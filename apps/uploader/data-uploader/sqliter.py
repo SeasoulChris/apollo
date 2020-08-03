@@ -2,7 +2,6 @@
 
 """Sqlite DB lightweight app"""
 
-import os
 import sys
 
 import colored_glog as glog

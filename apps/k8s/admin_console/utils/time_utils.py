@@ -42,7 +42,6 @@ def get_first_day(week_flag):
     str_year_start = year_num + '0101'   # the firt day of the year
     year_start = datetime.datetime.strptime(str_year_start, '%Y%m%d')  # format the date
     year_start_calendar_msg = year_start.isocalendar()  # the week info of the firt day
-    year_start_week = year_start_calendar_msg[1]
     year_start_weekday = year_start_calendar_msg[2]
     year_start_year = year_start_calendar_msg[0]
     # sunday is the first day of oneweek

@@ -159,7 +159,7 @@ def pod_log_hdl(pod_name, namespace='default'):
                               ['labels']
                               ['spark-app-selector'])
         spark_history_url = os.path.join(spark_history_server, spark_app_selector)
-    except Exception as ex:
+    except Exception:
         spark_history_url = ''
     return flask.render_template('pod_log.html', pod_name=pod_name, namespace=namespace,
                                  spark_history_url=spark_history_url)

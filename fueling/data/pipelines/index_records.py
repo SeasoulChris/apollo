@@ -4,8 +4,6 @@
 import collections
 import os
 
-from absl import flags
-
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
 from fueling.data.record_parser import RecordParser

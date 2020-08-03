@@ -3,30 +3,21 @@
 
 from datetime import datetime
 from http import HTTPStatus
-import base64
 import json
-import os
-import site
 import subprocess
 import threading
 
 from absl import app
 from absl import flags
 from absl import logging
-import boto3
-import botocore
 import flask
 import flask_restful
 import google.protobuf.json_format as json_format
 
 from apps.k8s.spark_submitter.job_processor import JobProcessor
 from apps.k8s.spark_submitter.saas_job_arg_pb2 import SaasJobArg
-from apps.k8s.spark_submitter.spark_submit_arg_pb2 import Env, JobRecord, SparkSubmitArg
+from apps.k8s.spark_submitter.spark_submit_arg_pb2 import SparkSubmitArg
 from apps.k8s.spark_submitter.utils import Utils
-from fueling.common.mongo_utils import Mongo
-import apps.k8s.spark_submitter.jobs as jobs
-import fueling.common.job_utils as job_utils
-import fueling.common.proto_utils as proto_utils
 
 
 flags.DEFINE_boolean('debug', False, 'Enable debug mode.')

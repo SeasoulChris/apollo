@@ -2,11 +2,9 @@
 """Spark submitter utils."""
 
 import base64
-import json
 import os
 import site
 
-from absl import flags
 import boto3
 import botocore
 
@@ -28,8 +26,6 @@ class Utils(object):
         EXTRACTED_PATH = '/apollo/modules/data/fuel'
         SPARK_LOG_STORAGE = 'file:///mnt/bos/modules/data/spark'
         EVENTLOG_DIR = os.path.join(SPARK_LOG_STORAGE, 'spark-events')
-        DRIVER_LOG4J = os.path.join(SPARK_LOG_STORAGE, 'driver-logs/log4j-driver.properties')
-        EXECUTOR_LOG4J = os.path.join(SPARK_LOG_STORAGE, 'executor-logs/log4j-executor.properties')
         SECRET_ENVS = {
             'BOS_ACCESS': 'bos-secret:ak',
             'BOS_SECRET': 'bos-secret:sk',

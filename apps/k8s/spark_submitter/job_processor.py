@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 
 from http import HTTPStatus
-import datetime
-import os
 import string
-import time
 
-from absl import flags
 from absl import logging
 
 from apps.k8s.spark_submitter.saas_job_arg_pb2 import SaasJobArg

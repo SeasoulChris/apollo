@@ -31,7 +31,7 @@ def new_job(job_type):
 
 @app.route('/submit_job', methods=['POST'])
 def submit_job():
-    kube_proxy_url = F'http://localhost:8001'
+    kube_proxy_url = 'http://localhost:8001'
     service_name = 'namespaces/default/services/http:spark-submitter-service:8000'
     handler = 'open-service'
     service_url = F'{kube_proxy_url}/api/v1/{service_name}/proxy/{handler}'

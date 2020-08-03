@@ -1,4 +1,4 @@
-import os
+#!/usr/bin/env python
 
 import flask_restful
 from flask_restful import reqparse

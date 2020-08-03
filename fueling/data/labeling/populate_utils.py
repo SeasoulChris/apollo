@@ -4,7 +4,6 @@
 import gc
 import math
 import os
-import sys
 
 from google.protobuf.json_format import MessageToJson
 from scipy.spatial.transform import Rotation as R
@@ -369,7 +368,7 @@ class PointCloudSensor(Sensor):
         frame.device_position.y = point_world.y
         frame.device_position.z = point_world.z
         rotation = get_rotation_from_tranform(transform)
-        qtn = rotation_to_quaternion(rotation)
+        rotation_to_quaternion(rotation)
 
 
 class RadarSensor(Sensor):

@@ -1,7 +1,10 @@
+#!/usr/bin/env python
+
 import datetime
-import json
+
 import flask_restful
 from flask_restful.reqparse import RequestParser
+
 from controllers import job
 import fueling.common.logging as logging
 

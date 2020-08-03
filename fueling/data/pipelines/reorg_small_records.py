@@ -3,7 +3,6 @@
 
 import collections
 import os
-import sys
 
 from cyber.python.cyber_py3.record import RecordReader, RecordWriter
 

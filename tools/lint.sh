@@ -22,9 +22,10 @@ function LintDir {
 
   # TODO(all): Cover all code.
   find "$1" -type f -name '*.py' | \
+      grep -v 'apps/k8s/warehouse/display_util.py' | \
       grep -v 'fueling/common/logging.py' | \
       grep -v 'fueling/common/record/kinglong' | \
-      grep 'fueling/common' | \
+      grep -e 'apps/' -e 'fueling/common' -e 'fueling/data' | \
       xargs ${FLAKE}
 }
 

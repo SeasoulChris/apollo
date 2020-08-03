@@ -10,8 +10,6 @@ import urllib.parse
 
 import boto3
 import colored_glog as glog
-import cv2
-import numpy as np
 import requests
 import scaleapi
 
@@ -96,7 +94,7 @@ def upload_images(task, s3_client):
     image_links = os.listdir(os.path.join(task, 'images'))
     for image_name in image_links:
         image_src = os.path.join(streaming_image_path, image_name)
-        if not image_bin:
+        if not os.path.isfile(image_src):
             glog.error('no image found for : {}'.format(image_src))
             return False
         image_dst = 'images/{}.jpg'.format(image_name)

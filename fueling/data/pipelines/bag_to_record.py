@@ -6,8 +6,6 @@ This pipeline needs old Ubuntu 14.04 environment. Please run it with
 import fnmatch
 import os
 
-from absl import flags
-
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging

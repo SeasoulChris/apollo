@@ -10,7 +10,6 @@ import _thread
 
 import gflags
 
-from bos_sync_executor import BosSyncExecutor
 from road_test_listener import RoadTestTaskListener
 from rsync_executor import RsyncExecutor
 from serialize_job_listener import SerializeJobTaskListener

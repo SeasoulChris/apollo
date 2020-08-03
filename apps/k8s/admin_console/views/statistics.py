@@ -7,7 +7,6 @@ import flask
 
 import application
 from controllers import job
-from fueling.common import job_utils
 from utils import time_utils
 import fueling.common.logging as logging
 
@@ -37,7 +36,6 @@ def statistics():
 
     filter_list = []
     labels = []
-    weeks = []
     num_list = {}
     num_list_temp = {}
     show_job_type_list = {}
@@ -113,7 +111,7 @@ def statistics():
                                                for type_job in job_type_list if type_job != "A"]}
         if not selc_aggregated:
             selc_aggregated = "week"
-        aggregated = f"$" + selc_aggregated
+        aggregated = "$" + selc_aggregated
         logging.info(f"find_filter: {find_filter}")
 
         operator = []

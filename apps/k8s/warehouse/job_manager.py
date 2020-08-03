@@ -58,7 +58,7 @@ class JobManager(object):
                             spark_job_owner = arg_value
                         elif arg_type == '--job_id':
                             spark_job_id = arg_value
-            except Exception as ex:
+            except Exception:
                 pass
         return {'namespace': namespace,
                 'podname': podname,
@@ -166,7 +166,7 @@ class JobManager(object):
         logs_generator = None
         try:
             logs_generator = self.kubectl.log_stream(pod_name, namespace)
-        except Exception as ex:
+        except Exception:
             pass
         # if the log is loaded from kubernetes streaming api, return a generator
         if logs_generator:

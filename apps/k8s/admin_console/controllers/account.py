@@ -11,7 +11,6 @@ import flask
 from common import paginator
 from controllers import job
 from fueling.common import account_utils
-from fueling.common import logging
 from utils import time_utils
 
 account_db = account_utils.AccountUtils()
@@ -187,9 +186,7 @@ def get_account_filter(conf_dict, args_dict):
     """
     Get the filter about account
     """
-    res = {}
     black_list = conf_dict["black_list"]
-    account_show_action = conf_dict["account_show_action"]
     vehicle_sn = args_dict["vehicle_sn"]
     find_filter = []
     if vehicle_sn:

@@ -3,9 +3,6 @@
 
 import collections
 import os
-import sys
-
-from absl import flags
 
 from cyber.python.cyber_py3.record import RecordReader, RecordWriter
 
