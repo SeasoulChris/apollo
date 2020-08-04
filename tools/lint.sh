@@ -24,7 +24,8 @@ function LintDir {
       grep -v 'apps/k8s/warehouse/display_util.py' | \
       grep -v 'fueling/common/logging.py' | \
       grep -v 'fueling/common/record/kinglong/cybertron' | \
-      grep -e 'apps/' -e 'fueling/com' -e 'fueling/d' -e 'fueling/m' -e 'fueling/s' \
+      grep -v 'fueling/learning/network_utils.py' | \
+      grep -e 'apps/' -e 'fueling/com' -e 'fueling/d' -e 'fueling/l' -e 'fueling/m' -e 'fueling/s' \
               -e 'perception/sen' -e 'perception/pi' -e 'perception/pointpillars/t' | \
       xargs ${FLAKE}
 }

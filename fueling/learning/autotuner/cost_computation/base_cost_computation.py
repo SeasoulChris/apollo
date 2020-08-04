@@ -2,8 +2,6 @@
 """Auto Tuner Base"""
 
 import json
-import uuid
-import os
 import time
 
 from absl import flags

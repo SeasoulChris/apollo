@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 """Loss utils."""
 
-import math
-
+from torch import cuda
 import numpy as np
 import torch
-import torch.nn as nn
 
 
 class TrajectoryBivariateGaussianLoss:

@@ -1,24 +1,15 @@
-import argparse
 import os
 import sys
 from datetime import datetime
 
 
 from absl import flags
-import numpy as np
 import optuna
 from optuna.samplers import TPESampler
 import uuid
 import google.protobuf.text_format as text_format
 
 from modules.control.proto.control_conf_pb2 import ControlConf
-from modules.control.proto.lat_controller_conf_pb2 import LatControllerConf
-from modules.control.proto.lon_controller_conf_pb2 import LonControllerConf
-from modules.control.proto.mpc_controller_conf_pb2 import MPCControllerConf
-from modules.control.proto.gain_scheduler_conf_pb2 import GainScheduler
-from modules.control.proto.leadlag_conf_pb2 import LeadlagConf
-from modules.control.proto.mrac_conf_pb2 import MracConf
-from modules.control.proto.pid_conf_pb2 import PidConf
 
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
@@ -64,7 +55,7 @@ class OptunaBaseTuner():
     """Basic functionality for Optuna Tuner."""
 
     def __init__(self):
-        logging.info(f"Init OptunaBaseTuner Tuner.")
+        logging.info("Init OptunaBaseTuner Tuner.")
 
         tuner_conf = TunerConfigs()
         user_conf = ControlConf()  # Basic configuration corresponding to user module

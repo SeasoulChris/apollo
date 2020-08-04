@@ -1,4 +1,3 @@
-import argparse
 import os
 import sys
 import time
@@ -6,18 +5,9 @@ import time
 from absl import flags
 from bayes_opt import BayesianOptimization
 from bayes_opt.util import UtilityFunction
-import numpy as np
 
 from modules.control.proto.control_conf_pb2 import ControlConf
-from modules.control.proto.lat_controller_conf_pb2 import LatControllerConf
-from modules.control.proto.lon_controller_conf_pb2 import LonControllerConf
-from modules.control.proto.mpc_controller_conf_pb2 import MPCControllerConf
-from modules.control.proto.gain_scheduler_conf_pb2 import GainScheduler
-from modules.control.proto.leadlag_conf_pb2 import LeadlagConf
-from modules.control.proto.mrac_conf_pb2 import MracConf
-from modules.control.proto.pid_conf_pb2 import PidConf
 
-from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
 from fueling.learning.autotuner.tuner.base_tuner import BaseTuner
 from fueling.learning.autotuner.tuner.bayesian_optimization_visual_utils \
     import BayesianOptimizationVisualUtils

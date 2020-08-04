@@ -7,7 +7,6 @@ import signal
 from fueling.learning.autotuner.common.utils import run_with_retry
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
 import fueling.learning.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
-import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
 import fueling.common.logging as logging
 
 MAX_RUNNING_ROLE_LENGTH = 18
@@ -40,7 +39,7 @@ class CostComputationClient(object):
         if commit_id and scenario_ids and isinstance(dynamic_model, int):
             self.initialize(commit_id, scenario_ids, dynamic_model)
         else:
-            logging.info(f"Missing necessary inputs to initialize the Client")
+            logging.info("Missing necessary inputs to initialize the Client")
 
     def __enter__(self):
         return self
@@ -208,6 +207,6 @@ class CostComputationClient(object):
 
         logging.info(f"Closing {self.service_token} service ...")
         request = self.construct_close_request()
-        response = self.send_request_with_retry('Close', request)
+        self.send_request_with_retry('Close', request)
         logging.info(f"Service {self.service_token} closed.")
         self.service_token = None

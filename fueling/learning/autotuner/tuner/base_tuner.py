@@ -1,4 +1,3 @@
-import argparse
 from datetime import datetime
 import glob
 import json
@@ -46,7 +45,7 @@ class BaseTuner():
 
     def __init__(self, UserConfClassDict):
         tic_start = time.perf_counter()
-        logging.info(f"Init Optimization Tuner.")
+        logging.info("Init Optimization Tuner.")
 
         self.tuner_param_config_pb, self.algorithm_conf_pb = self.read_configs(UserConfClassDict)
 
@@ -172,7 +171,7 @@ class BaseTuner():
         config_name = message.DESCRIPTOR.fields_by_name[field_name].full_name.split('.')[-2]
         # DESCRIPTOR attribute 'label' is formatted as 'OPTIONAL = 1, REPEATED = 3, REQUIRED = 2'
         label = message.DESCRIPTOR.fields_by_name[field_name].label
-        is_repeated = True if label is 3 else False
+        is_repeated = (label == 3)
         return message, config_name, field_name, is_repeated
 
     def separate_repeated_param(self, parameter):

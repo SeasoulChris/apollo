@@ -3,12 +3,10 @@
 import glob
 import json
 import os
-import sys
 import time
 
 from absl import flags
 
-from apps.k8s.spark_submitter.client import SparkSubmitterClient
 from fueling.learning.autotuner.cost_computation.base_cost_computation import BaseCostComputation
 from fueling.learning.autotuner.proto.cost_computation_conf_pb2 import CostComputationConf
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
@@ -95,7 +93,7 @@ class ProfilingCostComputation(BaseCostComputation):
             options.update({flag.flag_name: flag.enable})
 
         if not self.run_profiling_locally(options):
-            logging.error(f"Fail to run the profiling job locally.")
+            logging.error("Fail to run the profiling job locally.")
             self.pause_to_debug()
             return [float('nan'), 0]
         logging.info(f"Timer: run_profiling_locally - {time.perf_counter() - tic_start: 0.04f} sec")

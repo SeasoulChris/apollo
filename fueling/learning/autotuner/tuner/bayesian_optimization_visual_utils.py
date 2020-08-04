@@ -1,17 +1,13 @@
 #!/usr/bin/env python
 """ Bayesian optimization visualization related utils """
 
+import os
+
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-from matplotlib import gridspec
-from mpl_toolkits.mplot3d import Axes3D
-
-from bayes_opt import BayesianOptimization
-from bayes_opt import UtilityFunction
 import numpy as np
-import os
-import time
+from matplotlib import gridspec
 
 import fueling.common.logging as logging
 
@@ -23,9 +19,7 @@ class BayesianOptimizationVisualUtils():
         """Initialize the optimization visualization"""
         self.figure = plt.figure(figsize=(12, 9))
         plt.show(block=False)
-        self.figure.suptitle(
-            f'Gaussian Process and Utility Function Initialization, Waiting ...'
-        )
+        self.figure.suptitle('Gaussian Process and Utility Function Initialization, Waiting ...')
         plt.draw()
         plt.pause(1)
 

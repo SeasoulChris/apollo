@@ -1,4 +1,3 @@
-import getpass
 import time
 
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient

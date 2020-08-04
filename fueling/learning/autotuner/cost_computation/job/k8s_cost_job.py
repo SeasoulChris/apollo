@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 
-import os
 import json
-import signal
-import subprocess
-import threading
 import time
 import requests
 

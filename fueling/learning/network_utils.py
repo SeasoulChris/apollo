@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """Network utils."""
 
+from torch import Tensor
 import cv2 as cv
+import numpy as np
 import torch
 import torch.nn as nn
 
