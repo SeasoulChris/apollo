@@ -7,6 +7,7 @@ py_library(
     srcs = ["account.py"],
     data = ["//apps/k8s/admin_console:resource"],
     deps = [
+        "//apps/k8s/admin_console/common:paginator",
         "//apps/k8s/admin_console/controllers:job",
         "//apps/k8s/admin_console/utils:time_utils",
         "//fueling/common:account_utils",

@@ -12,6 +12,7 @@ py_library(
     deps = [
         "//apps/k8s/admin_console/controllers:account",
         "//apps/k8s/admin_console/utils:conf_utils",
+        "//fueling/common:file_utils",
     ],
 )
 
