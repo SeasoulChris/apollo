@@ -19,6 +19,7 @@ RUN pip3 install --no-cache-dir \
         pytz \
         redis
 
+RUN touch /usr/local/lib/python3.6/dist-packages/google/__init__.py
 COPY index.zip /home/warehouse/index.zip
 ENV PYTHONPATH=/home/warehouse
 
