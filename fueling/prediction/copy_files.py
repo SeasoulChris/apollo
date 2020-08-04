@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import operator
 import os
 import shutil
 
@@ -23,7 +22,7 @@ class CopyFiles(BasePipeline):
             .distinct()
             .cache())
 
-        dirs_rdd = (
+        (
             # RDD(file)
             files_rdd
             # RDD(target_file)
@@ -37,8 +36,7 @@ class CopyFiles(BasePipeline):
         result = files_rdd.map(lambda filename: shutil.copyfile(
                                filename, filename.replace(origin_prefix, target_prefix)))
 
-        logging.info('Finishing copy ' + str(result.count()) + ' files: '
-                     + origin_prefix + ' -> ' + target_prefix)
+        logging.info(F'Finishing copy {result.count()} files: {origin_prefix} -> {target_prefix}')
         logging.info('Everything is under control!')
 
 

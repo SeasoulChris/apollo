@@ -30,7 +30,7 @@ class StatAutoMileage(BasePipeline):
             # RDD(auto_mileage)
             .map(self.calculate)
             .sum())
-        logging.info('Calculated auto mileage is: {}'.format(mileage))
+        logging.info(F'Calculated auto mileage is: {mileage}')
 
     def calculate(self, record):
         """Calculate mileage"""

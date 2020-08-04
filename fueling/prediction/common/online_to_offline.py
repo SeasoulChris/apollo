@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 
-import abc
-import logging
 import math
 import numpy as np
-
-from google.protobuf.internal import decoder
-from google.protobuf.internal import encoder
 
 from modules.prediction.proto import offline_features_pb2
 
@@ -146,7 +141,7 @@ class LabelGenerator(object):
         lane_change_finish_time = None
         is_jittering = False
         feature_seq_len = len(feature_sequence)
-        prev_timestamp = -1.0
+        # prev_timestamp = -1.0
         obs_actual_lane_ids = []
         obs_visited_lane_seg = []
         obs_traj = []
@@ -268,9 +263,9 @@ class LabelGenerator(object):
     '''
 
     def LabelSingleLane(self, period_of_interest=3.0):
-        output_features = offline_features_pb2.Features()
+        # output_features = offline_features_pb2.Features()
         for obs_id, feature_sequence in self.feature_dict.items():
-            feature_seq_len = len(feature_sequence)
+            # feature_seq_len = len(feature_sequence)
             for idx, feature in enumerate(feature_sequence):
                 if not feature.HasField('lane') or \
                    not feature.lane.HasField('lane_feature'):
@@ -396,7 +391,7 @@ class LabelGenerator(object):
         np.save(self.filepath + '.cruise_label.npy', self.cruise_label_dict)
 
     def LabelTrajectory(self, period_of_interest=3.0):
-        output_features = offline_features_pb2.Features()
+        # output_features = offline_features_pb2.Features()
         for obs_id, feature_sequence in self.feature_dict.items():
             for idx, feature in enumerate(feature_sequence):
                 # Observe the subsequent Features
@@ -409,7 +404,7 @@ class LabelGenerator(object):
         np.save(self.filepath + '.future_status.npy', self.future_status_dict)
 
     def LabelCrossRoad(self):
-        output_features = offline_features_pb2.Features()
+        # output_features = offline_features_pb2.Features()
         for obs_id, feature_sequence in self.feature_dict.items():
             for idx, feature in enumerate(feature_sequence):
                 if "{}@{:.3f}".format(feature.id, feature.timestamp) not in self.observation_dict:
@@ -426,7 +421,7 @@ class LabelGenerator(object):
         np.save(self.filepath + '.cross_road.npy', self.future_status_dict)
 
     def LabelVisitedLaneSegment(self):
-        output_features = offline_features_pb2.Features()
+        # output_features = offline_features_pb2.Features()
         for obs_id, feature_sequence in self.feature_dict.items():
             for idx, feature in enumerate(feature_sequence):
                 # Observe the subsequent Features
@@ -441,7 +436,7 @@ class LabelGenerator(object):
     def LabelJunctionExit(self):
         '''Label feature trajectory according to real future lane sequence in 7s
         '''
-        output_features = offline_features_pb2.Features()
+        # output_features = offline_features_pb2.Features()
         for obs_id, feature_sequence in self.feature_dict.items():
             feature_seq_len = len(feature_sequence)
             for i, fea in enumerate(feature_sequence):

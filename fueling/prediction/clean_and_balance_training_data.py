@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
 from collections import Counter
-import glob
 import operator
 import os
 
-from absl import flags
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
@@ -149,7 +147,7 @@ class CleanTrainingDataPipeline(BasePipeline):
         return False
 
     def IsDataPtZeroCurrPosition(self, data_pt):
-        curr = data_pt[0][-1]
+        # curr = data_pt[0][-1]
         curr_x = data_pt[0][-1][1] + OFFSET_X
         curr_y = data_pt[0][-1][2] + OFFSET_Y
         if abs(curr_x) < 1.0 or abs(curr_y) < 1.0:

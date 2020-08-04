@@ -70,7 +70,7 @@ class PytorchTraining(BasePipeline):
 
         # Spark distributing as normal
         self.to_rdd(range(workers)).foreach(lambda instance: self.train(instance, workers, job_id))
-        logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
+        logging.info(F'Training complete in {time.time() - time_start} seconds.')
 
     @staticmethod
     def train(instance, world_size, job_id):

@@ -25,9 +25,17 @@ function LintDir {
       grep -v 'fueling/common/logging.py' | \
       grep -v 'fueling/common/record/kinglong/cybertron' | \
       grep -v 'fueling/learning/network_utils.py' | \
-      grep -e 'apps/' -e 'fueling/com' -e 'fueling/d' -e 'fueling/l' -e 'fueling/m' -e 'fueling/s' \
-              -e 'perception/sen' -e 'perception/pi' -e 'perception/pointpillars/t' | \
-      xargs ${FLAKE}
+      grep -e 'apps/' \
+          -e 'fueling/com' \
+          -e 'fueling/d' \
+          -e 'fueling/l' \
+          -e 'fueling/m' \
+          -e 'fueling/s' \
+          -e 'perception/sen' \
+          -e 'perception/pi' \
+          -e 'perception/pointpillars/t' \
+          -e 'prediction/c' \
+          | xargs ${FLAKE}
 }
 
 PATH_ARG=$1

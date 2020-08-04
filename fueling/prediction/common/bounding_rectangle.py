@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+from math import cos, sin
+
 from fueling.prediction.common.vector2d import Vector2
-from fueling.prediction.common.rotation2d import *
+from fueling.prediction.common.rotation2d import rotate_fast
 from fueling.prediction.common.util import segment_overlap
 
 

@@ -27,19 +27,19 @@ class PytorchTraining(BasePipeline):
         """Run."""
         time_start = time.time()
         self.to_rdd(range(1)).foreach(self.train)
-        logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
+        logging.info(F'Training complete in {time.time() - time_start} seconds.')
 
     @staticmethod
     def train(instance_id):
         """Run training task"""
-        logging.info('nvidia-smi on Executor {}:'.format(instance_id))
+        logging.info(F'nvidia-smi on Executor {instance_id}:')
         if os.system('nvidia-smi') != 0:
             logging.fatal('Failed to run nvidia-smi.')
             sys.exit(-1)
 
-        logging.info('cuda available? {}'.format(torch.cuda.is_available()))
-        logging.info('cuda version: {}'.format(torch.version.cuda))
-        logging.info('gpu device count: {}'.format(torch.cuda.device_count()))
+        logging.info(F'cuda available? {torch.cuda.is_available()}')
+        logging.info(F'cuda version: {torch.version.cuda}')
+        logging.info(F'gpu device count: {torch.cuda.device_count()}')
 
         dtype = torch.float
         # Or use 'cpu' for CPU training.
@@ -66,7 +66,7 @@ class PytorchTraining(BasePipeline):
 
             # Compute and print loss
             loss = (y_pred - y).pow(2).sum().item()
-            logging.info(t, loss)
+            logging.info(F'{t} {loss}')
 
             # Backprop to compute gradients of w1 and w2 with respect to loss
             grad_y_pred = 2.0 * (y_pred - y)

@@ -69,7 +69,7 @@ def CombineDataForTuningAndLabels(feature_path, label_path):
             # logging.info('Cannot find a feature-to-label mapping.')
             continue
 
-        labels = None
+        # labels = None
         list_curr = None
         future_status = dict_labels[key]
         start_timestamp = future_status[0][6]
