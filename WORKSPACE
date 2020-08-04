@@ -99,7 +99,6 @@ http_archive(
 new_git_repository(
     name = "yolov4",
     branch = "master",
-    remote = "git@github.com:ApolloAuto/pytorch-YOLOv4.git",
-    shallow_since = "2020-07-20",
+    remote = "https://github.com/ApolloAuto/pytorch-YOLOv4.git",
     build_file = "yolov4.BUILD",
 )
