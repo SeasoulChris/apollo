@@ -26,6 +26,7 @@ class OpenserviceRegression(object):
         try:
             resp = requests.post(self.service_url, json=json.dumps(requestdata))
             http_code, msg = resp.status_code, resp.content
+            logging.info(f'Regression job - {job_type} has been submitted')
         except BaseException:
             http_code = HTTPStatus.BAD_REQUEST
             msg = 'Wrong job argument'
@@ -47,11 +48,44 @@ class OpenserviceRegression(object):
             'extra_roi_extension': '0.5',
             'output_data_path': output_data_path
         }
-        logging.info(f'Regression job - {job_type} has been submitted')
+        return self.request_openservice(job_type, job_flags)
+
+    def submit_sensor_calibration(self):
+        """submit sensor calibration job"""
+        job_type = 'SENSOR_CALIBRATION'
+        input_data_path = 'test/openservice-regression/SensorCalibration/input'
+        output_data_path = 'test/openservice-regression/SensorCalibration/output'
+        job_flags = {
+            'input_data_path': input_data_path,
+            'output_data_path': output_data_path
+        }
+        return self.request_openservice(job_type, job_flags)
+
+    def submit_vehicle_calibration(self):
+        """submit vehicle calibration job"""
+        job_type = 'VEHICLE_CALIBRATION'
+        input_data_path = 'test/openservice-regression/VehicleCalibration/input/task001'
+        job_flags = {
+            'input_data_path': input_data_path,
+        }
+        return self.request_openservice(job_type, job_flags)
+
+    def submit_control_profiling(self):
+        """submit control profiling job"""
+        job_type = 'CONTROL_PROFILING'
+        input_data_path = 'test/openservice-regression/ControlProfiling/input/DevKit'
+        job_flags = {
+            'input_data_path': input_data_path,
+        }
         return self.request_openservice(job_type, job_flags)
 
 
 if __name__ == '__main__':
     openservice = OpenserviceRegression()
-    msg, http_code = openservice.submit_virtual_lane_generation()
-    logging.info(f'submit_virtual_lane_generation: {http_code}: {msg}')
+    jobs_to_call = ['submit_virtual_lane_generation',
+                    'submit_sensor_calibration',
+                    'submit_vehicle_calibration',
+                    'submit_control_profiling']
+    for job in jobs_to_call:
+        msg, http_code = getattr(openservice, job)()
+        logging.info(f'{job}: {http_code}: {msg}')
