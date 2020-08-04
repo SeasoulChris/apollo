@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 # Change container name if the host machine is shared by multiple users.
-CONTAINER="fuel_${USER}"
+CONTAINER="fuel"
+RUN_CONFIG=""
+RM_CONFIG=""
 
 # Goto fuel root
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
@@ -9,7 +11,14 @@ source ./tools/docker_version.sh
 
 DOCKER_RUN="docker run"
 # Decide to use GPU or not.
-DOCKER_RUN="docker run"
+if [ "$1" = "--rm" ]; then
+    RUN_CONFIG="--rm"
+    RM_CONFIG="bash -c tools/check.sh"
+else
+    RUN_CONFIG="-d"
+    RM_CONFIG="bash"
+fi
+
 
 APOLLO_ROOT="/home/apollo/apollo"
 if [ -d ${APOLLO_ROOT} ]; then
@@ -94,7 +103,7 @@ else
     optional_volumes="-v ${SIMULATOR}:/apollo-simulator ${optional_volumes}"
   fi
 
-  ${DOCKER_RUN} -it -d --privileged \
+  ${DOCKER_RUN} -it ${RUN_CONFIG} --privileged \
       --net host \
       --name ${CONTAINER} \
       --hostname ${CONTAINER} --add-host ${CONTAINER}:127.0.0.1 \
@@ -104,10 +113,5 @@ else
       -e DISPLAY=$DISPLAY \
       -e DOCKER_USER=$USER -e DOCKER_USER_ID=$USER_ID \
       -e DOCKER_GRP=$GRP -e DOCKER_GRP_ID=$GRP_ID \
-      ${IMAGE} bash
-  if [ "${USER}" != "root" ]; then
-    docker exec ${CONTAINER} bash -c '/apollo/scripts/docker_start_user.sh'
-  fi
-  docker exec ${CONTAINER} bash -c "cat /home/libs/bash.rc >> ${HOME}/.bashrc"
+      ${IMAGE} ${RM_CONFIG}
 fi
-docker exec -i -u ${USER} ${CONTAINER} bash
