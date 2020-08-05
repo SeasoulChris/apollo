@@ -2,6 +2,7 @@
 """Clean records."""
 
 import os
+from os import path
 import resource
 from datetime import datetime, timedelta
 
@@ -61,18 +62,22 @@ class RoutingGenerator(BasePipeline):
 
     def run(self):
         """Run prod."""
-        individual_tasks = [
-            'modules/planning/temp/converted_data/batch_20200512_171650/MKZ173_20200121122216',
-            'modules/planning/temp/converted_data/batch_20200512_171650/MKZ170_20200121120310',
-            'modules/planning/temp/converted_data/batch_20200512_171650/MKZ167_20200121131624',
-        ]
+        task_list_file = path.dirname(path.abspath(__file__)) + "/task_list.txt"
+        logging.info(task_list_file)
 
         task_files = []
-        for task in individual_tasks:
-            files = self.our_storage().list_files(task)
-            for file in files:
-                if record_utils.is_record_file(file):
-                    task_files.append(file)
+        with open(task_list_file, 'r') as f:
+            for task_desc in f:
+                task_desc = task_desc.replace("\n", "")
+                day_task_folder = task_desc.split(" ")[0]
+                # task_filter = task_desc.split(" ")[1]
+                files = self.our_storage().list_files(day_task_folder)
+                for file in files:
+                    # record_task = file.split(os.sep)[-2]
+                    # if task_filter not in record_task:
+                    #    continue
+                    if record_utils.is_record_file(file):
+                        task_files.append(file)
 
         if self.RUN_IN_DRIVER:
             for file in task_files:
