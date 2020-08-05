@@ -1,14 +1,10 @@
 from pathlib import Path
 
-import numpy as np
-import torch
-
 import torchplus
 from second.core import box_np_ops
 from second.core.inference import InferenceContext
 from second.builder import target_assigner_builder, voxel_builder
 from second.pytorch.builder import box_coder_builder, second_builder
-from second.pytorch.models.voxelnet import VoxelNet
 from second.pytorch.train import predict_to_kitti_label, example_convert_to_torch
 
 
@@ -20,15 +16,15 @@ class TorchInferenceContext(InferenceContext):
 
     def _build(self):
         config = self.config
-        input_cfg = config.eval_input_reader
+        # input_cfg = config.eval_input_reader
         model_cfg = config.model.second
         train_cfg = config.train_config
-        batch_size = 1
+        # batch_size = 1
         voxel_generator = voxel_builder.build(model_cfg.voxel_generator)
         bv_range = voxel_generator.point_cloud_range[[0, 1, 3, 4]]
         grid_size = voxel_generator.grid_size
         self.voxel_generator = voxel_generator
-        vfe_num_filters = list(model_cfg.voxel_feature_extractor.num_filters)
+        _ = list(model_cfg.voxel_feature_extractor.num_filters)
 
         box_coder = box_coder_builder.build(model_cfg.box_coder)
         target_assigner_cfg = model_cfg.target_assigner
@@ -70,8 +66,8 @@ class TorchInferenceContext(InferenceContext):
         torchplus.train.restore(str(ckpt_path), self.net)
 
     def _inference(self, example):
-        train_cfg = self.config.train_config
-        input_cfg = self.config.eval_input_reader
+        # train_cfg = self.config.train_config
+        # input_cfg = self.config.eval_input_reader
         model_cfg = self.config.model.second
         example_torch = example_convert_to_torch(example)
         result_annos = predict_to_kitti_label(

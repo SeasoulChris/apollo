@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 
-import math
-
-import cv2 as cv
 import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader
 
-from semantic_map_single_image_model import *
+from semantic_map_single_image_model import TrajectoryPredictionSingle
 
 
 if __name__ == '__main__':

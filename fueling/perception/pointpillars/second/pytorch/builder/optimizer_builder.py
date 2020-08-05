@@ -14,13 +14,12 @@
 # ==============================================================================
 """Functions to build DetectionModel training optimizers."""
 
-from fueling.perception.pointpillars.torchplus.train import learning_schedules
-from fueling.perception.pointpillars.torchplus.train import optim
+from functools import partial
+
 import torch
 from torch import nn
-from fueling.perception.pointpillars.torchplus.train.fastai_optim import (
-    OptimWrapper, FastAIMixedOptim)
-from functools import partial
+
+from fueling.perception.pointpillars.torchplus.train.fastai_optim import OptimWrapper
 
 
 def children(m: nn.Module):

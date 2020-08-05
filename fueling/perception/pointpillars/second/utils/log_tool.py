@@ -1,7 +1,6 @@
-import numpy as np
+from pathlib import Path
 from tensorboardX import SummaryWriter
 import json
-from pathlib import Path
 
 
 def _flat_nested_json_dict(json_dict, flatted, sep=".", start=""):
@@ -67,12 +66,12 @@ class SimpleModelLog:
         summary_dir = model_dir / 'summary'
         summary_dir.mkdir(parents=True, exist_ok=True)
 
-        log_mjson_file_path = model_dir / f'log.json.lst'
+        log_mjson_file_path = model_dir / 'log.json.lst'
         if log_mjson_file_path.exists():
             with open(log_mjson_file_path, 'r') as f:
                 for line in f.readlines():
                     self.metrics.append(json.loads(line))
-        log_file_path = model_dir / f'log.txt'
+        log_file_path = model_dir / 'log.txt'
         self.log_mjson_file = open(log_mjson_file_path, 'a')
         self.log_file = open(log_file_path, 'a')
         self.summary_writter = SummaryWriter(str(summary_dir))

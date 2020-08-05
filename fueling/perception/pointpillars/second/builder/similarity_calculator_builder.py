@@ -1,7 +1,4 @@
-import numpy as np
-
 from fueling.perception.pointpillars.second.core import region_similarity
-from fueling.perception.pointpillars.second.protos import similarity_pb2
 
 
 def build(similarity_config):

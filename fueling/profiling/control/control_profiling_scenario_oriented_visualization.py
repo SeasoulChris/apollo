@@ -2,11 +2,8 @@
 
 """Visualize control features from multiple test-cases at the same scenario"""
 
-from collections import namedtuple
 import glob
 import os
-import tarfile
-import time
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging

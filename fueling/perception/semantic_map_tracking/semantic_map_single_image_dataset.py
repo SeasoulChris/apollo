@@ -9,7 +9,7 @@ import random
 
 from fueling.common.coord_utils import CoordUtils
 import fueling.common.file_utils as file_utils
-from fueling.learning.network_utils import *
+from fueling.learning.network_utils import rotate
 from fueling.prediction.learning.data_preprocessing.map_feature.online_mapping \
     import ObstacleMapping
 
@@ -53,7 +53,7 @@ class ApolloSinglePredictionTrajectoryDataset(Dataset):
         self.same_scene_mask = []
         self.random_rotate = True
         self.using_image_regression = True
-        total_num_cutin_data_pt = 0
+        # total_num_cutin_data_pt = 0
         accumulated_data_pt = 0
 
         # TODO(Hongyi): add the drawing class here.
@@ -207,7 +207,7 @@ class ApolloSinglePredictionTrajectoryDataset(Dataset):
         return rot_points.transpose()
 
     def filter_removed(self, entry):
-        dim = entry.ndim
+        # dim = entry.ndim
         if entry.ndim == 2:
             idx = np.all(entry == 0, axis=1)
             return (entry[~idx], idx)

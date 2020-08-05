@@ -1,21 +1,12 @@
-import pathlib
-import pickle
 import time
 from collections import defaultdict
-from functools import partial
 
-import cv2
 import numpy as np
-from skimage import io as imgio
 
 from fueling.perception.pointpillars.second.core import box_np_ops
 from fueling.perception.pointpillars.second.core import preprocess as prep
 from fueling.perception.pointpillars.second.core.geometry import points_in_convex_polygon_3d_jit
 from fueling.perception.pointpillars.second.data import kitti_common as kitti
-from fueling.perception.pointpillars.second.utils import simplevis
-from fueling.perception.pointpillars.second.utils.timer import simple_timer
-
-import matplotlib.pyplot as plt
 
 
 def merge_second_batch(batch_list):
@@ -163,10 +154,12 @@ def prep_pointcloud(input_dict,
 
     if reference_detections is not None:
         assert calib is not None and "image" in input_dict
+        P2 = None  # TODO: Fix
         C, R, T = box_np_ops.projection_matrix_to_CRT_kitti(P2)
         frustums = box_np_ops.get_frustum_v2(reference_detections, C)
         frustums -= T
         frustums = np.einsum('ij, akj->aki', np.linalg.inv(R), frustums)
+        rect = Trv2c = None  # TODO: Fix.
         frustums = box_np_ops.camera_to_lidar(frustums, rect, Trv2c)
         surfaces = box_np_ops.corner_to_surfaces_3d_jit(frustums)
         masks = points_in_convex_polygon_3d_jit(points, surfaces)
@@ -178,6 +171,7 @@ def prep_pointcloud(input_dict,
         points = box_np_ops.remove_outside_points(
             points, calib["rect"], calib["Trv2c"], calib["P2"], image_shape)
     if remove_environment is True and training:
+        gt_names = None  # TODO: Fix.
         selected = kitti.keep_arrays_by_name(gt_names, target_assigner.classes)
         _dict_select(gt_dict, selected)
         masks = box_np_ops.points_in_rbbox(points, gt_dict["gt_boxes"])

@@ -1,16 +1,12 @@
 #!/usr/bin/env python
-import cgi
-import collections
 import os
 import math
-import sys
 
 import google.protobuf.text_format as text_format
 
 from cyber.python.cyber_py3.record import RecordReader
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
-import fueling.common.email_utils as email_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
@@ -86,7 +82,7 @@ def missing_field(path, conf_pb):
         conf = proto_utils.get_pb_from_text_file(conf_file, pb_value)
         logging.info(F'{vehicle} vehicle conf: {conf}')
         id_status = check_vehicle_id(conf)
-        if id_status is not 'OK':
+        if id_status != 'OK':
             status = F'{id_status} in conf: {conf_pb} for vehicle: {vehicle}'
             return status
         # required field
@@ -115,28 +111,21 @@ def missing_message_data(path, channels):
 
 def sanity_check(input_folder, conf_pb, channels):
     def error_message(status, folder):
-        message = (F'Sanity_Check: Failed; \n'
-                   F'Detailed Reason: {status}; \n'
-                   F'Data Directory: {folder}.')
-        return message
+        return ('Sanity_Check: Failed; \n'
+                F'Detailed Reason: {status}; \n'
+                F'Data Directory: {folder}.')
     if not os.path.isdir(input_folder):
-        status_msg = error_message(F'The input_data_path does not exist', input_folder)
-        return status_msg
+        return error_message('The input_data_path does not exist', input_folder)
     current_status = missing_file(input_folder, conf_pb)
-    if current_status is not 'OK':
-        status_msg = error_message(current_status, input_folder)
-        return status_msg
+    if current_status != 'OK':
+        return error_message(current_status, input_folder)
     current_status = parse_error(input_folder, conf_pb)
-    if current_status is not 'OK':
-        status_msg = error_message(current_status, input_folder)
-        return status_msg
+    if current_status != 'OK':
+        return error_message(current_status, input_folder)
     current_status = missing_field(input_folder, conf_pb)
-    if current_status is not 'OK':
-        status_msg = error_message(current_status, input_folder)
-        return status_msg
+    if current_status != 'OK':
+        return error_message(current_status, input_folder)
     current_status = missing_message_data(input_folder, channels)
-    if current_status is not 'OK':
-        status_msg = error_message(current_status, input_folder)
-        return status_msg
-    status_msg = 'OK'
-    return status_msg
+    if current_status != 'OK':
+        return error_message(current_status, input_folder)
+    return 'OK'

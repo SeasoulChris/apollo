@@ -1,7 +1,4 @@
-import shutil
 import subprocess
-import tempfile
-from pathlib import Path
 
 from fueling.perception.pointpillars.second.utils.loader import import_file
 from fueling.perception.pointpillars.second.utils.find import find_cuda_device_arch

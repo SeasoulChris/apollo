@@ -1,11 +1,6 @@
-import time
-from enum import Enum
-from functools import reduce
-import contextlib
 import numpy as np
 import torch
 from torch import nn
-from torch.nn import functional as F
 
 from fueling.perception.pointpillars.second.pytorch.models.voxelnet import (
     register_voxelnet, VoxelNet)

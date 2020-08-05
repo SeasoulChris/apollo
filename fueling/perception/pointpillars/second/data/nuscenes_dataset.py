@@ -1,22 +1,16 @@
 import json
 import pickle
-import time
-import random
 from copy import deepcopy
-from functools import partial
 from pathlib import Path
 import subprocess
 
 import numpy as np
 
-from fueling.perception.pointpillars.second.core import box_np_ops
-from fueling.perception.pointpillars.second.core import preprocess as prep
 from fueling.perception.pointpillars.second.data import kitti_common as kitti
 from fueling.perception.pointpillars.second.data.dataset import Dataset, register_dataset
 from fueling.perception.pointpillars.second.utils.eval import (
     get_coco_eval_result, get_official_eval_result)
 from fueling.perception.pointpillars.second.utils.progress_bar import progress_bar_iter as prog_bar
-from fueling.perception.pointpillars.second.utils.timer import simple_timer
 
 
 @register_dataset
@@ -83,7 +77,6 @@ class NuScenesDataset(Dataset):
         if "gt_boxes" not in self._nusc_infos[0]:
             return None
         from nuscenes.eval.detection.config import config_factory
-        from nuscenes.eval.detection.config import DetectionConfig
         cfg = config_factory(self.eval_version)
         cls_range_map = cfg.class_range
 
@@ -556,7 +549,6 @@ def _lidar_nusc_box_to_global(info, boxes, classes, eval_version="cvpr_2019"):
         box.translate(np.array(info['lidar2ego_translation']))
         # filter det in ego.
         from nuscenes.eval.detection.config import config_factory
-        from nuscenes.eval.detection.config import DetectionConfig
         cfg = config_factory(eval_version)
         cls_range_map = cfg.class_range
 

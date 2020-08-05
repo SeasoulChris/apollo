@@ -1,13 +1,10 @@
 import io as sysio
-import time
 
 import numba
 import numpy as np
-from scipy.interpolate import interp1d
 
 from fueling.perception.pointpillars.second.core.non_max_suppression.nms_gpu import (
     rotate_iou_gpu_eval)
-from fueling.perception.pointpillars.second.core import box_np_ops
 
 
 @numba.jit
@@ -812,7 +809,7 @@ def get_official_eval_result(gt_annos,
             result += print_str(f"3d   AP:{mAP3d}")
             if compute_aos:
                 mAPaos = get_mAP(metrics["bbox"]["orientation"][j, :, i])
-                detail[class_name][f"aos"] = mAPaos.tolist()
+                detail[class_name]["aos"] = mAPaos.tolist()
                 mAPaos = ", ".join(f"{v:.2f}" for v in mAPaos)
                 result += print_str(f"aos  AP:{mAPaos}")
     return {
@@ -906,12 +903,12 @@ def get_coco_eval_result(gt_annos,
         result += print_str((f"3d   AP:{mAP3d[j, 0]:.2f}, "
                              f"{mAP3d[j, 1]:.2f}, "
                              f"{mAP3d[j, 2]:.2f}"))
-        detail[class_name][f"bbox"] = mAPbbox[j].tolist()
-        detail[class_name][f"bev"] = mAPbev[j].tolist()
-        detail[class_name][f"3d"] = mAP3d[j].tolist()
+        detail[class_name]["bbox"] = mAPbbox[j].tolist()
+        detail[class_name]["bev"] = mAPbev[j].tolist()
+        detail[class_name]["3d"] = mAP3d[j].tolist()
 
         if compute_aos:
-            detail[class_name][f"aos"] = mAPaos[j].tolist()
+            detail[class_name]["aos"] = mAPaos[j].tolist()
             result += print_str((f"aos  AP:{mAPaos[j, 0]:.2f}, "
                                  f"{mAPaos[j, 1]:.2f}, "
                                  f"{mAPaos[j, 2]:.2f}"))

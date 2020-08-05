@@ -19,19 +19,18 @@ function LintDir {
       grep -v 'prediction/learning/datasets/apollo_pedestrian_dataset/data_for_learning_pb2.py' | \
       xargs ${LINT}
 
-  # TODO(all): Cover all code.
+  # TODO(all): Cover all:
+  # fueling/audio: 75
+  # fueling/planning: 186
+  # fueling/prediction/learning: 343
   find "$1" -type f -name '*.py' | \
       grep -v 'apps/k8s/warehouse/display_util.py' | \
       grep -v 'fueling/common/logging.py' | \
       grep -v 'fueling/common/record/kinglong/cybertron' | \
-      grep -v 'fueling/learning/network_utils.py' | \
       \
       grep -v 'fueling/audio' | \
-      grep -v 'fueling/perception/pointpillars' | \
-      grep -v 'fueling/perception/semantic_map_tracking' | \
       grep -v 'fueling/planning' | \
       grep -v 'fueling/prediction/learning' | \
-      grep -v 'fueling/profiling' | \
       xargs ${FLAKE}
 }
 

@@ -1,12 +1,6 @@
-import math
-from pathlib import Path
-
-import numba
 import numpy as np
-from numba import cuda
-from fueling.perception.pointpillars.second.utils.buildtools.pybind11_build import load_pb11
-from perception_pointpillars.nms import (
-    non_max_suppression)
+from perception_pointpillars.nms import non_max_suppression
+
 '''
 try:
     from fueling.perception.pointpillars.second.core.non_max_suppression.nms import (

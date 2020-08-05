@@ -1,6 +1,3 @@
-import numpy as np
-
-from fueling.perception.pointpillars.second.protos import box_coder_pb2
 from fueling.perception.pointpillars.second.pytorch.core.box_coders import (BevBoxCoderTorch,
                                                                             GroundBox3dCoderTorch)
 

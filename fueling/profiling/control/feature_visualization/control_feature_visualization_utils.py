@@ -16,7 +16,6 @@ from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, FEATURE_NAM
 from fueling.profiling.proto.control_profiling_pb2 import ControlProfiling
 from fueling.profiling.proto.control_profiling_data_pb2 import ControlFeatures
 import fueling.common.file_utils as file_utils
-import fueling.common.h5_utils as h5_utils
 import fueling.common.json_utils as json_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
@@ -79,7 +78,7 @@ def write_data_json_file(data_rdd):
     data_json = proto_utils.pb_to_dict(control_features)
     data_json['labels'] = {'x_label': 'timestamp_sec',
                            'y_label': [key for key in data_json.keys()
-                                       if key is not 'timestamp_sec']}
+                                       if key != 'timestamp_sec']}
     logging.info('transforming {} messages to json file {} for target {}'
                  .format(data.shape[0], json_data_file, dir_data))
     json_utils.write_json(data_json, dir_data, json_data_file)

@@ -5,9 +5,7 @@
 from collections import namedtuple
 import glob
 import os
-import sys
 import tarfile
-import time
 
 from absl import flags
 
@@ -18,7 +16,6 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.spark_helper as spark_helper
 import fueling.common.spark_op as spark_op
-import fueling.profiling.common.dir_utils as dir_utils
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.profiling.control.feature_visualization.control_feature_visualization_utils \
     as visual_utils

@@ -1,5 +1,3 @@
-import numpy as np
-
 from fueling.perception.pointpillars.second.core.voxel_generator import VoxelGeneratorV2
 from fueling.perception.pointpillars.second.protos import voxel_generator_pb2
 

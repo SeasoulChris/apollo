@@ -1,6 +1,3 @@
-import math
-from functools import reduce
-
 import numpy as np
 import torch
 from torch import stack as tstack
@@ -388,12 +385,12 @@ def multiclass_nms(nms_func,
     selected_per_class = []
     assert len(boxes.shape) == 3, "bbox must have shape [N, num_cls, 7]"
     assert len(scores.shape) == 2, "score must have shape [N, num_cls]"
-    num_class = scores.shape[1]
+    # num_class = scores.shape[1]
     if not (boxes.shape[1] == scores.shape[1] or boxes.shape[1] == 1):
         raise ValueError('second dimension of boxes must be either 1 or equal '
                          'to the second dimension of scores')
-    num_boxes = boxes.shape[0]
-    num_scores = scores.shape[0]
+    # num_boxes = boxes.shape[0]
+    # num_scores = scores.shape[0]
     num_classes = scores.shape[1]
     boxes_ids = (range(num_classes)
                  if boxes.shape[1] > 1 else [0] * num_classes)

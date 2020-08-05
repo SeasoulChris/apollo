@@ -1,17 +1,12 @@
 import abc
-import sys
-import time
 from collections import OrderedDict
-from functools import reduce
 
 import numba
 import numpy as np
 
 from fueling.perception.pointpillars.second.core import box_np_ops
-from fueling.perception.pointpillars.second.core.geometry import (is_line_segment_intersection_jit,
-                                                                  points_in_convex_polygon_3d_jit,
+from fueling.perception.pointpillars.second.core.geometry import (points_in_convex_polygon_3d_jit,
                                                                   points_in_convex_polygon_jit)
-import copy
 
 
 class BatchSampler:
@@ -279,7 +274,7 @@ def noise_per_box_group(boxes, valid_mask, loc_noises, rot_noises, group_nums):
     # valid_mask: [N]
     # loc_noises: [N, M, 3]
     # rot_noises: [N, M]
-    num_groups = group_nums.shape[0]
+    # num_groups = group_nums.shape[0]
     num_boxes = boxes.shape[0]
     num_tests = loc_noises.shape[1]
     box_corners = box_np_ops.box2d_to_corner_jit(boxes)

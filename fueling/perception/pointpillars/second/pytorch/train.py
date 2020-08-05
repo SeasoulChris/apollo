@@ -1,22 +1,16 @@
-import copy
 import json
-import os
 from pathlib import Path
 import pickle
-import shutil
 import time
 import re
+
 import numpy as np
 import torch
 from google.protobuf import text_format
 
-import fueling.perception.pointpillars.second.data.kitti_common as kitti
 from fueling.perception.pointpillars.torchplus.train.checkpoint import (
-    latest_checkpoint, restore, restore_latest_checkpoints,
-    restore_models, save, save_models, try_restore_latest_checkpoints)
-
+    restore, save_models, try_restore_latest_checkpoints)
 from fueling.perception.pointpillars.second.builder import target_assigner_builder, voxel_builder
-from fueling.perception.pointpillars.second.core import box_np_ops
 from fueling.perception.pointpillars.second.data.preprocess import (
     merge_second_batch, merge_second_batch_multigpu)
 from fueling.perception.pointpillars.second.protos import pipeline_pb2
@@ -317,7 +311,7 @@ def train(config_path,
                 cls_pos_loss = ret_dict["cls_pos_loss"].mean()
                 cls_neg_loss = ret_dict["cls_neg_loss"].mean()
                 loc_loss = ret_dict["loc_loss"]
-                cls_loss = ret_dict["cls_loss"]
+                # cls_loss = ret_dict["cls_loss"]
 
                 cared = ret_dict["cared"]
                 labels = example_torch["labels"]
@@ -568,9 +562,9 @@ def helper_tune_target_assigner(config_path, target_rate=None,
         proto_str = text_format.MessageToString(config, indent=2)
 
     input_cfg = config.train_input_reader
-    eval_input_cfg = config.eval_input_reader
+    # eval_input_cfg = config.eval_input_reader
     model_cfg = config.model.second
-    train_cfg = config.train_config
+    # train_cfg = config.train_config
 
     net = build_network(model_cfg, False)
     # if train_cfg.enable_mixed_precision:

@@ -12,7 +12,6 @@ import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
-import fueling.profiling.common.sanity_check as sanity_check
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 
 # Message number in each segment
@@ -163,7 +162,7 @@ def extract_data_at_multi_channels(msgs, flags, driving_mode,
     if flags['ctl_metrics_filter_by_MRAC']:
         MRAC_condition = (control_mtx_rtn[:, FEATURE_IDX['steer_mrac_enable_status']] != 1)
         control_mtx_rtn = np.delete(control_mtx_rtn, np.where(MRAC_condition)[0], axis=0)
-        logging.info(F'Control channel messages with MRAC off are filtered out')
+        logging.info('Control channel messages with MRAC off are filtered out')
 
     # Fifth, delete the control data with inverted-sequence chassis and localization sequence_num
     # (in very rare cases, the sequence number in control record is like ... 100, 102, 101, 103 ...)

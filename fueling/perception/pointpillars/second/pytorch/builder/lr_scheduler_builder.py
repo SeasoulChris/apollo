@@ -16,7 +16,6 @@
 """Functions to build DetectionModel training optimizers."""
 
 from fueling.perception.pointpillars.torchplus.train import learning_schedules_fastai as lsf
-import torch
 
 
 def build(optimizer_config, optimizer, total_step):

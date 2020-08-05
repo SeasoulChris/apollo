@@ -5,7 +5,7 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pyqtgraph.opengl as gl
-from mpl_toolkits.mplot3d.art3d import Line3DCollection, Poly3DCollection
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 from pyqtgraph.Qt import QtCore, QtGui
 import cv2
@@ -94,7 +94,7 @@ def draw_bbox_in_ax(ax,
             alpha=alpha)
         ax.add_patch(rect_p)
         if label is not None:
-            t = ax.text(
+            ax.text(
                 bbox[0],
                 bbox[1],
                 label,

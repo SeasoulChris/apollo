@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
+import os
+
 import cv2 as cv
-import numpy as np
-import math
 import torch
-from torch.utils.data import Dataset, DataLoader
-from semantic_map_single_image_model import *
-from semantic_map_single_image_dataset import *
+from torch.utils.data import DataLoader
+from semantic_map_single_image_model import TrajectoryPredictionSingle
+from semantic_map_single_image_dataset import (
+    ApolloSinglePredictionTrajectoryDataset,
+    custom_collate,
+)
 
 
 #########################################################

@@ -1,6 +1,5 @@
 import time
 from enum import Enum
-from functools import reduce
 import contextlib
 import numpy as np
 import torch
@@ -10,11 +9,10 @@ from torch.nn import functional as F
 from fueling.perception.pointpillars.torchplus.nn.functional import one_hot
 from fueling.perception.pointpillars.second.pytorch.core import box_torch_ops
 from fueling.perception.pointpillars.second.pytorch.core.losses import (
-    WeightedSigmoidClassificationLoss,
     WeightedSmoothL1LocalizationLoss,
     WeightedSoftmaxClassificationLoss)
 from fueling.perception.pointpillars.second.pytorch.models import (
-    middle, pointpillars, rpn, voxel_encoder)
+    middle, rpn, voxel_encoder)
 from fueling.perception.pointpillars.torchplus import metrics
 
 
@@ -406,7 +404,7 @@ class VoxelNet(nn.Module):
         else:
             batch_anchors_mask = example["anchors_mask"].view(batch_size, -1)
 
-        t = time.time()
+        # t = time.time()
         batch_box_preds = preds_dict["box_preds"]
         batch_cls_preds = preds_dict["cls_preds"]
         batch_box_preds = batch_box_preds.view(batch_size, -1,
@@ -615,7 +613,7 @@ class VoxelNet(nn.Module):
                             box_preds.dtype)
                 final_box_preds = box_preds
                 final_scores = scores
-                final_labels = label_preds
+                # final_labels = label_preds
                 if post_center_range is not None:
                     mask = (final_box_preds[:, :3] >= post_center_range[:3]).all(1)
                     mask &= (final_box_preds[:, :3] <= post_center_range[3:]).all(1)

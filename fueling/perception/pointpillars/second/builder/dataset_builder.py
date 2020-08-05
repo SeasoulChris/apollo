@@ -31,9 +31,6 @@ from fueling.perception.pointpillars.second.builder import dbsampler_builder
 from functools import partial
 from fueling.perception.pointpillars.second.utils.config_tool import get_downsample_factor
 
-import fueling.perception.pointpillars.second.data.kitti_dataset
-import fueling.perception.pointpillars.second.data.nuscenes_dataset
-
 
 def build(input_reader_config,
           model_config,
@@ -61,7 +58,7 @@ def build(input_reader_config,
     num_point_features = model_config.num_point_features
     out_size_factor = get_downsample_factor(model_config)
     assert out_size_factor > 0
-    cfg = input_reader_config
+    # cfg = input_reader_config
     db_sampler_cfg = prep_cfg.database_sampler
     db_sampler = None
     if len(db_sampler_cfg.sample_groups) > 0 or db_sampler_cfg.database_info_path != "":

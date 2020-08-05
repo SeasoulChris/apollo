@@ -1,7 +1,5 @@
-import numpy as np
-
 from fueling.perception.pointpillars.second.core.target_assigner import TargetAssigner
-from fueling.perception.pointpillars.second.protos import target_pb2, anchors_pb2
+from fueling.perception.pointpillars.second.protos import target_pb2
 from fueling.perception.pointpillars.second.builder import similarity_calculator_builder
 from fueling.perception.pointpillars.second.builder import anchor_generator_builder
 

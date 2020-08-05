@@ -1,16 +1,12 @@
-import glob
-import os
-
-import cv2 as cv
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset
-from torchvision import models
-from torchvision import transforms
+from torch import Tensor
 
-from fueling.learning.network_utils import *
-from fueling.learning.train_utils import *
-from fueling.learning.backbone import *
+from fueling.learning.network_utils import clip_boxes
+from fueling.learning.backbone import resbackbone1
+
+
+List = list  # Comfort pyflakes
 
 
 class Flatten(nn.Module):
@@ -21,7 +17,7 @@ class Flatten(nn.Module):
 class TrajectoryPredictionSingleLoss():
     def loss_fn(self, y_pred, y_true, epoch=None):
         loss_func = nn.MSELoss(reduction='none')
-        n = y_pred.shape[0]
+        # n = y_pred.shape[0]
         topk = 1
         y_true_tensor = torch.cat(y_true)
         loss = torch.sum(torch.sum(loss_func(y_pred, y_true_tensor), 2), 1)
@@ -37,7 +33,7 @@ class TrajectoryPredictionSingleLoss():
             return torch.mean(valid_loss)
 
     def loss_info(self, y_pred, y_true):
-        n = y_pred.shape[0]
+        # n = y_pred.shape[0]
         out = y_pred - torch.cat(y_true)
         out = torch.sqrt(torch.sum(out ** 2, 2))
         out = torch.mean(out)
@@ -116,7 +112,7 @@ class TrajectoryPredictionSingle(nn.Module):
             img = data[0]
             channel, height, width = img.shape
             obs_pos_rel = data[1]
-            ref_pos = data[2]
+            # ref_pos = data[2]
             rois = data[3].data.cpu()
             scale_factor = data[4].data.cpu()
 

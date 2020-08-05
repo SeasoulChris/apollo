@@ -1,6 +1,5 @@
 import pickle
 
-import fueling.perception.pointpillars.second.core.preprocess as prep
 from fueling.perception.pointpillars.second.builder import preprocess_builder
 from fueling.perception.pointpillars.second.core.preprocess import DataBasePreprocessor
 from fueling.perception.pointpillars.second.core.sample_ops import DataBaseSamplerV2

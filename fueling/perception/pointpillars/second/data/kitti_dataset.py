@@ -1,12 +1,9 @@
 from pathlib import Path
 import pickle
-import time
-from functools import partial
 
 import numpy as np
 
 from fueling.perception.pointpillars.second.core import box_np_ops
-from fueling.perception.pointpillars.second.core import preprocess as prep
 from fueling.perception.pointpillars.second.data import kitti_common as kitti
 from fueling.perception.pointpillars.second.utils.eval import (
     get_coco_eval_result, get_official_eval_result)
@@ -39,13 +36,13 @@ class KittiDataset(Dataset):
 
     def convert_detection_to_kitti_annos(self, detection):
         class_names = self._class_names
-        det_image_idxes = [det["metadata"]["image_idx"] for det in detection]
-        gt_image_idxes = [
-            info["image"]["image_idx"] for info in self._kitti_infos
-        ]
+        # det_image_idxes = [det["metadata"]["image_idx"] for det in detection]
+        # gt_image_idxes = [
+        #     info["image"]["image_idx"] for info in self._kitti_infos
+        # ]
         annos = []
         for i in range(len(detection)):
-            det_idx = det_image_idxes[i]
+            # det_idx = det_image_idxes[i]
             det = detection[i]
             # info = self._kitti_infos[gt_image_idxes.index(det_idx)]
             info = self._kitti_infos[i]

@@ -1,12 +1,9 @@
-import time
-
 import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
 
-from fueling.perception.pointpillars.torchplus.nn.modules.common import Empty, Sequential
-from fueling.perception.pointpillars.torchplus.nn.modules.normalization import GroupNorm
+from fueling.perception.pointpillars.torchplus.nn.modules.common import Empty
 from fueling.perception.pointpillars.torchplus.tools import change_default_args
 
 REGISTERED_VFE_CLASSES = {}

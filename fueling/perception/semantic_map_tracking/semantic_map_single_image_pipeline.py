@@ -1,13 +1,20 @@
 #!/usr/bin/env python
 
 import argparse
+import os
+
 import cv2 as cv
 import torch
 
-from fueling.common.learning.train_utils import *
-from fueling.common.learning.loss_utils import *
-from semantic_map_single_image_dataset import *
-from semantic_map_single_image_model import *
+from fueling.common.learning.train_utils import train_valid_dataloader
+from semantic_map_single_image_dataset import (
+    ApolloSinglePredictionTrajectoryDataset,
+    custom_collate,
+)
+from semantic_map_single_image_model import (
+    TrajectoryPredictionSingleLoss,
+    TrajectoryPredictionSingle,
+)
 
 
 # for documentation: http://wiki.baidu.com/display/AutoDrive/semantic+map+object+tracking

@@ -1,5 +1,4 @@
 import multiprocessing
-import os
 import re
 import subprocess
 from concurrent.futures import ProcessPoolExecutor

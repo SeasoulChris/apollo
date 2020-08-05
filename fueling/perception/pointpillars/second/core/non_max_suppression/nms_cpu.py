@@ -1,9 +1,6 @@
-import math
-from pathlib import Path
 import numba
 import numpy as np
 from fueling.perception.pointpillars.second.core import box_np_ops
-from fueling.perception.pointpillars.second.utils.buildtools.pybind11_build import load_pb11
 from perception_pointpillars.nms import (
     non_max_suppression_cpu, rotate_non_max_suppression_cpu)
 '''
@@ -126,7 +123,7 @@ def soft_nms_jit(boxes, sigma=0.5, Nt=0.3, threshold=0.001, method=0):
             y1 = boxes[pos, 1]
             x2 = boxes[pos, 2]
             y2 = boxes[pos, 3]
-            s = boxes[pos, 4]
+            # s = boxes[pos, 4]
 
             area = (x2 - x1 + 1) * (y2 - y1 + 1)
             iw = (min(tx2, x2) - max(tx1, x1) + 1)

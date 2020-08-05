@@ -1,9 +1,6 @@
-import time
-
 import numpy as np
 import torch
 from torch import nn
-from torch.nn import functional as F
 from torchvision.models import resnet
 
 from fueling.perception.pointpillars.torchplus.nn.modules.common import Empty, Sequential
@@ -480,12 +477,12 @@ class RPNV2(RPNBase):
                 BatchNorm2d = change_default_args(
                     eps=1e-3, momentum=0.01)(nn.BatchNorm2d)
             Conv2d = change_default_args(bias=False)(nn.Conv2d)
-            ConvTranspose2d = change_default_args(bias=False)(
+            _ = change_default_args(bias=False)(
                 nn.ConvTranspose2d)
         else:
             BatchNorm2d = Empty
             Conv2d = change_default_args(bias=True)(nn.Conv2d)
-            ConvTranspose2d = change_default_args(bias=True)(
+            _ = change_default_args(bias=True)(
                 nn.ConvTranspose2d)
 
         block = Sequential(
@@ -513,12 +510,12 @@ class RPNNoHead(RPNNoHeadBase):
                 BatchNorm2d = change_default_args(
                     eps=1e-3, momentum=0.01)(nn.BatchNorm2d)
             Conv2d = change_default_args(bias=False)(nn.Conv2d)
-            ConvTranspose2d = change_default_args(bias=False)(
+            _ = change_default_args(bias=False)(
                 nn.ConvTranspose2d)
         else:
             BatchNorm2d = Empty
             Conv2d = change_default_args(bias=True)(nn.Conv2d)
-            ConvTranspose2d = change_default_args(bias=True)(
+            _ = change_default_args(bias=True)(
                 nn.ConvTranspose2d)
 
         block = Sequential(

@@ -7,10 +7,8 @@ Run with:
 """
 
 from absl import flags
-from absl.testing import absltest
 import os
 import shutil
-import warnings
 
 from fueling.common.base_pipeline import BasePipelineTest
 import fueling.common.file_utils as file_utils

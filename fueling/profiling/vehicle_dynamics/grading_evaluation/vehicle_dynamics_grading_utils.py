@@ -2,9 +2,7 @@
 """ Control performance grading related utils. """
 
 from collections import namedtuple
-import math
 import numpy as np
-import os
 
 from fueling.profiling.conf.control_channel_conf import DYNAMICS_FEATURE_IDX
 import fueling.common.h5_utils as h5_utils

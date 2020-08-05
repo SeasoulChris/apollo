@@ -8,7 +8,6 @@ import h5py
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -79,7 +78,7 @@ def plot_features_vs_time(data_plot_x, data_plot_y, label_plot, features, title_
 
 def plot_feature_vs_feature(data_plot_x, data_plot_y, label_plot, features, title_addon):
     """ control feature y v.s. feature x """
-    if len(features) is not 2:
+    if len(features) != 2:
         logging.warning('The input feature size is not 2,'
                         'which does not match the default setting for feature_vs_feature plots')
         return
@@ -175,7 +174,7 @@ def plot_h5_features_per_scenario(data_list):
                          ["pose_position_x", "pose_position_y"]]
         for features in plot_features:
             # Input feature size must be 2 for feature v.s. feature plotting
-            if len(features) is not 2:
+            if len(features) != 2:
                 continue
             title_addon = str(len(data)) + " test cases"
             data_plot_x = [array[:, FEATURE_IDX[features[0]]] for array in data]

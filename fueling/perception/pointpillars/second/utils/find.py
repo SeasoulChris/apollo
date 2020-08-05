@@ -124,7 +124,7 @@ def find_cuda_device_arch():
         find_work_arch = False
         while arch_int > 10:
             try:
-                res = subprocess.check_output(
+                subprocess.check_output(
                     "nvcc -arch=sm_{}".format(arch_int),
                     shell=True,
                     stderr=subprocess.STDOUT)

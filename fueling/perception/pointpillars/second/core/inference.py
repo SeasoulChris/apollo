@@ -26,7 +26,7 @@ class InferenceContext:
         assert self.config is not None
         assert self.built is True
         kitti.convert_to_kitti_info_version2(info)
-        pc_info = info["point_cloud"]
+        # pc_info = info["point_cloud"]
         image_info = info["image"]
         calib = info["calib"]
 

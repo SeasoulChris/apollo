@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import operator
 import os
 import shutil
 
@@ -11,7 +10,6 @@ import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.spark_helper as spark_helper
 import fueling.common.spark_op as spark_op
-import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.profiling.control.feature_extraction.multi_job_control_feature_extraction_utils \
     as feature_utils
 
@@ -123,7 +121,7 @@ class ReorgSmallRecordsByVehicle(BasePipeline):
         dir_vehicle_rdd.foreach(lambda path: shutil.copytree(path[0], path[1]))
 
         # 3. Add REORG TAG
-        source_dir_rdd = spark_helper.cache_and_log(
+        spark_helper.cache_and_log(
             'dir_vehicle_rdd',
             dir_vehicle_rdd
             # RDD source_dir

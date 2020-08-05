@@ -2,13 +2,10 @@
 
 """ Extracting features and grading the vehicle dynamic"""
 
-from collections import namedtuple
 import glob
 import os
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.email_utils as email_utils
-import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.common.spark_helper as spark_helper

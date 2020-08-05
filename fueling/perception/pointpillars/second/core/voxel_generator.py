@@ -1,7 +1,5 @@
 
 import numpy as np
-from pathlib import Path
-from fueling.perception.pointpillars.second.utils.buildtools.pybind11_build import load_pb11
 
 from perception_pointpillars.point2voxel import (
     points_to_voxel_3d_np,
@@ -183,7 +181,7 @@ class VoxelGenerator:
         voxels = res["voxels"]
         coors = res["coordinates"]
         num_points_per_voxel = res["num_points_per_voxel"]
-        voxel_num = res["voxel_num"]
+        # voxel_num = res["voxel_num"]
         return (voxels, coors, num_points_per_voxel)
 
     @property

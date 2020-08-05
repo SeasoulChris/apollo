@@ -4,12 +4,8 @@ from pathlib import Path
 import numpy as np
 
 from fueling.perception.pointpillars.second.core import box_np_ops
-from fueling.perception.pointpillars.second.data.dataset import Dataset, get_dataset_class
-from fueling.perception.pointpillars.second.data.kitti_dataset import KittiDataset
-import fueling.perception.pointpillars.second.data.nuscenes_dataset as nuds
+from fueling.perception.pointpillars.second.data.dataset import get_dataset_class
 from fueling.perception.pointpillars.second.utils.progress_bar import progress_bar_iter as prog_bar
-
-from concurrent.futures import ProcessPoolExecutor
 
 
 def create_groundtruth_database(dataset_class_name,
@@ -127,6 +123,7 @@ def create_groundtruth_database_parallel(dataset_class_name,
     database_save_path.mkdir(parents=True, exist_ok=True)
     all_db_infos = {}
 
+    group_counter = 0
     for j in prog_bar(list(range(len(dataset)))):
         image_idx = j
         sensor_data = dataset.get_sensor_data(j)

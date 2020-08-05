@@ -2,8 +2,7 @@
 # some functions should be only used for KITTI dataset.
 
 from google.protobuf import text_format
-from fueling.perception.pointpillars.second.protos import pipeline_pb2, second_pb2
-from pathlib import Path
+from fueling.perception.pointpillars.second.protos import pipeline_pb2
 import numpy as np
 
 

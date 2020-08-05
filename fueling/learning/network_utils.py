@@ -8,6 +8,9 @@ import torch
 import torch.nn as nn
 
 
+Tuple = tuple  # Comfort pyflakes
+
+
 def generate_cnn1d(dim_list):
     return
 

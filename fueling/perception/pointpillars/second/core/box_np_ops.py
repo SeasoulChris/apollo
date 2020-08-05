@@ -1,9 +1,5 @@
-from pathlib import Path
-
 import numba
 import numpy as np
-
-from fueling.perception.pointpillars.second.utils.buildtools.pybind11_build import load_pb11
 
 from fueling.perception.pointpillars.second.core.geometry import (
     points_in_convex_polygon_3d_jit, points_count_convex_polygon_3d_jit)
@@ -990,7 +986,7 @@ def distance_similarity(points,
 
 
 def box3d_to_bbox(box3d, rect, Trv2c, P2):
-    box3d_to_cam = box_lidar_to_camera(box3d, rect, Trv2c)
+    _ = box_lidar_to_camera(box3d, rect, Trv2c)
     box_corners = center_to_corner_box3d(
         box3d[:, :3], box3d[:, 3:6], box3d[:, 6], [0.5, 1.0, 0.5], axis=1)
     box_corners_in_image = project_to_image(box_corners, P2)

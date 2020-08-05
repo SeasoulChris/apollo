@@ -12,9 +12,7 @@ from fueling.perception.pointpillars.second.pytorch.models.voxel_encoder import 
     get_paddings_indicator, register_vfe)
 from fueling.perception.pointpillars.second.pytorch.models.middle import register_middle
 from fueling.perception.pointpillars.torchplus.nn.modules.common import Empty
-
 from fueling.perception.pointpillars.torchplus.tools import change_default_args
-import numpy as np
 
 
 class PFNLayer(nn.Module):
@@ -122,7 +120,7 @@ class PillarFeatureNetOld(nn.Module):
         self.y_offset = self.vy / 2 + pc_range[1]
 
     def forward(self, features, num_voxels, coors):
-        device = features.device
+        # device = features.device
 
         dtype = features.dtype
         # Find distance of x, y, and z from cluster center
@@ -210,7 +208,7 @@ class PillarFeatureNet(nn.Module):
         self.y_offset = self.vy / 2 + pc_range[1]
 
     def forward(self, features, num_voxels, coors):
-        device = features.device
+        # device = features.device
 
         dtype = features.dtype
         # Find distance of x, y, and z from cluster center
@@ -308,7 +306,7 @@ class PillarFeatureNetRadius(nn.Module):
         self.y_offset = self.vy / 2 + pc_range[1]
 
     def forward(self, features, num_voxels, coors):
-        device = features.device
+        # device = features.device
 
         dtype = features.dtype
         # Find distance of x, y, and z from cluster center
@@ -398,7 +396,7 @@ class PillarFeatureNetRadiusHeight(nn.Module):
         self.y_offset = self.vy / 2 + pc_range[1]
 
     def forward(self, features, num_voxels, coors):
-        device = features.device
+        # device = features.device
 
         dtype = features.dtype
         # Find distance of x, y, and z from cluster center

@@ -20,7 +20,6 @@ import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.common.spark_helper as spark_helper
 import fueling.common.spark_op as spark_op
-import fueling.profiling.common.dir_utils as dir_utils
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.profiling.control.feature_extraction.multi_job_control_feature_extraction_utils \
     as feature_utils
@@ -136,7 +135,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             #   Exit with error emails if doesn't pass the sanity check
             sanity_status = sanity_check(origin_dir,
                                          feature_utils.CONF_FILE, feature_utils.CHANNELS)
-            if sanity_status is 'OK':
+            if sanity_status == 'OK':
                 logging.info('Sanity_Check: Passed.')
             else:
                 logging.error(sanity_status)

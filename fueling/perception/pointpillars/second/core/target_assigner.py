@@ -1,9 +1,7 @@
 import numpy as np
 from collections import OrderedDict
 
-from fueling.perception.pointpillars.second.core import box_np_ops, region_similarity
 from fueling.perception.pointpillars.second.core.target_ops import create_target_np
-from fueling.perception.pointpillars.second.utils.timer import simple_timer
 
 
 class TargetAssigner:
@@ -115,7 +113,7 @@ class TargetAssigner:
 
             mask = np.array([c == class_name for c in gt_names],
                             dtype=np.bool_)
-            feature_map_size = anchor_dict["anchors"].shape[:3]
+            # feature_map_size = anchor_dict["anchors"].shape[:3]
             num_loc = anchor_dict["anchors"].shape[-2]
             if anchors_mask is not None:
                 anchors_mask = anchors_mask.reshape(-1)
@@ -210,7 +208,7 @@ class TargetAssigner:
 
     def generate_anchors_dict(self, feature_map_size):
         ndim = len(feature_map_size)
-        anchors_list = []
+        # anchors_list = []
         matched_thresholds = [
             a.match_threshold for a in self._anchor_generators
         ]

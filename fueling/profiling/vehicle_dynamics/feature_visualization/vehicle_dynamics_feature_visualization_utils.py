@@ -169,19 +169,19 @@ def plot_h5_features_time(data_rdd):
         data = data[np.argsort(data[:, DYNAMICS_FEATURE_IDX["timestamp_sec"]])]
         plot_features = ["throttle", "brake", "steering", "acceleration"]
         for feature in plot_features:
-            if feature is "throttle":
+            if feature == "throttle":
                 slope_y = 1.0
                 bias_y = 0.0
                 delay_frame = 0
-            elif feature is "brake":
+            elif feature == "brake":
                 slope_y = 1.0
                 bias_y = 0.0
                 delay_frame = 0
-            elif feature is "steering":
+            elif feature == "steering":
                 slope_y = 1.0
                 bias_y = 0.0
                 delay_frame = 0
-            elif feature is "acceleration":
+            elif feature == "acceleration":
                 slope_y = 1.0
                 bias_y = 0.0
                 delay_frame = 0
@@ -191,7 +191,7 @@ def plot_h5_features_time(data_rdd):
                             - data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[:, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]]
                             - data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            if feature is "steering" or feature is "acceleration":
+            if feature == "steering" or feature == "acceleration":
                 data_plot_y0 = (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]] - bias_y) / slope_y
             else:
                 data_plot_y0 = np.maximum(0, (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
@@ -220,7 +220,7 @@ def plot_h5_features_time(data_rdd):
                             - data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]]
                             - data[0 - delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            if feature is "steering" or feature is "acceleration":
+            if feature == "steering" or feature == "acceleration":
                 data_plot_y0 = (data[0:-1 + delay_frame, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
                                 - bias_y) / slope_y
             else:
@@ -243,7 +243,7 @@ def plot_h5_features_time(data_rdd):
             plt.close()
             # Scaled data by fitting the data curve
             title_addon = "scaled data"
-            if feature is "steering" or feature is "acceleration":
+            if feature == "steering" or feature == "acceleration":
                 data_plot_y0 = data_plot_y0 * var_polyfit[0] + var_polyfit[1]
             else:
                 data_plot_y0[data_alivezone_y0] = np.maximum(0.0, data_plot_y0[data_alivezone_y0]
@@ -284,14 +284,14 @@ def plot_h5_features_freq(data_rdd):
         data = data[np.argsort(data[:, DYNAMICS_FEATURE_IDX["timestamp_sec"]])]
         plot_features = ["acceleration", "steering", ]
         for feature in plot_features:
-            if feature is "throttle":
+            if feature == "throttle":
                 slope_y = 1.0
                 bias_y = 0.0
-                delay_frame = 0
-            elif feature is "acceleration":
+                # delay_frame = 0
+            elif feature == "acceleration":
                 slope_y = 1.0
                 bias_y = 0.0
-                delay_frame = 0
+                # delay_frame = 0
             # Raw data plots and analysis
             title_addon = "raw data"
             data_plot_x0 = (data[:, DYNAMICS_FEATURE_IDX["timestamp_sec"]]

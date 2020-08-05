@@ -162,7 +162,7 @@ def points_in_convex_polygon_3d_jit(points,
         [num_points, num_polygon] bool array.
     """
     max_num_surfaces, max_num_points_of_surface = polygon_surfaces.shape[1:3]
-    num_points = points.shape[0]
+    # num_points = points.shape[0]
     num_polygons = polygon_surfaces.shape[0]
     if num_surfaces is None:
         num_surfaces = np.full((num_polygons,), 9999999, dtype=np.int64)
@@ -188,7 +188,7 @@ def points_count_convex_polygon_3d_jit(points,
         [num_polygon] array.
     """
     max_num_surfaces, max_num_points_of_surface = polygon_surfaces.shape[1:3]
-    num_points = points.shape[0]
+    # num_points = points.shape[0]
     num_polygons = polygon_surfaces.shape[0]
     if num_surfaces is None:
         num_surfaces = np.full((num_polygons,), 9999999, dtype=np.int64)
