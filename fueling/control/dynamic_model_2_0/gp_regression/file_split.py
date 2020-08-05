@@ -6,6 +6,7 @@ from random import shuffle
 import argparse
 import os
 import shutil
+import pickle
 
 
 import fueling.common.logging as logging
@@ -21,6 +22,22 @@ class TrainTestFileSplitter():
         self.category_dir_list = None
         self.split_ratio = 0.8
 
+    def get_local_file_list(self, dst_folder):
+        """ get train and test file list """
+        self.category_dir_list = [f.path for f in os.scandir(self.src_dir) if f.is_dir()]
+        logging.info(self.category_dir_list)
+        # loop over each category
+        for category_dir in self.category_dir_list:
+            cur_category = os.path.basename(category_dir)
+            logging.info(f'processing category {cur_category}...')
+            # get all files in all subfolders
+            files = file_utils.list_files_with_suffix(category_dir, '.h5')
+            logging.info(f'files are {len(files)}')
+            file_list = os.path.join(dst_folder, f'{cur_category}.txt')
+            logging.info(file_list)
+            with open(file_list, "wb") as fp:  # Pickling
+                pickle.dump(files, fp)
+
     def get_category_list(self):
         """categorize data files to train-set and test-set"""
         self.category_dir_list = [f.path for f in os.scandir(self.src_dir) if f.is_dir()]
@@ -34,6 +51,16 @@ class TrainTestFileSplitter():
             train_files, test_files = self.get_training_and_testing_sets(files)
             logging.info(f'training files are {len(train_files)}')
             logging.info(f'test files are {len(test_files)}')
+            # dump file list
+            train_file_list = os.path.join(category_dir, 'train_file_list.txt')
+            test_file_list = os.path.join(category_dir, 'test_file_list.txt')
+            with open(train_file_list, "wb") as fp:  # Pickling
+                pickle.dump(files, fp)
+            # with open(train_file_list, "rb") as fp:  # Pickling
+            #     read_file_list = pickle.load(fp)
+            #     print(read_file_list)
+            with open(test_file_list, "wb") as fp:  # Pickling
+                pickle.dump(test_files, fp)
             self.copy_files(train_files, self.src_dir, self.train_dir)
             self.copy_files(test_files, self.src_dir, self.test_dir)
 
@@ -63,4 +90,7 @@ if __name__ == "__main__":
     parser.add_argument('--dst_dir', type=str)
     args = parser.parse_args()
     splitter = TrainTestFileSplitter(args.src_dir, args.dst_dir)
-    splitter.get_category_list()
+    # splitter.get_category_list()
+    splitter.get_local_file_list('/fuel/fueling/data/0708_2/train')
+    splitter.get_local_file_list('/fuel/fueling/data/0708_2/test')
+    # /mnt/bos/modules/control/dynamic_model_2_0/labeled_data/notall-segment100-step15-size8000/2020-07-06-21
