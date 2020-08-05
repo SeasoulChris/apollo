@@ -3,14 +3,15 @@
 import argparse
 
 import torch
+from torch.utils.data import DataLoader
 
-from fueling.learning.train_utils import *
+from fueling.learning.train_utils import train_valid_dataloader
 from fueling.prediction.learning.datasets.apollo_pedestrian_dataset.apollo_pedestrian_dataset \
-    import *
+    import ApolloPedestrianDataset
 from fueling.prediction.learning.models.social_interaction_model.human_trajectory_dataset \
-    import *
+    import HumanTrajectoryDataset, collate_scenes
 from fueling.prediction.learning.models.social_interaction_model.social_interaction_model \
-    import *
+    import SimpleLSTM, ProbablisticTrajectoryLoss
 
 
 if __name__ == "__main__":
@@ -42,8 +43,8 @@ if __name__ == "__main__":
     loss = ProbablisticTrajectoryLoss()
     print(model)
     learning_rate = 3e-4
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, factor=0.3, patience=10, min_lr=1e-9, verbose=True, mode='min')
 
     # CUDA setup:

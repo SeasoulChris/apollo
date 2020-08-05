@@ -4,8 +4,11 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 
-from fueling.learning.network_utils import *
-from fueling.learning.train_utils import *
+from fueling.learning.network_utils import generate_mlp
+
+
+def cuda(x):
+    return x.cuda()
 
 
 class CruiseMLP(nn.Module):
@@ -106,7 +109,7 @@ class LaneAttention(nn.Module):
         lane_features = lane_features.float()
         is_self_lane = is_self_lane.float()
         same_obs_mask = same_obs_mask.float()
-        N = obs_features.size(0)
+        # N = obs_features.size(0)
         M = lane_features.size(0)
 
         # N x 128
@@ -262,7 +265,7 @@ class VehicleDynamicLSTM(nn.Module):
         obs_embed = self.embed(obs_fea.view(N * 20, 8)).view(N, 20, self.embed_size)
 
         # Run through RNN.
-        h0, c0 = self.h0.repeat(1, N, 1), self.c0.repeat(1, N, 1)
+        # h0, c0 = self.h0.repeat(1, N, 1), self.c0.repeat(1, N, 1)
         packed_input = pack_padded_sequence(obs_embed, seq_lengths.cpu(), batch_first=True)
         packed_output, (ht, ct) = self.vehicle_rnn(packed_input)
         # (N x 20 x hidden_size)
@@ -343,7 +346,7 @@ class BackwardLaneLSTM(nn.Module):
         obs_embed = obs_embed.view(M, 20, self.embed_size)
 
         # Run through RNN.
-        h0, c0 = self.h0.repeat(1, M, 1), self.c0.repeat(1, M, 1)
+        # h0, c0 = self.h0.repeat(1, M, 1), self.c0.repeat(1, M, 1)
         packed_input = pack_padded_sequence(obs_embed, seq_lengths.cpu(), batch_first=True)
         packed_output, (ht, ct) = self.vehicle_rnn(packed_input)
         # (M x 20 x hidden_size)
@@ -466,7 +469,7 @@ class AttentionalLaneLSTM(nn.Module):
             output: M x encode_size
         '''
         M = lane_features.size(0)
-        N = obs_encoding.size(0)
+        # N = obs_encoding.size(0)
 
         # Input embedding.
         # (M x 150 x embed_size)
@@ -589,7 +592,7 @@ class DistributionalScoring(nn.Module):
             - lane_encoding: M x lane_enc_size
             - aggregated_info: N x aggr_enc_size
         '''
-        N = obs_encoding.size(0)
+        # N = obs_encoding.size(0)
         M = lane_encoding.size(0)
         out = cuda(torch.zeros(M, 1))
 

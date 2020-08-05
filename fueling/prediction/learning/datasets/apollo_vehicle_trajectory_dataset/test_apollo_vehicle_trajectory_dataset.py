@@ -4,7 +4,7 @@ import cv2 as cv
 import numpy as np
 
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 
 import fueling.prediction.learning.models.semantic_map_model.semantic_map_model \
     as semantic_map_model
@@ -71,7 +71,7 @@ if __name__ == '__main__':
                       '/model_epoch1_valloss8798324149956.923828.pt'}
         model.load_state_dict(torch.load(model_path))
         model.cuda().eval()
-        pred = model.forward(cuda(X))
+        pred = model.forward(X.cuda())
         obs_features = X[1].detach().numpy().reshape(-1)
         lane_features = X[1].detach().numpy().reshape(-1)
         labels = y.numpy().reshape(-1)
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1)
     count = 0
     for i, (X, traj) in enumerate(test_dataloader):
-        img = x[0]
+        img = X[0]
         model = semantic_map_model.SemanticMapSelfAttentionLSTMModel(30, 20)
         model.eval()
         pred = model.forward(X)

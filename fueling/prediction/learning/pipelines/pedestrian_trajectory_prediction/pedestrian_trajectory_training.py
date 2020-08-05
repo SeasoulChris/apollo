@@ -8,7 +8,7 @@ import torch
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
-from fueling.learning.train_utils import *
+from fueling.learning.train_utils import train_valid_dataloader
 from fueling.prediction.learning.pipelines.pedestrian_trajectory_prediction \
     .pedestrian_trajectory_dataset import PedestrianTrajectoryDataset
 from fueling.prediction.learning.models.semantic_map_model.semantic_map_model \
@@ -38,7 +38,7 @@ class PedestrianTraining(BasePipeline):
         logging.info('gpu device count: {}'.format(torch.cuda.device_count()))
 
         # Use gpu0 for training
-        device = torch.device('cuda:0')
+        # device = torch.device('cuda:0')
 
         dataset = PedestrianTrajectoryDataset(train_folder)
         valid_size = dataset.__len__() // 5

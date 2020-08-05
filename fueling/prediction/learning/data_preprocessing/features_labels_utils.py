@@ -4,6 +4,8 @@ import os
 
 import numpy as np
 
+from modules.prediction.proto import offline_features_pb2
+
 
 '''
 Read a single dataforlearn.bin file and output a list of DataForLearning
@@ -12,8 +14,7 @@ that is contained in that file.
 
 
 def LoadDataForLearning(filepath):
-    list_of_data_for_learning = \
-        offline_features_pb2.ListDataForLearning()
+    list_of_data_for_learning = offline_features_pb2.ListDataForLearning()
     with open(filepath, 'rb') as file_in:
         list_of_data_for_learning.ParseFromString(file_in.read())
     return list_of_data_for_learning.data_for_learning

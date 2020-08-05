@@ -1,14 +1,12 @@
 #!/usr/bin/env python
-
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
 from fueling.common.coord_utils import CoordUtils
-# TODO: Avoid import *
-from fueling.learning.loss_utils import *
-from fueling.learning.network_utils import *
+from fueling.learning.network_utils import generate_mlp
 import fueling.common.file_utils as file_utils
 
 
@@ -219,7 +217,7 @@ class lane_scanning_loss:
     def loss_fn(self, y_pred, y_true):
         # TODO(jiacheng): elaborate on this (e.g. consider final displacement error, etc.)
         y_true = y_true.float()
-        return multi_modal_loss(y_pred, y_true)
+        # TODO: Fix: return multi_modal_loss(y_pred, y_true)
 
     def loss_helper(self, y_pred, y_true):
         loss_func = nn.MSELoss(reduction='none')

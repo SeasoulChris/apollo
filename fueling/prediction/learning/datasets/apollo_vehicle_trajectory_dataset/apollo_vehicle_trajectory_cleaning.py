@@ -5,6 +5,7 @@ import glob
 import random
 
 import cv2 as cv
+import numpy as np
 import scipy
 from scipy.signal import filtfilt
 
@@ -121,7 +122,7 @@ def LabelCleaningAndSmoothing(label_dir):
     for label_dict_file in label_dict_file_list:
         label_dict = np.load(label_dict_file, allow_pickle=True).item()
         processed_label_dict = {}
-        idx = 0
+        # idx = 0
         for key, feature_seq in label_dict.items():
             pred_len = 30
             turn_type = LabelCleaningCoarse(feature_seq, pred_len)
@@ -161,7 +162,7 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
         print('Processing {}/{}'.format(file_count, len(label_dict_list)))
         label_dict = np.load(label_dict_name).item()
         cleaned_label_dict = {}
-        idx = 0
+        # idx = 0
         for key, feature_seq in label_dict.items():
             # 1. Only keep pred_len length
             if len(feature_seq) < pred_len:
@@ -230,12 +231,12 @@ def LabelBalance(label_dir, straight_remain_rate=0.25):
     for label_dict_file in label_dict_file_list:
         label_dict = np.load(label_dict_file, allow_pickle=True).item()
         processed_label_dict = {}
-        idx = 0
+        # idx = 0
         for key, feature_seq in label_dict.items():
             pred_len = 30
             turn_type = LabelCleaningCoarse(feature_seq, pred_len)
             if turn_type:
-                select = True
+                # select = True
                 if turn_type == 'straight':
                     chance = random.uniform(0, 1)
                     if chance > straight_remain_rate:
@@ -262,3 +263,4 @@ if __name__ == '__main__':
     # LabelCleaningFine('test',
     #     '/home/jiacheng/work/apollo/data/apollo_vehicle_trajectory_data/labels-future-points-clean')
     # LabelBalance('/home/xukecheng/labels', 0.21)
+    pass

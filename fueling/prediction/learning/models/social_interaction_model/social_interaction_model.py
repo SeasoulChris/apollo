@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
+import numpy as np
 import torch
 import torch.nn as nn
 
-from fueling.learning.train_utils import *
+
+def cuda(x):
+    return x.cuda()
 
 
 class SocialInteraction(nn.Module):
@@ -398,7 +401,7 @@ class SpatialEdgeRNN(nn.Module):
             timestamp_mask: (N x 1)
             same_scene_mask: [0,0,1,1,1,1,2]
         '''
-        N = traj.size(0)
+        # N = traj.size(0)
         all_scene_ids = torch.unique(same_scene_mask.long()).cpu().numpy().tolist()
 
         for scene_id in all_scene_ids:
@@ -485,7 +488,7 @@ class TemporalEdgeRNN(nn.Module):
             traj_rel: (N x 2)
             timestamp_mask: (N x 1)
         '''
-        N = ht_list.size(0)
+        # N = ht_list.size(0)
         timestamp_mask = (ts_mask[:, 0] == 1)
         existing_N = torch.sum(timestamp_mask).item()
 
@@ -654,7 +657,7 @@ class NodeRNN(nn.Module):
             hv_tm1: (N x node_hidden_size)
             ts_mask: (N x 1)
         '''
-        N = Hv_t.size(0)
+        # N = Hv_t.size(0)
         timestamp_mask = (ts_mask[:, 0] == 1)
         existing_N = torch.sum(timestamp_mask).item()
 

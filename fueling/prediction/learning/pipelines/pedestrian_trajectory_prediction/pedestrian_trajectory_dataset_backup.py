@@ -48,7 +48,7 @@ class PedestrianTrajectoryDataset(Dataset):
                 continue
             if len(data_pt[0]) == 0:
                 return True
-            curr = data_pt[0][-1]
+            # curr = data_pt[0][-1]
             curr_x = data_pt[0][-1][1]
             curr_y = data_pt[0][-1][2]
             if self.shifted:
@@ -202,7 +202,7 @@ class PedestrianTrajectoryDataset(Dataset):
         if self.img_transform:
             img = self.img_transform(img)
         all_obs_positions = np.concatenate(self.obs_pos[s_idx:e_idx])
-        all_obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])
+        # all_obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])
 
         # Target obstacle's historical information
         target_obs_hist_size = obs_hist_sizes[predicting_idx]

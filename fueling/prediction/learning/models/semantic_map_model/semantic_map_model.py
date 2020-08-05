@@ -1,22 +1,20 @@
 #!/usr/bin/env python
 
 import glob
+import math
 import os
 
-import math
 import cv2 as cv
+import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.utils.data import Dataset
 from torchvision import models
 from torchvision import transforms
 from torchvision.models.resnet import BasicBlock
 
 from fueling.common.coord_utils import CoordUtils
-from fueling.learning.network_utils import *
-from fueling.learning.train_utils import *
-from fueling.prediction.learning.models.semantic_map_model.self_attention import Self_Attn
+from fueling.learning.network_utils import generate_lstm_states
 from fueling.prediction.learning.models.semantic_map_model.spatial_attention \
     import SpatialAttention2d
 
@@ -25,6 +23,10 @@ from fueling.prediction.learning.models.semantic_map_model.spatial_attention \
 Dataset set-up
 ========================================================================
 '''
+
+
+def cuda(x):
+    return x.cuda()
 
 
 class SemanticMapDataset(Dataset):
@@ -343,7 +345,7 @@ class SemanticMapSelfLSTMEgoAttentionModel(nn.Module):
         img = X[0]
         obs_pos_rel = X[3]
         obs_pos_step = X[4]
-        ego_pos_rel = X[6]
+        # ego_pos_rel = X[6]
         ego_pos_step = X[7]
         N = obs_pos_rel.size(0)
         obs_ht, obs_ct = self.h0.repeat(1, N, 1), self.h0.repeat(1, N, 1)
@@ -440,7 +442,7 @@ class SemanticMapSocialAttentionModel(nn.Module):
         # CNN
         self.cnn = cnn_net(pretrained=pretrained)
         self.cnn_out_size = self.cnn.fc.in_features
-        fc_in_features = self.cnn.fc.in_features
+        # fc_in_features = self.cnn.fc.in_features
         self.cnn = nn.Sequential(*list(self.cnn.children())[:-1])
         self.edge_hidden_size = edge_hidden_size
 
@@ -476,7 +478,7 @@ class SemanticMapSocialAttentionModel(nn.Module):
         observation_len = target_obs_pos_abs.size(1)
         nearby_padding_size = nearby_obs_pos_abs.size(1)
         M = N * nearby_padding_size
-        pred_mask = cuda(torch.ones(N))
+        # pred_mask = cuda(torch.ones(N))
         pred_traj = cuda(torch.zeros(N, self.pred_len, 2))
 
         img_embedding = self.cnn(img)
@@ -493,7 +495,7 @@ class SemanticMapSocialAttentionModel(nn.Module):
 
         Ht = self.nearby_h0.repeat(N, 1)  # (N, edge_hidden_size)
 
-        scores = torch.zeros(N, nearby_padding_size)
+        # scores = torch.zeros(N, nearby_padding_size)
 
         for t in range(1, observation_len + self.pred_len):
             if t < observation_len:
@@ -508,7 +510,7 @@ class SemanticMapSocialAttentionModel(nn.Module):
                 # (N, nearby_padding_size, 2)
                 curr_nearby_obs_pos_abs = nearby_obs_pos_abs[:, :, t, :].float()
                 # (N, nearby_padding_size, 2)
-                curr_nearby_obs_pos_rel = nearby_obs_pos_rel[:, :, t, :].float()
+                # curr_nearby_obs_pos_rel = nearby_obs_pos_rel[:, :, t, :].float()
                 # (N, nearby_padding_size, 2)
                 curr_nearby_obs_pos_step = nearby_obs_pos_step[:, :, t, :].float()
             else:

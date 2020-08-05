@@ -18,8 +18,7 @@ from fueling.learning.train_utils import cuda
 from fueling.planning.datasets.img_in_traj_out_dataset \
     import TrajectoryImitationCNNFCDataset, \
     TrajectoryImitationConvRNNDataset
-from fueling.planning.models.trajectory_imitation.cnn_fc_model import \
-    TrajectoryImitationCNNFC
+from fueling.planning.models.trajectory_imitation.cnn_fc_model import TrajectoryImitationCNNFC
 from fueling.planning.models.trajectory_imitation.cnn_lstm_model import TrajectoryImitationCNNLSTM
 from fueling.planning.models.trajectory_imitation.conv_rnn_model import TrajectoryImitationConvRNN
 from fueling.planning.input_feature_preprocessor.agent_poses_future_img_renderer import \

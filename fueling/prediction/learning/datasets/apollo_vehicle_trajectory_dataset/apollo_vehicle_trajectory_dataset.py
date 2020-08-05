@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 
 import cv2 as cv
 import numpy as np
@@ -255,7 +256,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         self.reference_world_coord = []
         self.same_scene_mask = []
 
-        total_num_cutin_data_pt = 0
+        # total_num_cutin_data_pt = 0
         accumulated_data_pt = 0
 
         # TODO(Hongyi): add the drawing class here.
@@ -420,7 +421,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             if self.img_transform:
                 img = self.img_transform(img)
             all_obs_positions = np.concatenate(self.obs_pos[s_idx:e_idx])
-            all_obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])
+            # all_obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])
 
             # Target obstacle's historical information
             target_obs_hist_size = obs_hist_sizes[predicting_idx]

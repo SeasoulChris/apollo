@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
 import argparse
+import os
 
 import torch
 
-# TODO: Avoid import *
-from fueling.learning.train_utils import *
-from fueling.learning.loss_utils import *
-from learning_algorithms.prediction.datasets.apollo_vehicle_trajectory_dataset \
-    .apollo_vehicle_trajectory_dataset import *
-from learning_algorithms.prediction.models.lane_attention_trajectory_model \
-    .lane_attention_trajectory_model import *
-from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import *
+from fueling.learning.train_utils import train_valid_dataloader
+from fueling.prediction.learning.datasets.apollo_vehicle_trajectory_dataset \
+    .apollo_vehicle_trajectory_dataset import ApolloVehicleTrajectoryDataset
+from fueling.prediction.learning.models.semantic_map_model.semantic_map_model import (
+    SemanticMapLoss,
+    SemanticMapSelfAttentionLSTMModel,
+)
 
 
 if __name__ == "__main__":

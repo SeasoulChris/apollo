@@ -3,14 +3,12 @@
 import numpy as np
 from torch.utils.data import Dataset
 
-from fueling.prediction.learning.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
+from fueling.prediction.learning.datasets.apollo_pedestrian_dataset import data_for_learning_pb2
 import fueling.common.file_utils as file_utils
-import fueling.prediction.learning.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
 
 
 def LoadDataForLearning(filepath):
-    list_of_data_for_learning = (learning_algorithms.datasets.apollo_pedestrian_dataset
-                                 .data_for_learning_pb2.ListDataForLearning())
+    list_of_data_for_learning = data_for_learning_pb2.ListDataForLearning()
     with open(filepath, 'rb') as file_in:
         list_of_data_for_learning.ParseFromString(file_in.read())
     return list_of_data_for_learning.data_for_learning

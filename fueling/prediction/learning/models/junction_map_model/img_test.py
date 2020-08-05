@@ -1,9 +1,12 @@
 #!/usr/bin/env python
-
+import numpy as np
 import torch
+from torch.utils.data import DataLoader
 
-from fueling.learning.train_utils import *
-from fueling.prediction.learning.models.junction_map_model.junction_map_model import *
+from fueling.prediction.learning.models.junction_map_model.junction_map_model import (
+    JunctionMapDataset,
+    JunctionMapModel,
+)
 
 
 # Set-up data-loader

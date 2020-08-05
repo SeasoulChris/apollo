@@ -2,10 +2,15 @@
 
 import argparse
 
+import numpy as np
 import torch
+from sklearn.model_selection import train_test_split
 
-from fueling.learning.train_utils import *
-from fueling.prediction.learning.models.interaction_model.interaction_model import *
+from fueling.learning.train_utils import train_valid_vanilla
+from fueling.prediction.learning.models.interaction_model.interaction_model import (
+    InteractionLoss,
+    InteractionModel,
+)
 
 
 delta = 0.5
@@ -49,8 +54,8 @@ if __name__ == '__main__':
     loss = InteractionLoss()
     learning_rate = 1e-3
 
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, factor=0.3, patience=2, min_lr=1e-8, verbose=True, mode='min')
 
     # CUDA setup:

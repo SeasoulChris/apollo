@@ -3,11 +3,10 @@
 import cv2 as cv
 import numpy as np
 
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 
-from apollo_vehicle_regroad_dataset import ApolloVehicleRegularRoadDataset \
-    as ApolloVehicleRegularRoadDataset
-from apollo_vehicle_regroad_dataset import collate_fn as collate_fn
+from apollo_vehicle_regroad_dataset import ApolloVehicleRegularRoadDataset
+from apollo_vehicle_regroad_dataset import collate_fn
 
 
 def point_to_idx(point_x, point_y):

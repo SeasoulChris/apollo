@@ -3,11 +3,7 @@
 import argparse
 
 import torch
-import torch.nn as nn
-from torchvision import models
 
-from fueling.learning.network_utils import *
-from fueling.learning.train_utils import *
 from fueling.prediction.learning.models.semantic_map_model.semantic_map_model \
     import SemanticMapSelfLSTMModel
 
@@ -18,11 +14,11 @@ def jit_trace_semantic_map_model(torch_model_file, jit_model_file, device):
     model.load_state_dict(torch.load(torch_model_file))
     model.eval()
     X = (torch.ones([1, 3, 224, 224]), torch.ones([1, 20, 2]), torch.ones([1, 20, 2]))
-    y = model.forward(X)
+    _ = model.forward(X)
     if device == 'cpu':
         traced_model = torch.jit.trace(model.cpu(), (X,))
     else:
-        traced_model = torch.jit.trace(model.cuda(), (cuda(X),))
+        traced_model = torch.jit.trace(model.cuda(), (X.cuda(),))
     traced_model.save(jit_model_file)
 
 

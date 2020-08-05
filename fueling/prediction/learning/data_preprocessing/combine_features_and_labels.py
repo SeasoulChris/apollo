@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
 import argparse
+import os
 
-from fueling.prediction.learning.data_preprocessing.features_labels_utils import *
+from fueling.prediction.learning.data_preprocessing.features_labels_utils import (
+    CombineFeaturesAndLabels,
+    MergeCombinedFeaturesAndLabels,
+)
 
 
 if __name__ == "__main__":

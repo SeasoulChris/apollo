@@ -1,6 +1,4 @@
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 # Reference: https://github.com/nashory/DeLF-pytorch/blob/master/train/layers.py

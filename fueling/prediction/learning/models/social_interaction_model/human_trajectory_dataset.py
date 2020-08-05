@@ -163,8 +163,8 @@ def collate_scenes(batch):
     # unzip to form list of np-arrays
     # TODO(jiacheng): set a max. limit in case the collated data exceeds the limit
     #                 of graphics memory of NVIDIA.
-    past_traj, past_traj_rel, pred_traj, pred_traj_rel, past_traj_timestamp_mask, is_predictable
-    = zip(*batch)
+    past_traj, past_traj_rel, pred_traj, pred_traj_rel, past_traj_timestamp_mask, is_predictable = \
+        zip(*batch)
 
     same_scene_mask = [scene.shape[0] for scene in past_traj]
     past_traj = np.concatenate(past_traj)

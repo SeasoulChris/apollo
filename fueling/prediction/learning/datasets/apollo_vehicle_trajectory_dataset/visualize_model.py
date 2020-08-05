@@ -2,12 +2,9 @@
 
 import cv2 as cv
 import numpy as np
-
 import torch
-import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from torchvision import models
-from torchvision import transforms
 
 import fueling.prediction.learning.models.semantic_map_model.semantic_map_model \
     as semantic_map_model

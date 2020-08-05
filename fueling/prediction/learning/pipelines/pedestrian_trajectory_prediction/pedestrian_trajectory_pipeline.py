@@ -1,24 +1,15 @@
 #!/usr/bin/env python
 
 import argparse
-import glob
 import os
 
-import cv2 as cv
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import Dataset
-from torchvision import models
-from torchvision import transforms
 
-from fueling.learning.train_utils import *
-from fueling.learning.loss_utils import *
+from fueling.learning.train_utils import train_valid_dataloader
 from fueling.prediction.learning.pipelines.pedestrian_trajectory_prediction \
     .pedestrian_trajectory_dataset import PedestrianTrajectoryDataset
 from fueling.prediction.learning.models.semantic_map_model.semantic_map_model \
-    import SemanticMapSelfLSTMModel, SemanticMapSelfLSTMEgoAttentionModel, \
-    SemanticMapLoss, WeightedSemanticMapLoss
+    import SemanticMapSelfLSTMModel, WeightedSemanticMapLoss
 
 
 if __name__ == "__main__":

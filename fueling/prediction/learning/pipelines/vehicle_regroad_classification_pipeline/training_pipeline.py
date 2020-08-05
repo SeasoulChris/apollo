@@ -2,14 +2,16 @@
 
 import argparse
 
+from torch.utils.data import DataLoader
 import torch
 
-from fueling.learning.network_utils import *
-from fueling.learning.train_utils import *
+from fueling.learning.train_utils import train_valid_dataloader
 from fueling.prediction.learning.datasets.apollo_vehicle_regroad_dataset \
-    .apollo_vehicle_regroad_dataset import *
-from fueling.prediction.learning.models.lane_attention_model \
-    .lane_attention_model import *
+    .apollo_vehicle_regroad_dataset import ApolloVehicleRegularRoadDataset, collate_fn
+from fueling.prediction.learning.models.lane_attention_model.lane_attention_model import (
+    ClassificationLoss,
+    FastLaneAttention,
+)
 
 
 def train_using_given_model_and_params(model_params, train_file, valid_file):
@@ -28,8 +30,8 @@ def train_using_given_model_and_params(model_params, train_file, valid_file):
     loss = ClassificationLoss()
     print(model)
     learning_rate = 1e-4
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, factor=0.3, patience=3, min_lr=1e-11, verbose=True, mode='min')
 
     # Set-up CUDA

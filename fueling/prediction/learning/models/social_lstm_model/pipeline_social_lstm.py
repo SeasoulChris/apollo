@@ -3,17 +3,22 @@
 import argparse
 
 import torch
+from torch.utils.data import DataLoader
 
-from fueling.learning.train_utils import *
-from fueling.prediction.learning.models.social_lstm_model.social_lstm_model import *
-import fueling.common.file_utils as file_utils
+from fueling.learning.train_utils import train_valid_dataloader
+from fueling.prediction.learning.datasets.public_human_trajectory_dataset.human_trajectory_dataset \
+    import collate_scenes
+from fueling.prediction.learning.models.social_lstm_model.social_lstm_model import (
+    HumanTrajectoryDataset,
+    ProbablisticTrajectoryLoss,
+    SocialLSTM,
+)
 
 
 if __name__ == "__main__":
 
     # data parser:
-    parser = argparse.ArgumentParser(
-        description='social-lstm model training pipeline')
+    parser = argparse.ArgumentParser(description='social-lstm model training pipeline')
 
     parser.add_argument('train_file', type=str, help='training data')
     parser.add_argument('valid_file', type=str, help='validation data')
@@ -39,8 +44,8 @@ if __name__ == "__main__":
     loss = ProbablisticTrajectoryLoss()
     print(model)
     learning_rate = 3e-4
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, factor=0.3, patience=2, min_lr=1e-9, verbose=True, mode='min')
 
     # CUDA setup:

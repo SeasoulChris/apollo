@@ -2,7 +2,7 @@
 
 import argparse
 
-from fueling.prediction.learning.data_preprocessing.features_labels_utils import *
+from fueling.prediction.learning.data_preprocessing.features_labels_utils import MergeDicts
 
 
 if __name__ == "__main__":

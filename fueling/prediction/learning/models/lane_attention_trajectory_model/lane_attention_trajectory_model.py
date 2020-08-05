@@ -1,12 +1,22 @@
 #!/usr/bin/env python
 
+import numpy as np
 import torch
 import torch.nn as nn
 
-from fueling.learning.network_utils import *
-from fueling.learning.train_utils import *
-from fueling.prediction.learning.models.lane_attention_trajectory_model \
-    .coord_conversion_utils import *
+from fueling.learning.network_utils import generate_mlp, generate_lstm_states
+from fueling.prediction.learning.models.lane_attention_trajectory_model.coord_conversion_utils \
+    import (
+        FindClosestLineSegmentFromLineToPoint,
+        ObstacleToLaneRelation,
+        PointToLineProjection,
+        ProjPtToSL,
+        SLToXY,
+    )
+
+
+def cuda(x):
+    return x.cuda()
 
 
 ################################################################################
@@ -741,7 +751,7 @@ class LanePoolingSimple(nn.Module):
             - lane_of_interest_mask: M (sum of it = sum of ts_mask)
         '''
         M = lane_dist.size(0)
-        N = ts_mask.size(0)
+        # N = ts_mask.size(0)
 
         # (M)
         lane_of_interest_mask = cuda(torch.zeros(M))
@@ -792,8 +802,8 @@ class GetAggregatedLaneEnc(nn.Module):
         M = lane_ht.size(0)
         N = torch.unique(same_obstacle_mask).size(0)
 
-        lane_aggr_enc = cuda(torch.zeros(N, self.aggr_enc_size))
-        count = 0
+        # lane_aggr_enc = cuda(torch.zeros(N, self.aggr_enc_size))
+        # count = 0
 
         # (M x N)
         same_obs_mask_repeated = same_obstacle_mask.repeat(1, N).float()

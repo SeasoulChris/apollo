@@ -1,12 +1,12 @@
 #!/usr/bin/env python
+import os
 
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from fueling.prediction.learning.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
+from fueling.prediction.learning.datasets.apollo_pedestrian_dataset import data_for_learning_pb2
 import fueling.common.file_utils as file_utils
-import fueling.prediction.learning.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
 
 
 obs_feature_size = 180
@@ -16,8 +16,7 @@ future_lane_feature_size = 400
 
 
 def LoadDataForLearning(filepath):
-    list_of_data_for_learning = (learning_algorithms.datasets.apollo_pedestrian_dataset
-                                 .data_for_learning_pb2.ListDataForLearning())
+    list_of_data_for_learning = data_for_learning_pb2.ListDataForLearning()
     try:
         with open(filepath, 'rb') as file_in:
             list_of_data_for_learning.ParseFromString(file_in.read())

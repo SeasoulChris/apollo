@@ -7,11 +7,10 @@ from torch.utils.data import Dataset
 from torchvision import models
 from torchvision import transforms
 import cv2 as cv
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from fueling.common.coord_utils import CoordUtils
 
 
 '''

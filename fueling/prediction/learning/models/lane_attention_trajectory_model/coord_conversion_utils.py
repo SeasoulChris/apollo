@@ -3,9 +3,6 @@
 import torch
 import torch.nn as nn
 
-from fueling.learning.network_utils import *
-from fueling.learning.train_utils import *
-
 
 class PointToLineProjection(nn.Module):
     '''Get the projection point from a given point to a given line-segment.
@@ -149,7 +146,7 @@ class ProjPtToSL(nn.Module):
 
         # Get the distance of each lane-pt w.r.t. the 0th one.
         # (N x 150)
-        lane_pt_spacing = cuda(torch.zeros(N, num_lane_pt))
+        lane_pt_spacing = torch.zeros(N, num_lane_pt).cuda()
         lane_pt_spacing[:, 1:] = torch.sqrt(torch.sum(
             (lane_features[:, 1:, :2] - lane_features[:, :-1, :2]) ** 2, 2))
         # (N x 150) The distance of each lane-pt w.r.t. the 0th one.
@@ -197,7 +194,7 @@ class SLToXY(nn.Module):
         num_lane_pt = lane_features.size(1)
         # Get the distance of each lane-pt w.r.t. the 0th one.
         # (N x 150)
-        lane_pt_spacing = cuda(torch.zeros(N, num_lane_pt))
+        lane_pt_spacing = torch.zeros(N, num_lane_pt).cuda()
         lane_pt_spacing[:, 1:] = torch.sqrt(torch.sum(
             (lane_features[:, 1:, :2] - lane_features[:, :-1, :2]) ** 2, 2))
         lane_pt_dist = torch.cumsum(lane_pt_spacing, 1)
@@ -207,9 +204,9 @@ class SLToXY(nn.Module):
         mask_front = (pt_sl[:, 0] < lane_pt_dist[:, 1])
         mask_back = (pt_sl[:, 0] > lane_pt_dist[:, -2])
         mask_middle = (mask_front == 0) * (mask_back == 0)
-        idx_before = cuda(torch.zeros(N))
+        idx_before = torch.zeros(N).cuda()
         if torch.sum(mask_back).long() != 0:
-            idx_before[mask_back] = ((num_lane_pt - 2) * cuda(torch.ones(N)))[mask_back]
+            idx_before[mask_back] = ((num_lane_pt - 2) * torch.ones(N).cuda())[mask_back]
         S = pt_sl[:, 0].view(N, 1)
         S_repeated = S.repeat(1, num_lane_pt)
         # (N x 150)
@@ -263,7 +260,7 @@ class BroadcastObstaclesToLanes(nn.Module):
         '''
         M = same_obs_mask.size(0)
         # (M x 2)
-        repeated_obs_pos = cuda(torch.zeros(M, 2))
+        repeated_obs_pos = torch.zeros(M, 2).cuda()
 
         for obs_id in range(same_obs_mask.max().long().item() + 1):
             curr_mask = (same_obs_mask[:, 0] == obs_id)
@@ -296,7 +293,7 @@ class ObstacleToLaneRelation(nn.Module):
             - projected_points: M x 2
             - idx_before and idx_after: M x 2
         '''
-        N = obs_pos.size(0)
+        # N = obs_pos.size(0)
         M = lane_features.size(0)
         lane_features = lane_features.float()
         # (M x 2)

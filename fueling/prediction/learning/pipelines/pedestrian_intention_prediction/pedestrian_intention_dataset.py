@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 
 import cv2 as cv
-import math
 import numpy as np
-import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from fueling.common.coord_utils import CoordUtils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 from fueling.prediction.common.configure import semantic_map_config
@@ -49,7 +46,7 @@ class PedestrianIntentionDataset(Dataset):
                 continue
             if len(data_pt[0]) == 0:
                 return True
-            curr = data_pt[0][-1]
+            # curr = data_pt[0][-1]
             curr_x = data_pt[0][-1][1]
             curr_y = data_pt[0][-1][2]
             if self.shifted:

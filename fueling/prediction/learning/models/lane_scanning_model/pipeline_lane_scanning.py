@@ -2,11 +2,19 @@
 
 import argparse
 
+import numpy as np
 import torch
+from torch.utils.data import DataLoader
 
-from fueling.learning.train_utils import *
-from fueling.prediction.learning.models.lane_scanning_model.lane_scanning_model import *
+from fueling.learning.train_utils import train_valid_dataloader
+from fueling.prediction.learning.models.lane_scanning_model.lane_scanning_model import (
+    LaneScanningDataset,
+    collate_with_padding,
+    lane_scanning_loss,
+    lane_scanning_model,
+)
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 
 
 cuda_is_available = torch.cuda.is_available()
@@ -64,8 +72,8 @@ if __name__ == "__main__":
     logging.info(model)
     print(model)
     learning_rate = 1e-3
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, factor=0.3, patience=2, min_lr=1e-9, verbose=True, mode='min')
 
     # CUDA setup:

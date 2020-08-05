@@ -3,11 +3,16 @@
 import argparse
 import os
 
+from sklearn.model_selection import train_test_split
 import h5py
 import torch
 
-from fueling.learning.train_utils import *
-from fueling.prediction.learning.models.junction_mlp_model.junction_mlp_model import *
+from fueling.learning.train_utils import train_valid_vanilla
+from fueling.prediction.learning.models.junction_mlp_model.junction_mlp_model import (
+    JunctionMLPModel,
+    JunctionMLPLoss,
+)
+import fueling.common.logging as logging
 
 
 dim_input = 114
@@ -59,8 +64,8 @@ def do_training(source_save_paths):
     model = JunctionMLPModel(dim_input)
     loss = JunctionMLPLoss()
     learning_rate = 1e-3
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, factor=0.3, patience=2, min_lr=1e-8, verbose=True, mode="min")
     epochs = 20
 

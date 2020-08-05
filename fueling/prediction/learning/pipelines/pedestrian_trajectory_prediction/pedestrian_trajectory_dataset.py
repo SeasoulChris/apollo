@@ -49,7 +49,7 @@ class PedestrianTrajectoryDataset(Dataset):
                 continue
             if len(data_pt[0]) == 0:
                 return True
-            curr = data_pt[0][-1]
+            # curr = data_pt[0][-1]
             curr_x = data_pt[0][-1][1]
             curr_y = data_pt[0][-1][2]
             if self.shifted:
@@ -172,7 +172,7 @@ class PedestrianTrajectoryDataset(Dataset):
             #     (curr_history[:, 4:]).reshape([1, curr_obs_hist_size, 20, 2])
             # obs_polygons.append(curr_obs_polygons)
 
-            ego_hist_size = np.ones([1, 1]) * curr_obs_hist_size
+            # ego_hist_size = np.ones([1, 1]) * curr_obs_hist_size
             # ego_polygons = curr_obs_polygons[0]
             ego_pos_abs[curr_hist_start:, :] = curr_history[:, 1:3]
             ego_history = curr_history[:, 1:4]
