@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-import glob
 import os
 import time
-
 
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
@@ -11,17 +9,13 @@ import gpytorch
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import torch.nn as nn
-
 
 from fueling.common import file_utils
 from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config
 from fueling.control.dynamic_model_2_0.conf.model_conf import smoke_test_training_config as config
-from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset import \
     DynamicModelDataset
-from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder, DilatedEncoder
-from fueling.control.dynamic_model_2_0.gp_regression.encoder import TransformerEncoderCNN
+from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 import fueling.common.logging as logging
 

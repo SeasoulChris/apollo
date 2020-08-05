@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-import os
-import sys
-
 from scipy.signal import savgol_filter
 import h5py
 import numpy as np
@@ -76,7 +73,7 @@ def vect_ddiff(vect, dt):
     """
     calculate secondary derivative of a vector
     """
-    pre_ret = vect_differential(vect, dt)
+    _ = vect_differential(vect, dt)
     ret = vect_differential(vect, dt)
     return ret
 

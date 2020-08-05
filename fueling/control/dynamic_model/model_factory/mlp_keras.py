@@ -1,24 +1,15 @@
 #!/usr/bin/env python
 
 from datetime import datetime
-from random import shuffle
-from time import time
-import glob
 import os
 import subprocess
 
-from absl import flags
-from keras.regularizers import l1, l2
-from keras.layers import Dense, Input
-from keras.layers import Activation
-from keras.metrics import mse
-from keras.models import Sequential, Model
-from scipy.signal import savgol_filter
+from keras.regularizers import l2
+from keras.layers import Dense
+from keras.models import Sequential
 from sklearn.model_selection import train_test_split
 from tensorflow.python.client import device_lib
-import google.protobuf.text_format as text_format
 import h5py
-import numpy as np
 import tensorflow as tf
 
 from fueling.control.dynamic_model.conf.model_config import feature_config, mlp_model_config
@@ -42,7 +33,6 @@ if USE_TENSORFLOW:
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
         os.environ["KERAS_BACKEND"] = "tensorflow"
-    from keras.callbacks import TensorBoard
 else:
     os.environ["KERAS_BACKEND"] = "theano"
     if USE_GPU:
@@ -148,8 +138,7 @@ def mlp_keras(x_data, y_data, param_norm, out_dir):
 
     model = setup_model()
     with tf.device('/gpu:0'):
-        training_history = model.fit(x_train, y_train, shuffle=True, nb_epoch=EPOCHS,
-                                     batch_size=32, verbose=2)
+        model.fit(x_train, y_train, shuffle=True, nb_epoch=EPOCHS, batch_size=32, verbose=2)
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
 

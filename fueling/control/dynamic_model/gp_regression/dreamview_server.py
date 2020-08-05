@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 
-import argparse
-import glob
 import os
-import pickle
 
-import numpy as np
 import pyro
 import pyro.contrib.gp as gp
 import torch

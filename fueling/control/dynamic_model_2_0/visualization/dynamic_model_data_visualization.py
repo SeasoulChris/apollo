@@ -4,7 +4,6 @@ import os
 import time
 
 from absl import flags
-import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.h5_utils import read_h5

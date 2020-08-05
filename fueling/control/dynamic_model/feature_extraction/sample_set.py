@@ -11,14 +11,11 @@ from fueling.control.features.feature_extraction_utils import pair_cs_pose
 
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
-import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.spark_helper as spark_helper
 import fueling.common.spark_op as spark_op
 import fueling.common.time_utils as time_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
-import fueling.control.dynamic_model.flag
-import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
@@ -62,8 +59,8 @@ def get_conf_value(msgs):
     speed_max = 0.0
     throttle_max = 0.0  # positive value
     brake_max = 0.0  # positive value
-    speed_min = 30.0
-    acc_min = 0.0  # negative
+    # speed_min = 30.0
+    # acc_min = 0.0  # negative
     acc_max = 0.0
     for msg in msgs:
         chassis, pose_pre = msg

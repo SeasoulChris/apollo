@@ -98,7 +98,7 @@ class ScaledDotProductAttention(nn.Module):
         # and position in the sequence
         k = k.transpose(1, 2)
         score_attn = torch.bmm(q, k)  # (Batch, Seq, Seq)
-        tmp0 = score_attn
+        # tmp0 = score_attn
         # we get an attention score between each position in the sequence for each batch
 
         # STEP 2: Divide by sqrt(Dk)
@@ -381,7 +381,7 @@ class TransformerEncoderCNN(nn.Module):
         """Define forward computation and activation functions"""
         # original data shape: [sequency/window_size, batch_size, channel]
         encoded_data = self.encoder(data)
-        isnan = torch.isnan(encoded_data)
+        # isnan = torch.isnan(encoded_data)
 
         # conv_input shape: [batch_size, channel, sequency/window_size]
         conv1_input = torch.transpose(torch.transpose(encoded_data, -2, -3), -2, -1)

@@ -27,7 +27,6 @@ function LintDir {
       grep -v 'fueling/learning/network_utils.py' | \
       \
       grep -v 'fueling/audio' | \
-      grep -v 'fueling/control/dynamic_model' | \
       grep -v 'fueling/perception/pointpillars' | \
       grep -v 'fueling/perception/semantic_map_tracking' | \
       grep -v 'fueling/planning' | \

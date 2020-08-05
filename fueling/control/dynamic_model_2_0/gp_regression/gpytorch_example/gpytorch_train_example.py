@@ -1,19 +1,12 @@
 #!/usr/bin/env python
 
 from math import floor
-import argparse
-import os
-import time
 
 from torch.utils.data import TensorDataset, DataLoader
-import numpy as np
 import gpytorch
 import torch
 import torch.nn as nn
-import torch.nn.functional as Func
-import pickle
 
-from fueling.control.dynamic_model_2_0.gp_regression.gpytorch_example.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.gpytorch_example.gp_model_example import \
     GPModelExample
 import fueling.common.logging as logging
@@ -113,7 +106,7 @@ def save_gp(model, test_x, jit_file_path):
     '''save to TorchScript'''
     wrapped_model = MeanVarModelWrapper(model)
     with gpytorch.settings.trace_mode(), torch.no_grad():
-        pred = wrapped_model(test_x)  # Compute caches
+        _ = wrapped_model(test_x)  # Compute caches
         traced_model = torch.jit.trace(wrapped_model, test_x)
         logging.info('saving model')
     traced_model.save(jit_file_path)

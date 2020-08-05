@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import os
-
 from matplotlib import cm
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import minmax_scale
@@ -94,7 +92,7 @@ def plot_distribution(axes, X, y, cmap, hist_nbins=50, title="",
     ax.set_ylabel(x1_label)
 
     # The scatter plot
-    colors = cmap(y)
+    # colors = cmap(y)
     ax.scatter(X[:, 0], X[:, 1], alpha=0.5, marker='o', s=5, lw=0)
 
     # Removing the top and the right spine for aesthetics

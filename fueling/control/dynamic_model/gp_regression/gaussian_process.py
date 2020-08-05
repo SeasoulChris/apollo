@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 
 from pyro.contrib.gp.parameterized import Parameterized
-import numpy as np
-import pyro
-import pyro.contrib.gp as gp
-import pyro.infer as infer
-import pyro.optim as optim
 
 # assert pyro.__version__.startswith('1.0.0')
 

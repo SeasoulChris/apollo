@@ -5,7 +5,6 @@ from math import ceil
 from random import shuffle
 import argparse
 import os
-import random
 import shutil
 
 

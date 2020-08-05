@@ -19,8 +19,8 @@ def test_gp(args, dataset, GaussianProcess):
     for sub_dir in os.scandir(args.gp_model_path):
         logging.info("************Loading GP model from {}".format(sub_dir))
         fnet_dict = torch.load(os.path.join(sub_dir, "fnet.p"))
-        lik_dict = torch.load(os.path.join(sub_dir, "likelihood.p"))
-        kernel_dict = torch.load(os.path.join(sub_dir, "kernel.p"))
+        # lik_dict = torch.load(os.path.join(sub_dir, "likelihood.p"))
+        # kernel_dict = torch.load(os.path.join(sub_dir, "kernel.p"))
         gp_dict = torch.load(os.path.join(sub_dir, "gp_f.p"))
 
         deep_encoding_net = Encoder(input_data.shape[2], args.kernel_dim)

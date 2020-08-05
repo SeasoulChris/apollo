@@ -7,12 +7,11 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
-from fueling.common.h5_utils import read_h5, combine_h5_to_npy
+from fueling.common.h5_utils import read_h5
 from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, feature_config
-from fueling.control.dynamic_model_2_0.conf.model_conf import input_index, output_index, imu_scaling
+from fueling.control.dynamic_model_2_0.conf.model_conf import imu_scaling
 from fueling.control.dynamic_model_2_0.label_generation.label_generation import generate_mlp_output
 from fueling.control.utils.echo_lincoln import echo_lincoln_wrapper
-import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
 
@@ -200,8 +199,8 @@ class RawDataVisualization():
     def plot(self, imu_only=True):
         """Plot states during the test run"""
         dataset_name = (os.path.basename(self.data_file)).split('.')[0]
-        dataset_path = os.path.dirname(self.data_file).replace(
-            self.training_data_path, self.plot_path)
+        # dataset_path = os.path.dirname(self.data_file).replace(
+        #     self.training_data_path, self.plot_path)
         if imu_only:
             fig = plt.figure(figsize=(12, 8))
             ax1 = fig.add_subplot(2, 1, 1)
@@ -254,7 +253,7 @@ class RawDataVisualization():
             logging.info(
                 f'Dynamic model 1.0 endpose is [{dm_x[-1]}, {dm_y[-1]}]')
             logging.info(
-                f'End Pose differences between GPS and dynamic model 1.0 is'
+                'End Pose differences between GPS and dynamic model 1.0 is'
                 '[{x_position[-1]-dm_x[-1]}, {y_position[-1]-dm_y[-1]}]')
             plt.plot(x_position - x_position[0], y_position - y_position[0], 'b.', label='GPS')
             plt.plot(imu_x - x_position[0], imu_y - y_position[0], 'r.', label='IMU')

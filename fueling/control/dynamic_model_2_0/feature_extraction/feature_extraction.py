@@ -2,13 +2,9 @@
 
 import os
 
-import numpy as np
-
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model_2_0.feature_extraction.interpolation_message import \
     InterPolationMessage, InterPolationMessageList
-from fueling.control.features.feature_extraction_utils import gen_data_point
-from fueling.control.features.feature_extraction_utils import pair_cs_pose
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
@@ -21,7 +17,7 @@ def serialize_groups(groups):
     """Get a string of groups for debugging"""
     groups_str = ''
     for group in groups:
-        group_str += '{:.9f},'.format(group[-1].chasis_msg.header.timestamp_sec)
+        groups_str += '{:.9f},'.format(group[-1].chasis_msg.header.timestamp_sec)
     return groups_str
 
 

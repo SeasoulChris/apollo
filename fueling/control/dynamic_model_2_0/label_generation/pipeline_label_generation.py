@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import operator
 import os
 import time
 
@@ -8,13 +7,10 @@ import time
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 from absl import flags
-from keras.models import load_model
 import h5py
-import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.control.dynamic_model_2_0.conf.model_conf import \
-    segment_index, feature_config, label_config, input_index, output_index
+from fueling.control.dynamic_model_2_0.conf.model_conf import label_config
 import fueling.common.context_utils as context_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging

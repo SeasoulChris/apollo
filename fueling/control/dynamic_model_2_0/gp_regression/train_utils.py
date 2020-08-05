@@ -83,7 +83,7 @@ def plot_train_loss(train_losses, fig_file_path):
     ax1 = fig.add_subplot(1, 1, 1)
     ax1.set_xlabel('epoch', fontdict={'size': 12})
     ax1.set_ylabel('loss', fontdict={'size': 12})
-    ax1.plot(train_losses, label=f"training loss")
+    ax1.plot(train_losses, label="training loss")
     plt.legend(fontsize=12, numpoints=5, frameon=False)
     plt.title("Training Loss")
     plt.grid(True)

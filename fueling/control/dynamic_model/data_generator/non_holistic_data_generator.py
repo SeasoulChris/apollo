@@ -5,19 +5,15 @@ import sys
 
 from keras.models import load_model
 from scipy import interpolate
-from scipy.signal import savgol_filter
 import h5py
 import numpy as np
 
 from modules.common.configs.proto import vehicle_config_pb2
 import modules.control.proto.control_conf_pb2 as ControlConf
 
-from fueling.control.dynamic_model.conf.model_config import \
-    acc_method, imu_scaling, pose_output_index
+from fueling.control.dynamic_model.conf.model_config import acc_method, imu_scaling
 from fueling.control.dynamic_model.conf.model_config import feature_config, point_mass_config
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
-from fueling.control.dynamic_model.conf.model_config import \
-    holistic_input_index, holistic_output_index
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction

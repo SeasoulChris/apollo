@@ -2,11 +2,6 @@
 
 """Utility functions"""
 
-from pyro.contrib.gp.likelihoods import Likelihood
-from torch.distributions import constraints
-from torch.nn import Parameter
-import pyro
-import pyro.distributions as dist
 import torch
 
 

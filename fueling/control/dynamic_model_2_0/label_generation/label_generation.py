@@ -4,8 +4,6 @@
 import argparse
 import glob
 import os
-import pickle
-import sys
 
 # disable GPU for local test
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"

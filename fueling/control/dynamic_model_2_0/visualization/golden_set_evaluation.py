@@ -1,26 +1,15 @@
 #!/usr/bin/env python
-import glob
 import math
 import os
 import time
 
-
-from matplotlib.collections import PatchCollection
-from matplotlib.patches import Rectangle
 from scipy.spatial import distance
-import gpytorch
-import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import torch.nn as nn
-
 
 from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, imu_scaling
-from fueling.control.dynamic_model_2_0.conf.model_conf import \
-    feature_config, input_index, output_index
-from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
-from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
+from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config, input_index
 from fueling.control.dynamic_model_2_0.visualization.raw_data_visualization import \
     RawDataVisualization
 from fueling.control.dynamic_model_2_0.visualization.validation_visualization import \
@@ -318,7 +307,7 @@ class GoldenSetEvaluation():
     def plot_IMU(self):
         logging.info(self.features.shape)
         fig = plt.figure(figsize=(12, 8))
-        ax1 = fig.add_subplot(2, 1, 1)
+        _ = fig.add_subplot(2, 1, 1)
         plt.xlabel('x (m)', fontdict={'size': 12})
         plt.ylabel('y (m)', fontdict={'size': 12})
         plt.axis('equal')
@@ -341,7 +330,7 @@ class GoldenSetEvaluation():
         plt.legend(fontsize=12, numpoints=5, frameon=False)
         plt.title("Trajectory Comparison")
         plt.grid(True)
-        ax2 = fig.add_subplot(2, 1, 2)
+        _ = fig.add_subplot(2, 1, 2)
         normalized_heading_angle = []
         for heading_angle in self.features[:200, 0]:
             normalized_heading_angle.append(self._normalize_angle(heading_angle))
@@ -438,7 +427,7 @@ if __name__ == '__main__':
     data_dir = '0708_2'
     # model training data normalization factors
     normalization_factor_file_path = os.path.join(
-        platform_dir, data_dir, 'train', standardization_factors.npy)
+        platform_dir, data_dir, 'train/standardization_factors.npy')
 
     validation_data_path = os.path.join(platform_dir, data_dir, 'test')
     logging.info(f'validation data path is {validation_data_path}')

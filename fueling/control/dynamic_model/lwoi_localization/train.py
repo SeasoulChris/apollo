@@ -3,7 +3,6 @@
 """Training models"""
 
 import os
-import time
 
 from liegroups.torch import SE3, SO3
 from pyro.contrib.gp.parameterized import Parameterized
@@ -510,7 +509,6 @@ def train_gp(args, dataset, gp_class):
     svi = infer.SVI(gp_instante.model, gp_instante.guide, optimizer, infer.Trace_ELBO())
 
     print("Start of training " + dataset.name + ", " + gp_class.name)
-    start_time = time.time()
     for epoch in range(1, args.epochs + 1):
         train_loop(dataset, gp_instante, svi, epoch)
         if epoch == 10:

@@ -4,15 +4,11 @@
 import os
 import time
 
-import numpy as np
 import pyro
 import pyro.contrib.gp as gp
 import torch
-import torch.nn as nn
-import torch.nn.functional as Func
 
-from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, feature_config
-from fueling.control.dynamic_model_2_0.conf.model_conf import input_index, output_index
+from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config
 from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
 from fueling.control.dynamic_model_2_0.gp_regression.predict import Predict
 import fueling.common.logging as logging
@@ -43,7 +39,7 @@ def save_gp(args, gp_model, feature, encoder):
     torch.save(gp_model.gp_f.likelihood.state_dict(),
                os.path.join(model_saving_path, "likelihood.p"))
     torch.save(encoder.state_dict(), os.path.join(model_saving_path, "fnet.p"))
-    predict_fn = Predict(gp_model.model, gp_model.guide)
+    Predict(gp_model.model, gp_model.guide)
     encoder_module = torch.jit.trace_module(encoder, {"forward": (feature,)}, check_trace=False)
     torch.jit.save(encoder_module, '/tmp/encoder_module.pt')
 

@@ -4,9 +4,6 @@ import glob
 import os
 import re
 
-import h5py
-import numpy as np
-
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import feature_config
 import fueling.common.logging as logging
@@ -59,7 +56,7 @@ class IMUEvaluation(BasePipeline):
             # PairRDD(driving_scenario, (segment, segment_d, segment_dd))
             .mapValues(feature_extraction.IMU_feature_processing), 1)
 
-        location = spark_helper.cache_and_log(
+        spark_helper.cache_and_log(
             "location",
             results_rdd
             # PairRDD(driving_scenario, (segment, segment_d, segment_dd))

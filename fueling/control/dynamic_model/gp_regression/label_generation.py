@@ -4,8 +4,6 @@
 import argparse
 import glob
 import os
-import pickle
-import sys
 
 from keras.models import load_model
 import h5py

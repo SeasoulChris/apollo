@@ -7,14 +7,8 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 
-from matplotlib.backends.backend_pdf import PdfPages
-import h5py
-import matplotlib.pyplot as plt
-import numpy as np
-
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.spark_helper as spark_helper
-from fueling.control.dynamic_model.conf.model_config import segment_index, input_index
 from fueling.control.dynamic_model.conf.model_config import feature_config
 import fueling.common.logging as logging
 import fueling.control.dynamic_model.data_generator.feature_extraction as data_generator
@@ -65,7 +59,7 @@ class DynamicModelDatasetDistribution(BasePipeline):
             .groupByKey()
             .mapValues(data_generator.generate_segment_from_list))
 
-        plot = spark_helper.cache_and_log(
+        spark_helper.cache_and_log(
             'plots',
             data
             .mapValues(lambda features: multi_vehicle_plot_utils

@@ -6,11 +6,8 @@ import math
 from matplotlib import pyplot as plt
 from sklearn.metrics import mean_squared_error
 import gpytorch
-import numpy as np
 import torch
-import torch.nn as nn
 import torch.utils.data
-import tqdm
 
 from fueling.control.dynamic_model_2_0.gp_regression.encoder import DummyEncoder
 import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_utils

@@ -16,7 +16,8 @@ def launch(args):
         train_gp(args, dataset, GaussianProcess)
     if args.test_gp:
         # test Gaussian process model
-        test_gp(args, dataset, GaussianProcess)
+        pass
+        # test_gp(args, dataset, GaussianProcess)
 
 
 if __name__ == '__main__':

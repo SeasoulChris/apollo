@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import argparse
 import os
-import glob
 
 from matplotlib.patches import Rectangle
 from matplotlib.collections import PatchCollection
@@ -30,8 +29,8 @@ def evaluation(args, dataset, GaussianProcess, data_frame_length=100, is_plot=Fa
     # [batch_size, channel] (window_size = 1)
     labels = torch.transpose(labels, 0, 1)
 
-    input_dim = input_data.shape[-1]
-    batch_size = input_data.shape[-2]
+    # input_dim = input_data.shape[-1]
+    # batch_size = input_data.shape[-2]
     output_dim = gt_data.shape[-1]
 
     logging.debug(f'input data shape is {input_data.shape}')

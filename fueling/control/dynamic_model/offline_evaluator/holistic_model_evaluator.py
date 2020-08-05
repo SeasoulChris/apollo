@@ -3,8 +3,6 @@
 from math import sqrt
 import math
 import os
-import sys
-import time
 
 import matplotlib
 matplotlib.use('Agg')
@@ -17,7 +15,6 @@ import numpy as np
 
 from fueling.control.dynamic_model.conf.model_config import feature_config
 from fueling.control.proto.dynamic_model_evaluation_pb2 import EvaluationResults
-import fueling.common.logging as logging
 import fueling.control.dynamic_model.data_generator.holistic_data_generator as data_generator
 
 # System setup
@@ -29,7 +26,6 @@ if USE_TENSORFLOW:
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
     os.environ["KERAS_BACKEND"] = "tensorflow"
-    from keras.callbacks import TensorBoard
 else:
     os.environ["KERAS_BACKEND"] = "theano"
     if USE_GPU:

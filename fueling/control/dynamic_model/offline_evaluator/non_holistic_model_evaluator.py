@@ -3,8 +3,6 @@
 from math import sqrt
 import math
 import os
-import sys
-import time
 
 import matplotlib
 matplotlib.use('Agg')
@@ -15,10 +13,9 @@ from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-from fueling.control.dynamic_model.conf.model_config import acc_method, imu_scaling
+from fueling.control.dynamic_model.conf.model_config import imu_scaling
 from fueling.control.dynamic_model.conf.model_config import feature_config
-from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
+from fueling.control.dynamic_model.conf.model_config import segment_index
 from fueling.control.proto.dynamic_model_evaluation_pb2 import EvaluationResults
 import fueling.common.logging as logging
 import fueling.control.dynamic_model.data_generator.non_holistic_data_generator as data_generator
@@ -34,7 +31,6 @@ if USE_TENSORFLOW:
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
     os.environ["KERAS_BACKEND"] = "tensorflow"
-    from keras.callbacks import TensorBoard
 else:
     os.environ["KERAS_BACKEND"] = "theano"
     if USE_GPU:
@@ -57,7 +53,7 @@ def heading_angle(scenario_segments, platform_path):
     """ plot heading angles """
     (scenario, (segment_origin, segment_d, segment_dd)) = scenario_segments
     alpha_origin = segment_origin[:, segment_index["heading"]]
-    alpha_integral = np.zeros(alpha_origin.shape)
+    # alpha_integral = np.zeros(alpha_origin.shape)
     segment_d[0, segment_index["heading"]] = segment_origin[0, segment_index["heading"]]
     segment_dd[0, segment_index["heading"]] = segment_origin[0, segment_index["heading"]]
     for index in range(1, segment_d.shape[0]):
@@ -210,7 +206,7 @@ def speed(scenario_segments, platform_path):
         plt.plot(v_d, color="blue", label="Speed_1", linewidth=0.5)
         plt.plot(v_dd, "r--", alpha=ALPHA, label="Speed_2", linewidth=0.3)
         plt.legend()
-        legend = plt.legend(loc='upper right', fontsize='small')
+        plt.legend(loc='upper right', fontsize='small')
         pdf_file.savefig()  # saves the current figure into a pdf page
         plt.close()
 
@@ -253,7 +249,7 @@ def acceleration(scenario_segments, platform_path):
         plt.plot(acc_d, color="blue", label="Acc_1", linewidth=0.5)
         plt.plot(acc_dd, "r--", alpha=ALPHA, label="Acc_2", linewidth=0.3)
         plt.legend()
-        legend = plt.legend(loc='upper right', fontsize='small')
+        plt.legend(loc='upper right', fontsize='small')
         pdf_file.savefig()  # saves the current figure into a pdf page
         plt.close()
 

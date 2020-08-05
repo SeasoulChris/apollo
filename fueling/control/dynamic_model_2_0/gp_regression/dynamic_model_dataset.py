@@ -4,21 +4,16 @@
 
 import os
 
-
-from scipy.signal import savgol_filter
 from torch.utils.data import Dataset
 import h5py
 import numpy as np
 import torch
 
-
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
-
-from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, feature_config
-from fueling.control.dynamic_model_2_0.conf.model_conf import input_index, output_index
+from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config
 from fueling.control.proto.fnn_model_pb2 import GPModelParam
 
 # Default (x,y) residual error correction cycle is 1s;
@@ -188,7 +183,7 @@ class DynamicModelDataset(Dataset):
         input_segment_mean = input_segment_mean / len(self.datasets)
 
         # standard deviation
-        data_length = 0
+        # data_length = 0
 
         input_segment_std = np.zeros((1, INPUT_DIM))
         for i, dataset in enumerate(self.datasets):

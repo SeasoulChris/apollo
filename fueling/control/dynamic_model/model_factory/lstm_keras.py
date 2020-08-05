@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
 from datetime import datetime
-from random import shuffle
-from time import time
 import os
 
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.models import Sequential
-from keras.regularizers import l1, l2
+from keras.regularizers import l2
 import h5py
 import numpy as np
 import tensorflow as tf
@@ -31,7 +29,6 @@ if USE_TENSORFLOW:
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
         os.environ["KERAS_BACKEND"] = "tensorflow"
-    from keras.callbacks import TensorBoard
 else:
     os.environ["KERAS_BACKEND"] = "theano"
     if USE_GPU:
@@ -78,9 +75,9 @@ def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_nam
 
     model = setup_model(model_name)
     with tf.device('/gpu:0'):
-        training_history = model.fit(lstm_input_split[0], lstm_output_split[0],
-                                     validation_data=(lstm_input_split[1], lstm_output_split[1]),
-                                     epochs=EPOCHS, batch_size=64, verbose=2, shuffle=True)
+        model.fit(lstm_input_split[0], lstm_output_split[0],
+                  validation_data=(lstm_input_split[1], lstm_output_split[1]),
+                  epochs=EPOCHS, batch_size=64, verbose=2, shuffle=True)
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
 

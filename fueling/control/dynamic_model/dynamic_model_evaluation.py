@@ -4,7 +4,6 @@ import glob
 import os
 import re
 
-import h5py
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline

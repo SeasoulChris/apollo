@@ -2,7 +2,7 @@
 
 from gpytorch.distributions import MultivariateNormal
 from gpytorch.models import ApproximateGP
-from gpytorch.kernels import MaternKernel, InducingPointKernel
+from gpytorch.kernels import MaternKernel
 from gpytorch.variational import CholeskyVariationalDistribution
 from gpytorch.variational import VariationalStrategy
 import gpytorch

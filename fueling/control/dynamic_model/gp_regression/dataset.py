@@ -3,8 +3,6 @@
 """Extracting and processing dataset"""
 import glob
 import os
-import pickle
-import sys
 
 from scipy.signal import savgol_filter
 from torch.utils.data.dataset import Dataset
@@ -12,8 +10,8 @@ import h5py
 import numpy as np
 import torch
 
-from fueling.control.dynamic_model.gp_regression.model_conf import segment_index, feature_config
-from fueling.control.dynamic_model.gp_regression.model_conf import input_index, output_index
+from fueling.control.dynamic_model.gp_regression.model_conf import feature_config
+from fueling.control.dynamic_model.gp_regression.model_conf import input_index
 import fueling.common.logging as logging
 
 # Default (x,y) residual error correction cycle is 1s;

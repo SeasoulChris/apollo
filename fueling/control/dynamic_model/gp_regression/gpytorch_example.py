@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import math
 import os
-import sys
 
 from matplotlib import pyplot as plt
 import gpytorch

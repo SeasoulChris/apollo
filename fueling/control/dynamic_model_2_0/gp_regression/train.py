@@ -3,9 +3,8 @@ import argparse
 import os
 import time
 
-
 from torch.utils.data import DataLoader
-from torch.optim.lr_scheduler import MultiStepLR, ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 import matplotlib.pyplot as plt
 import numpy as np
 import gpytorch
@@ -99,7 +98,7 @@ def train_over_dataloader(train_loader, model, loss, optimizer, print_period=Non
     for idx, (features, labels) in enumerate(train_loader):
         # check NAN
         if torch.isnan(features).any() or torch.isnan(labels).any():
-            logging.error(f'NAN happens')
+            logging.error('NAN happens')
             continue
         # **[window_size, batch_size, channel]
         features = torch.transpose(features, 0, 1).type(torch.FloatTensor)
@@ -140,7 +139,7 @@ def valid_loop(valid_loader, model, likelihood, loss):
 
 def valid_and_trace(valid_loader, model, likelihood, loss, use_cuda=False, analyzer=None):
     loss_history = []
-    loss_info_history = []
+    # loss_info_history = []
     valid_accuracy = []
     for i, (X, y) in enumerate(valid_loader):
         X = torch.transpose(X, 0, 1).type(torch.FloatTensor)
@@ -218,11 +217,11 @@ def train(args, train_loader, valid_loader, total_train_number,
     num_epoch_valid_loss_not_decreasing = 0
     # loss curve
     train_losses = []
-    train_accuracies = []
+    # train_accuracies = []
     valid_losses = []
-    valid_accuracies = []
+    # valid_accuracies = []
     for epoch in range(1, epochs + 1):
-        running_loss = 0.0
+        # running_loss = 0.0
         if use_cuda:
             likelihood.train().cuda
             model.train().cuda
@@ -260,7 +259,7 @@ def train(args, train_loader, valid_loader, total_train_number,
         else:
             num_epoch_valid_loss_not_decreasing += 1
             logging.info(
-                f'****** number of valid loss not decreasing epoch is: '
+                '****** number of valid loss not decreasing epoch is: '
                 + f'{num_epoch_valid_loss_not_decreasing} ')
             # Early stop if enabled and met the criterion
             if early_stop == num_epoch_valid_loss_not_decreasing:
@@ -297,8 +296,8 @@ def train(args, train_loader, valid_loader, total_train_number,
     ax1 = fig.add_subplot(2, 1, 1)
     ax1.set_xlabel('epoch', fontdict={'size': 12})
     ax1.set_ylabel('loss', fontdict={'size': 12})
-    ax1.plot(train_losses, label=f"training loss")
-    ax1.plot(valid_losses, 'r.', label=f"validation loss")
+    ax1.plot(train_losses, label="training loss")
+    ax1.plot(valid_losses, 'r.', label="validation loss")
     plt.legend(fontsize=12, numpoints=5, frameon=False)
     plt.title("Losses comparison")
     plt.grid(True)
@@ -337,7 +336,7 @@ def save_model_torch_script(model, likelihood, test_features, file_name):
         os.makedirs(file_dir)
     wrapped_model = MeanVarModelWrapper(model, likelihood)
     with gpytorch.settings.trace_mode(), torch.no_grad():
-        pred = wrapped_model(test_features)  # Compute cache
+        _ = wrapped_model(test_features)  # Compute cache
         traced_model = torch.jit.trace(wrapped_model, test_features, check_trace=False)
         logging.info(f'saving model: {file_name}')
     traced_model.save(file_name)
@@ -350,7 +349,7 @@ def save_model_state_dict(model, likelihood, file_name):
     file_dir = os.path.dirname(file_name)
     if not os.path.exists(file_dir):
         os.makedirs(file_dir)
-    state_dict = model.state_dict()
+    # state_dict = model.state_dict()
     logging.info(f'saving model state dict: {file_name}')
     torch.save([model.state_dict(), likelihood.state_dict()], file_name)
 

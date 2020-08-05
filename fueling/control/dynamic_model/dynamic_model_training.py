@@ -3,18 +3,15 @@
 import os
 
 import glob
-import h5py
 import shutil
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.control.dynamic_model.conf.model_config import feature_config
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 import fueling.control.dynamic_model.data_generator.training_data_generator as data_generator
-import fueling.control.dynamic_model.flag
 import fueling.control.dynamic_model.model_factory.lstm_keras as lstm_keras
 import fueling.control.dynamic_model.model_factory.mlp_keras as mlp_keras
 
@@ -58,7 +55,7 @@ class DynamicModelTraining(BasePipeline):
             data_prefix = os.path.join(data_dir, job_owner, 'forward', job_id)
 
         training_data_path = our_storage.abs_path(data_prefix)
-        output_dir = bos_client.abs_path(
+        output_dir = self.our_storage().abs_path(
             'modules/control/learning_based_model/dynamic_model_output/')
         # TODO: V2.
         model_conf_prefix = '/fuel/fueling/control/dynamic_model/conf'
