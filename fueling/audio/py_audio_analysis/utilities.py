@@ -1,5 +1,4 @@
 import sys
-import os
 import numpy
 
 
@@ -8,7 +7,7 @@ def isfloat(x):
     Check if argument is float
     """
     try:
-        a = float(x)
+        _ = float(x)
     except ValueError:
         return False
     else:

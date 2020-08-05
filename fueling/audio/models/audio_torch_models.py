@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-
-import argparse
 import os
 
 from absl import flags
@@ -9,11 +7,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset
-from torchvision import models
-from torchvision import transforms
 
-from fueling.common import file_utils
-from fueling.learning.train_utils import *
+from fueling.learning.train_utils import train_valid_dataloader
 from fueling.audio.models.audio_features_extraction import AudioFeatureExtraction
 
 
@@ -218,7 +213,7 @@ if __name__ == "__main__":
 
         train_dir = flags_dict['train_dir']
         valid_dir = flags_dict['valid_dir']
-        model_dir = flags_dict['model_dir']
+        # model_dir = flags_dict['model_dir']
 
         # Set-up data-loader
         train_features, train_labels = AudioFeatureExtraction.load_features_labels(

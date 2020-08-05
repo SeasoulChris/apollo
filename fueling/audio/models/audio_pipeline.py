@@ -4,11 +4,8 @@ import argparse
 import os
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import Dataset
 
-from fueling.learning.train_utils import *
+from fueling.learning.train_utils import train_valid_dataloader
 from fueling.audio.models.siren_net import SirenNet, SirenNetDataset, SirenNetLoss
 
 

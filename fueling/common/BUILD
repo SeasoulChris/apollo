@@ -109,11 +109,6 @@ py_library(
 )
 
 py_library(
-    name = "matplotlib_using_agg",
-    srcs = ["matplotlib_using_agg.py"],
-)
-
-py_library(
     name = "mongo_utils",
     srcs = ["mongo_utils.py"],
     deps = [

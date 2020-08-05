@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-
-import argparse
 import os
 
 from absl import flags
@@ -12,7 +10,6 @@ from sklearn.utils import shuffle
 
 from fueling.audio.py_audio_analysis import audio_feature_extraction
 from fueling.common import file_utils
-from fueling.learning.train_utils import *
 
 
 class AudioFeatureExtraction(object):
@@ -62,7 +59,7 @@ class AudioFeatureExtraction(object):
 
             # signal = self.preprocess(signal)
             signal_len = signal.shape[0]
-            segments = []
+            # segments = []
             signal_step = int(self.sample_rate * time_step)
             signal_pos = 0
             signal_seg_len = int(self.sample_rate * time_segment)

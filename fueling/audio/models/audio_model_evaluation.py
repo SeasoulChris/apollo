@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import os
 import warnings
 import sys
 
@@ -8,20 +7,11 @@ import librosa
 import numpy as np
 import seaborn as sns
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import Dataset
-from torchvision import models
-from torchvision import transforms
-from tqdm import tqdm
-from scipy.signal import butter, lfilter, hilbert
-from sklearn.utils import shuffle
 
 from fueling.audio.models.audio_features_extraction import AudioFeatureExtraction
 from fueling.audio.models.audio_torch_models import AudioCNN1dModel, AudioCNN2dModel, AudioMLPModel
 from fueling.audio.models.audio_features_extraction import preprocess
 from fueling.audio.py_audio_analysis import audioFeatureExtraction
-from fueling.common import file_utils
 
 
 sns.set_style("whitegrid")

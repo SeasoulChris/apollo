@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import argparse
 from fnmatch import fnmatch
 import os
 from shutil import copyfile

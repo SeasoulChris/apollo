@@ -1,26 +1,18 @@
-import sys
 import time
 import os
 import glob
-import numpy as np
-import _pickle as cPickle
-import aifc
 import math
-from numpy import NaN, Inf, arange, isscalar, array
-from scipy.fftpack import rfft
 from scipy.fftpack import fft
+
+import numpy as np
 from scipy.fftpack.realtransforms import dct
-from scipy.signal import fftconvolve
-import matplotlib.mlab
-# from matplotlib.mlab import find
 import matplotlib.pyplot as plt
-from scipy import linalg as la
-# import audioTrainTest as aT
+from scipy.signal import lfilter
+from scikits.talkbox import lpc
+import pywt
+
 from fueling.audio.pyAudioAnalysis import audio_basic_io
 from fueling.audio.pyAudioAnalysis import utilities
-from scipy.signal import lfilter, hamming
-# from scikits.talkbox import lpc
-import pywt
 
 # reload(sys)
 # sys.setdefaultencoding('utf8')
@@ -34,7 +26,7 @@ def stats_features(frame, fs, feature):
     Win, Step = int(0.02 * fs), int(0.01 * fs)
     N = len(frame)
     curPos = 0
-    frameStats = []
+    # frameStats = []
     sub_frames = []
     while (curPos + Win - 1 < N):  # for each short-term window until the end of signal
         sub_frame = frame[curPos:curPos + Win]
@@ -273,8 +265,8 @@ def mfccInitFilterBanks(fs, nfft):
     numLinFiltTotal = 13
     numLogFilt = 27
 
-    if fs < 8000:
-        nlogfil = 5
+    # if fs < 8000:
+    #     nlogfil = 5
 
     # Total number of filters
     nFiltTotal = numLinFiltTotal + numLogFilt
@@ -439,7 +431,7 @@ def stChromagram(signal, Fs, Win, Step, PLOT=False):
             Ratio = 1
         chromaGramToPlot = np.repeat(chromaGramToPlot, Ratio, axis=0)
         imgplot = plt.imshow(chromaGramToPlot)
-        Fstep = int(nfft / 5.0)
+        # Fstep = int(nfft / 5.0)
 #        FreqTicks = range(0, int(nfft) + Fstep, Fstep)
 #        FreqTicksLabels = [str(Fs/2-int((f*Fs) / (2*nfft))) for f in FreqTicks]
         ax.set_yticks(range(Ratio / 2, len(FreqAxis) * Ratio, Ratio))
@@ -818,20 +810,20 @@ def stFeatureSpeed(signal, Fs, Win, Step):
     logsc = 1.0711703
     nlinfil = 13
     nlogfil = 27
-    nceps = 13
-    nfil = nlinfil + nlogfil
-    nfft = Win / 2
+    # nceps = 13
+    # nfil = nlinfil + nlogfil
+    # nfft = Win / 2
     if Fs < 8000:
         nlogfil = 5
-        nfil = nlinfil + nlogfil
+        # nfil = nlinfil + nlogfil
         nfft = Win / 2
 
     # compute filter banks for mfcc:
     [fbank, freqs] = mfccInitFilterBanks(Fs, nfft, lowfreq, linsc, logsc, nlinfil, nlogfil)
 
-    numOfTimeSpectralFeatures = 8
-    numOfHarmonicFeatures = 1
-    totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures
+    # numOfTimeSpectralFeatures = 8
+    # numOfHarmonicFeatures = 1
+    # totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures
     # stFeatures = np.array([], dtype=np.float64)
     stFeatures = []
 
@@ -842,8 +834,8 @@ def stFeatureSpeed(signal, Fs, Win, Step):
         X = abs(fft(x))
         X = X[0:nfft]
         X = X / len(X)
-        Ex = 0.0
-        El = 0.0
+        # Ex = 0.0
+        # El = 0.0
         X[0:4] = 0
 #        M = np.round(0.016 * fs) - 1
 #        R = np.correlate(frame, frame, mode='full')
@@ -983,7 +975,7 @@ def dirWavFeatureExtractionNoAveraging(dirName, mtWin, mtStep, stWin, stStep):
 
     allMtFeatures = np.array([])
     signalIndices = np.array([])
-    processingTimes = []
+    # processingTimes = []
 
     types = ('*.wav', '*.aif', '*.aiff')
     wavFilesList = []

@@ -1,12 +1,12 @@
 import os
 import glob
+import shutil
+
 import eyed3
 import ntpath
-import shutil
 import numpy
-import scipy.io.wavfile as wavfile
-import pydub
 from pydub import AudioSegment
+import aifc
 
 
 def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName=False):
@@ -108,7 +108,7 @@ def readAudioFile(path):
                 return (-1, -1)
             Fs = audiofile.frame_rate
             x = []
-            for chn in xrange(audiofile.channels):
+            for chn in range(audiofile.channels):
                 x.append(data[chn::audiofile.channels])
             x = numpy.array(x).T
         else:

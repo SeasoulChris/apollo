@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8-*-
 """Utils for displaying."""
-from fueling.common.matplotlib_using_agg import matplotlib
 
 from collections import Counter
 import datetime
@@ -9,6 +8,8 @@ import math
 import pytz
 import sys
 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import mpld3
 

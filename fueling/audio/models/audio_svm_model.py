@@ -1,24 +1,18 @@
 #!/usr/bin/env python
 import sys
 import warnings
-import argparse
 import os
 import glob
-import time
 
 from absl import flags
 import librosa
 import librosa.display
-import matplotlib.ticker as ticker
-import matplotlib.style as ms
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy.signal import butter, lfilter, hilbert
-from sklearn.externals import joblib
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.utils import shuffle
@@ -79,10 +73,11 @@ def prepare_data(X_em, X_nonem, scale=True):
 
 def predict_op(y, scaler, model, N=20):
     y = preprocess(y)
+    sr = 8000  # TODO: Fix.
     feature_list = audioFeatureExtraction.stFeatureExtraction(
         y, sr, 0.10 * sr, .05 * sr)
     scaler.transform(feature_list)
-    count = 0
+    # count = 0
     th = 0.5
 
     prob_list = []
@@ -122,10 +117,11 @@ def predict_op(y, scaler, model, N=20):
 
 def predict_prob(y, scaler, model, N=20):
     y = preprocess(y)
+    sr = 8000  # TODO: Fix.
     feature_list = audioFeatureExtraction.stFeatureExtraction(
         y, sr, 0.10 * sr, .05 * sr)
     scaler.transform(feature_list)
-    count = 0
+    # count = 0
     th = 0.5
 
     prob_list = []
@@ -219,7 +215,7 @@ if __name__ == "__main__":
         analytic_signal = hilbert(y_filt)
         amplitude_envelope = np.abs(analytic_signal)
 
-        t = np.arange(len(y[:8000])) / sr
+        # t = np.arange(len(y[:8000])) / sr
         fig = plt.figure(figsize=(16, 5))
         ax0 = fig.add_subplot(111)
         # ax0.plot(y[:8000], label='signal')
@@ -312,8 +308,8 @@ if __name__ == "__main__":
         pred_test
 
         Y_test_np = np.array(Y_test)
-        Y_test_em = Y_test_np[Y_test_np == 1]
-        Y_test_nonem = Y_test_np[Y_test_np == 0]
+        # Y_test_em = Y_test_np[Y_test_np == 1]
+        # Y_test_nonem = Y_test_np[Y_test_np == 0]
 
         print("------ data level results -----")
         is_correct = pred_test == Y_test_np
@@ -327,7 +323,7 @@ if __name__ == "__main__":
 
         em_tot = 0
         correct_em = 0
-        op_list = []
+        # op_list = []
         for test_file in tqdm(test_em_files):
             y, sr = librosa.load(test_file, sr=8000)
             classes = predict_op(y, scaler1, model, 10)
@@ -341,7 +337,7 @@ if __name__ == "__main__":
 
         nonem_tot = 0
         correct_nonem = 0
-        op_list = []
+        # op_list = []
         for test_file in tqdm(test_nonem_files):
             y, sr = librosa.load(test_file, sr=8000)
             classes = predict_op(y, scaler1, model, 10)
