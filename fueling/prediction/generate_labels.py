@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 import os
-import glob
 import operator
-
-from absl import flags
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.prediction.common.online_to_offline import LabelGenerator

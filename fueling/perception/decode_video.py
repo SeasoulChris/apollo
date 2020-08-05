@@ -6,7 +6,6 @@ import collections
 import glob
 import operator
 import os
-import sys
 import time
 
 import cv2
@@ -164,7 +163,7 @@ def group_video_frames(message_meta):
         frame_type = None
         try:
             frame_type = ast.literal_eval(fields).get('frame_type', None)
-        except ValueError as error:
+        except ValueError:
             # Skip the problematic frame if for any reason it was not parsed correctly
             logging.error('invalid meta data: {}'.format(meta_list[idx]))
             continue
@@ -249,7 +248,7 @@ def replace_images(target_record, root_dir, decoded_records_dir):
     if os.path.exists(dst_record):
         dst_header = record_utils.read_record_header(dst_record)
         if dst_header and dst_header.is_complete:
-            logging.info('destination record exists and is complete, do nothing'.format(dst_record))
+            logging.info('destination record exists and is complete, do nothing')
             return
     logging.info("replacing frames for {} to {}".format(target_record, dst_record))
     reader = RecordReader(record)

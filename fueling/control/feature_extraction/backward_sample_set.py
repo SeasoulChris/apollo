@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """ extracting sample set """
-from collections import Counter
 import glob
-import operator
 import os
 
 from fueling.common.base_pipeline import BasePipeline

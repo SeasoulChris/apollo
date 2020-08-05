@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 import cgi
-import collections
 import math
 import os
-import sys
 
 import google.protobuf.text_format as text_format
 

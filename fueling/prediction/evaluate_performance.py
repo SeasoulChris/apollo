@@ -1,14 +1,10 @@
 #!/usr/bin/env python
-import fnmatch
 import glob
-import operator
 import os
 
 import numpy as np
 
 from modules.prediction.proto import offline_features_pb2
-from modules.prediction.proto import prediction_conf_pb2
-from modules.prediction.proto import feature_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.spark_op as spark_op

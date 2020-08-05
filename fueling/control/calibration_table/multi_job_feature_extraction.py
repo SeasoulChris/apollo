@@ -7,8 +7,6 @@ import os
 
 from absl import flags
 
-import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
-
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
 from fueling.common.partners import partners
@@ -18,7 +16,6 @@ from fueling.control.common.training_conf import inter_result_folder  # intermed
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
-import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.redis_utils as redis_utils
 import fueling.common.spark_helper as spark_helper
@@ -100,8 +97,6 @@ class MultiJobFeatureExtraction(BasePipeline):
         """Run test."""
         origin_prefix = '/fuel/testdata/control/sourceData/OUT'
         target_prefix = '/fuel/testdata/control/generated'
-        job_owner = self.FLAGS.get('job_owner')
-        job_id = self.FLAGS.get('job_id')
 
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(

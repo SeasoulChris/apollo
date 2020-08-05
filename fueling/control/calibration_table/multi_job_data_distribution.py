@@ -3,15 +3,11 @@ from datetime import datetime
 import glob
 import os
 import tarfile
-import time
 
-from absl import flags
 import matplotlib
 matplotlib.use('Agg')
 
-from matplotlib.backends.backend_pdf import PdfPages
 import h5py
-import matplotlib.pyplot as plt
 import numpy as np
 
 from fueling.common.partners import partners

@@ -3,16 +3,10 @@
 common functions for feature extractin
 """
 import os
-import glob
 
-import h5py
-import math
 import numpy as np
 
-from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.common.configs.proto import vehicle_config_pb2
-from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
-from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
 from fueling.control.dynamic_model.conf.model_config import point_mass_config
 from fueling.control.proto.feature_key_pb2 import FeatureKey

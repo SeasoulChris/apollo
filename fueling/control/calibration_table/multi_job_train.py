@@ -1,25 +1,16 @@
 #!/usr/bin/env python
-from collections import Counter
 import glob
-import operator
 import os
-
-from absl import flags
-import h5py
-import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
 from fueling.control.common.training_conf import inter_result_folder
 from fueling.control.common.training_conf import output_folder
 import fueling.common.logging as logging
-import fueling.common.proto_utils as proto_utils
 import fueling.common.spark_helper as spark_helper
 import fueling.control.common.multi_job_utils as multi_job_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.calibration_table_train_utils as train_utils
-import fueling.control.features.calibration_table_utils as calibration_table_utils
-import fueling.control.proto.calibration_table_pb2 as CalibrationTable
 
 
 def get_data_from_hdf5(hdf5_rdd):
@@ -250,7 +241,7 @@ class MultiJobTrain(BasePipeline):
         print('brake_model.collect() ', brake_model.collect())
         print('throttle_model.collect() ', throttle_model.collect())
 
-        model = spark_helper.cache_and_log(
+        spark_helper.cache_and_log(
             'model',
             brake_model
             # PairRDD(vehicle, (brake_table, throttle_table))

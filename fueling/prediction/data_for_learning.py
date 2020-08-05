@@ -5,8 +5,6 @@ import os
 from absl import flags
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.common.mongo_utils import Mongo
-import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 

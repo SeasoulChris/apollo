@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import glob
-import random
 import os
 
 import h5py
@@ -8,9 +6,7 @@ import numpy as np
 
 import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 
-from fueling.control.features.filters import Filters
 from fueling.control.features.neural_network_tf import NeuralNetworkTF
-import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils

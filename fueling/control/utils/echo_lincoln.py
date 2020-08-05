@@ -18,7 +18,7 @@ def file2txt(origin_input_file, txt_file):
     elif origin_input_file_ext == '.npy':
         data = np.load(origin_input_file, allow_pickle=True)
     else:
-        logging.error(f'Original input file format is not supported yet.')
+        logging.error('Original input file format is not supported yet.')
         return
     data_points = np.size(data, 0)
     init_v = data[0, 14]

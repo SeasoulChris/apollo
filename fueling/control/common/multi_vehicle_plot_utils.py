@@ -1,20 +1,15 @@
 #!/usr/bin/env python
 """ utils for multiple vehicles """
 import os
-import time
 
 import matplotlib
 matplotlib.use('Agg')
-from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import numpy as np
 
-import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
-
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index
 import fueling.common.logging as logging
-import fueling.common.proto_utils as proto_utils
 
 
 DIM_INPUT = 3
@@ -81,7 +76,7 @@ def gen_plot(elem, target_dir, throttle_or_brake):
     cmd_array = np.linspace(cmd_min, cmd_max, num=cmd_segment_num)
     speed_array = np.linspace(speed_min, speed_max, num=speed_segment_num)
     speed_maxtrix, cmd_matrix = np.meshgrid(speed_array, cmd_array)
-    grid_array = np.array([[s, c] for s, c in zip(np.ravel(speed_array), np.ravel(cmd_array))])
+    # grid_array = np.array([[s, c] for s, c in zip(np.ravel(speed_array), np.ravel(cmd_array))])
     with PdfPages(result_file) as pdf:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')

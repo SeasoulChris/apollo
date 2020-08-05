@@ -25,23 +25,22 @@ function LintDir {
       grep -v 'fueling/common/logging.py' | \
       grep -v 'fueling/common/record/kinglong/cybertron' | \
       grep -v 'fueling/learning/network_utils.py' | \
-      grep -e 'apps/' \
-          -e 'fueling/com' \
-          -e 'fueling/d' \
-          -e 'fueling/l' \
-          -e 'fueling/m' \
-          -e 'fueling/s' \
-          -e 'perception/sen' \
-          -e 'perception/pi' \
-          -e 'perception/pointpillars/t' \
-          -e 'prediction/c' \
-          | xargs ${FLAKE}
+      \
+      grep -v 'fueling/audio' | \
+      grep -v 'fueling/control/dynamic_model' | \
+      grep -v 'fueling/perception/pointpillars' | \
+      grep -v 'fueling/perception/semantic_map_tracking' | \
+      grep -v 'fueling/planning' | \
+      grep -v 'fueling/prediction/learning' | \
+      grep -v 'fueling/profiling' | \
+      xargs ${FLAKE}
 }
 
 PATH_ARG=$1
 if [ -z "${PATH_ARG}" ]; then
-  LintDir /fuel/apps
-  LintDir /fuel/fueling
+  cd "$( dirname "${BASH_SOURCE[0]}" )/.."
+  LintDir apps
+  LintDir fueling
 elif [ -d "${PATH_ARG}" ]; then
   LintDir "${PATH_ARG}"
 else

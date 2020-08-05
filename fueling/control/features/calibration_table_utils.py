@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 from collections import defaultdict
-import glob
 import math
 import os
 import random
 
 import h5py
 import numpy as np
-
-from modules.common.configs.proto.vehicle_config_pb2 import VehicleParam
 
 from fueling.control.proto.calibration_table_pb2 import CalibrationTable
 from fueling.control.features.filters import Filters
@@ -74,7 +71,7 @@ def decide_cmd(chassis_throttle_val, chassis_brake_val, VEHICLE_PARAM_CONF):
     segment_throttle_list = gen_throttle_list(VEHICLE_PARAM_CONF)
     segment_brake_list = gen_brake_list(VEHICLE_PARAM_CONF)
     feature_cmd = 0.0
-    if (VEHICLE_PARAM_CONF.vehicle_id.other_unique_id is "lexus"
+    if (VEHICLE_PARAM_CONF.vehicle_id.other_unique_id == "lexus"
             and chassis_throttle_val > 0.1 and chassis_brake_val > 0.1):
         logging.info("feature_cmd = 200")
         feature_cmd = 200.0

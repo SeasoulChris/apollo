@@ -110,7 +110,7 @@ class UniformDistributionSet(BasePipeline):
             # PairRDD(key, list of segments)
             .mapValues(list))
 
-        sampled_segments = spark_helper.cache_and_log(
+        spark_helper.cache_and_log(
             'sampled_segments',
             # PairRDD(key, list of segments)
             categorized_segments

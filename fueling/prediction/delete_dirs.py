@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import operator
 import os
 import shutil
 
@@ -13,7 +12,7 @@ class DeleteDirs(BasePipeline):
     def run(self):
         """Run prod."""
         target_prefix = 'modules/prediction/kinglong_train/'
-        files = (
+        (
             # RDD(file), start with target_prefix
             self.to_rdd(self.our_storage().list_files(target_prefix))
             # remove everyfile

@@ -1,23 +1,12 @@
 #!/usr/bin/env python
 
-import glob
 import os
-import time
-
-from absl import flags
-from matplotlib.backends.backend_pdf import PdfPages
-import h5py
-import matplotlib.pyplot as plt
-import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
 from fueling.common.h5_utils import read_h5
-from fueling.common.partners import partners
 from fueling.control.common.training_conf import inter_result_folder
 from fueling.control.common.training_conf import output_folder
-import fueling.common.email_utils as email_utils
-import fueling.common.logging as logging
 import fueling.common.spark_helper as spark_helper
 import fueling.control.common.multi_job_utils as multi_job_utils
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
@@ -45,7 +34,7 @@ class MultiJobResultVisualization(BasePipeline):
         conf_dir = our_storage.abs_path(conf_prefix)
 
         # RDD(plot_file)
-        plot_files = self.run_internal(origin_dir, conf_dir)
+        self.run_internal(origin_dir, conf_dir)
         JobUtils(job_id).save_job_progress(75)
 
     def run_internal(self, origin_prefix, conf_prefix):
