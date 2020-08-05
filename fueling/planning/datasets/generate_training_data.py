@@ -3,7 +3,6 @@ import glob
 import numpy as np
 import os
 import re
-import time
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
@@ -225,6 +224,8 @@ class GenerateTrainingData(BasePipeline):
         current_data_point = [current_features, current_label]
         return current_data_point
 
+    # TODO: Redefinition!
+    """
     def add_chassis_feature(self, learning_data_frame, current_features):
         chassis_feature = learning_data_frame.chassis
 
@@ -695,6 +696,7 @@ class GenerateTrainingData(BasePipeline):
         #     continue
         current_data_point = [current_features, current_label]
         return current_data_point
+    """
 
     def process_learning_data(self, src_dir):
         """ Process learning data: learning datas -> training data """
@@ -761,8 +763,7 @@ class GenerateTrainingData(BasePipeline):
                 np.save(new_file_path, output_np_array)
                 total_usable_data_points += num_usable_data_points
             except BaseException:
-                logging.error('Failed to save output file:{}'.format(
-                    path + '.training_data.npy'))
+                logging.error(F'Failed to save output file:{new_file_path}')
 
         logging.info('There are {} usable data points out of {}.'.format(
             total_usable_data_points, total_num_data_points))

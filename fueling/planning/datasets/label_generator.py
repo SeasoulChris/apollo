@@ -299,7 +299,7 @@ class LabelGenerator(object):
         learning_data_frame = learning_data_pb2.LearningDataFrame()
         # skip learning data when no label is generated.
         if not self.label_dict:
-            logging.info(f'no future labels for entire bin file, skip writing this bin file')
+            logging.info('no future labels for entire bin file, skip writing this bin file')
             return 0
         for key in self.label_dict.keys():
             # write feature to proto
@@ -388,7 +388,7 @@ if __name__ == '__main__':
     history_data_points = history_result2[key_list[args.key_id]]
     label_gen.Visualize(history_data_points, args.history_img_output_file)
     if len(result2) == 0:
-        logging.info(f'no data generated')
+        logging.info('no data generated')
     else:
         for key_id in key_list:
             data_points = result2[key_id]

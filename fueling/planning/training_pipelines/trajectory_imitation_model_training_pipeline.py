@@ -22,18 +22,12 @@ from fueling.planning.models.trajectory_imitation.cnn_fc_model import \
 from fueling.planning.models.trajectory_imitation.cnn_lstm_model import \
     TrajectoryImitationCNNLSTM,\
     TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet
-from fueling.planning.models.trajectory_imitation.conv_rnn_model import \
-    TrajectoryImitationConvRNN, \
-    TrajectoryImitationDeeperConvRNN, \
-    TrajectoryImitationConvRNNUnetResnet18v1, \
-    TrajectoryImitationConvRNNUnetResnet18v2
+from fueling.planning.models.trajectory_imitation.conv_rnn_model import TrajectoryImitationConvRNN
 from fueling.planning.models.trajectory_imitation.image_representation_loss import \
     TrajectoryImitationConvRNNLoss, \
-    TrajectoryImitationConvRNNWithEnvLoss, \
     TrajectoryImitationCNNLSTMWithAuxiliaryEnvLoss
 from fueling.planning.models.trajectory_imitation.trajectory_point_displacement_loss import \
-    TrajectoryPointDisplacementMSELoss, \
-    TrajectoryPointDisplacementL1Loss
+    TrajectoryPointDisplacementMSELoss
 from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator \
     import ChauffeurNetFeatureGenerator
 

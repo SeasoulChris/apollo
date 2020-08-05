@@ -104,7 +104,6 @@ if __name__ == "__main__":
     import os
     import json
     import matplotlib.pyplot as plt
-    from mpl_toolkits import mplot3d
 
     folders = sys.argv[1:]
     # fig, ax = plt.subplots(1, 1)

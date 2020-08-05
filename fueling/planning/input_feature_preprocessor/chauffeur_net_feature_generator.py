@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 import os
-import shutil
 
 import numpy as np
 import cv2 as cv
 
 from modules.map.proto import map_pb2
-from modules.planning.proto import learning_data_pb2
 
 import fueling.common.logging as logging
 from fueling.planning.input_feature_preprocessor.agent_box_img_renderer \

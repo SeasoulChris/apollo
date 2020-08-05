@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import argparse
-import math
 import os
 import shutil
 
@@ -19,19 +17,11 @@ import fueling.common.file_utils as file_utils
 from fueling.learning.train_utils import cuda
 from fueling.planning.datasets.img_in_traj_out_dataset \
     import TrajectoryImitationCNNFCDataset, \
-    TrajectoryImitationConvRNNDataset, \
-    TrajectoryImitationCNNLSTMDataset, \
-    TrajectoryImitationCNNLSTMWithAENDataset
+    TrajectoryImitationConvRNNDataset
 from fueling.planning.models.trajectory_imitation.cnn_fc_model import \
     TrajectoryImitationCNNFC
-from fueling.planning.models.trajectory_imitation.cnn_lstm_model import \
-    TrajectoryImitationCNNLSTM,\
-    TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet
-from fueling.planning.models.trajectory_imitation.conv_rnn_model import \
-    TrajectoryImitationConvRNN, \
-    TrajectoryImitationDeeperConvRNN, \
-    TrajectoryImitationConvRNNUnetResnet18v1, \
-    TrajectoryImitationConvRNNUnetResnet18v2
+from fueling.planning.models.trajectory_imitation.cnn_lstm_model import TrajectoryImitationCNNLSTM
+from fueling.planning.models.trajectory_imitation.conv_rnn_model import TrajectoryImitationConvRNN
 from fueling.planning.input_feature_preprocessor.agent_poses_future_img_renderer import \
     AgentPosesFutureImgRenderer
 import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
@@ -320,7 +310,7 @@ def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map
     test_dataset = None
 
     if update_base_map:
-        ChauffeurNetFeatureGenerator.draw_base_map(regions_list,
+        ChauffeurNetFeatureGenerator.draw_base_map([region],
                                                    renderer_config_file,
                                                    renderer_base_map_img_dir,
                                                    renderer_base_map_data_dir)

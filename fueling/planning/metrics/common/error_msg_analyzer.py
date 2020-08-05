@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from modules.common.proto import error_code_pb2
-from fueling.planning.metrics.common.statistical_analyzer import PrintColors
 from fueling.planning.metrics.common.distribution_analyzer import DistributionAnalyzer
 
 

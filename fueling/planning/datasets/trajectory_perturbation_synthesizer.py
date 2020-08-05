@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 
-import time
 import math
 
 from absl import flags
 import casadi as ca
 import numpy as np
-
-import fueling.common.logging as logging
 
 flags.DEFINE_multi_float('perturbate_xy_range', [-1.5, 1.5],
                          'points num in the past to be synthesized')
@@ -143,12 +140,12 @@ class TrajectoryPerturbationSynthesizer(object):
             linestyle='--', marker='o', color='r')
         xy_graph.plot(traj_for_plot[:, 0], traj_for_plot[:, 1],
                       linestyle='--', marker='o', color='g')
-        original_point = xy_graph.scatter(origin_traj_for_plot[perturbate_point_idx][0],
-                                          origin_traj_for_plot[perturbate_point_idx][1],
-                                          marker='D', color='r')
-        perturbated_point = xy_graph.scatter(traj_for_plot[perturbate_point_idx][0],
-                                             traj_for_plot[perturbate_point_idx][1],
-                                             marker='D', color='g')
+        _ = xy_graph.scatter(origin_traj_for_plot[perturbate_point_idx][0],
+                             origin_traj_for_plot[perturbate_point_idx][1],
+                             marker='D', color='r')
+        _ = xy_graph.scatter(traj_for_plot[perturbate_point_idx][0],
+                             traj_for_plot[perturbate_point_idx][1],
+                             marker='D', color='g')
 
         xy_graph.set_aspect('equal')
         plt.show()

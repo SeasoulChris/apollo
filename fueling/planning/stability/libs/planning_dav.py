@@ -20,7 +20,7 @@ class PlanningDav:
         current_timestamp = timestamp_sec + relative_time
         current_av = self.planning_av_processor.get_lastest_av()
 
-        acc = planning_pb.debug.planning_data.init_point.a
+        # acc = planning_pb.debug.planning_data.init_point.a
 
         if self.last_timestamp is not None and self.last_av is not None:
             delta_av = current_av - self.last_av

@@ -3,9 +3,7 @@
 
 import os
 import resource
-import sys
 from datetime import datetime, timedelta
-from os import path
 
 from cyber.python.cyber_py3.record import RecordWriter
 from planning_analytics.apl_record_reader.apl_record_reader import AplRecordReader

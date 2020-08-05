@@ -1,23 +1,12 @@
 #!/usr/bin/env python
 
 import argparse
-import os
 
 import torch
 
-from fueling.planning.models.trajectory_imitation.cnn_fc_model import \
-    TrajectoryImitationCNNFC
-from fueling.planning.models.trajectory_imitation.cnn_lstm_model import \
-    TrajectoryImitationCNNLSTM,\
-    TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet
-from fueling.planning.models.trajectory_imitation.conv_rnn_model import \
-    TrajectoryImitationConvRNN, \
-    TrajectoryImitationDeeperConvRNN, \
-    TrajectoryImitationConvRNNUnetResnet18v1, \
-    TrajectoryImitationConvRNNUnetResnet18v2
-
-import fueling.common.logging as logging
 from fueling.learning.train_utils import cuda
+from fueling.planning.models.trajectory_imitation.cnn_fc_model import TrajectoryImitationCNNFC
+import fueling.common.logging as logging
 
 
 def export(torch_model_file, export_model_file, device, export_form):

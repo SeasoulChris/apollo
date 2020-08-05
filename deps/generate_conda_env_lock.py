@@ -33,6 +33,7 @@ for path in ['fueling', 'apps']:
     for f in glob.glob(os.path.join(fuel_root, path, '**/*.py'), recursive=True):
         with open(f, encoding='utf-8') as fin:
             for line in fin:
+                line = line.strip()
                 if line.startswith('import ') or line.startswith('from '):
                     usage_counter[line.split()[1].split('.')[0]] += 1
 name_mappings = {

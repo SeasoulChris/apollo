@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 """Clean records."""
 
-import datetime
 import os
 
-import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 from fueling.common.base_pipeline import BasePipeline
 

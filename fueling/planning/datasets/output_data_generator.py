@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import operator
 import os
-import time
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.planning.datasets.label_generator import LabelGenerator

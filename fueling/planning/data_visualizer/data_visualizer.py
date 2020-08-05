@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import copy
-import datetime
 import os
-import sys
 import time
 
 import numpy as np

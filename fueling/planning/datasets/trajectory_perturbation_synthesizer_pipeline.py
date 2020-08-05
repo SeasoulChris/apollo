@@ -150,7 +150,7 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
         logging.info('Processing directory: {}'.format(self.src_dir))
         all_file_paths = file_utils.list_files(self.src_dir)
 
-        file_paths_rdd = (
+        (
             # RDD(file_paths)
             self.to_rdd(all_file_paths)
             # RDD(filtered_file_paths), which filtered out non-bin or non-labeled file_path

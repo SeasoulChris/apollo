@@ -16,10 +16,10 @@ def plot(routing_response, ax):
         cnt += 1
         c = colors[ind]
         passage_cnt = 1
-        passage_pt = [".", "o", "v"]
+        # passage_pt = [".", "o", "v"]
         for passage in road.passage:
-            pind = passage_cnt % len(passage_pt)
-            pt = passage_pt[pind]
+            # pind = passage_cnt % len(passage_pt)
+            # pt = passage_pt[pind]
             passage_cnt += 1
             for segment in passage.segment:
                 # logging.info(segment.id)
@@ -56,17 +56,17 @@ def plot_with_loc(routing_response, ax, fist_loc, last_loc):
 
     map_reader = MapReader()
     # colors = ["b", "r", "g", "k"]
-    colors = ["k"]
+    # colors = ["k"]
     cnt = 1
     for road in routing_response.road:
-        ind = cnt % len(colors)
+        # ind = cnt % len(colors)
         cnt += 1
-        c = colors[ind]
+        # c = colors[ind]
         passage_cnt = 1
-        passage_pt = [".", "o", "v"]
+        # passage_pt = [".", "o", "v"]
         for passage in road.passage:
-            pind = passage_cnt % len(passage_pt)
-            pt = passage_pt[pind]
+            # pind = passage_cnt % len(passage_pt)
+            # pt = passage_pt[pind]
             passage_cnt += 1
             passage_string = []
             for segment in passage.segment:

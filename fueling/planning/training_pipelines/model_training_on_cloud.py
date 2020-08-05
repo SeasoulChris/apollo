@@ -4,10 +4,7 @@ import os
 import sys
 import time
 
-from absl import app
-from absl import flags
 import torch
-import cv2 as cv
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging

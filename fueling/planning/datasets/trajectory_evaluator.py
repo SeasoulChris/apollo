@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import os
-import time
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.context_utils as context_utils

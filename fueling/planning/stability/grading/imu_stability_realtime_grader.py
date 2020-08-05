@@ -3,6 +3,8 @@
 import sys
 import math
 import threading
+
+from absl import flags
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
@@ -103,7 +105,7 @@ def update(frame_number):
 
 
 if __name__ == '__main__':
-    argv = FLAGS(sys.argv)
+    argv = flags.FLAGS(sys.argv)
     listener()
     fig, ax = plt.subplots()
     X = range(PLOT_DATA_LENGTH)

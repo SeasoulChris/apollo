@@ -21,7 +21,6 @@ function LintDir {
 
   # TODO(all): Cover all:
   # fueling/audio: 75
-  # fueling/planning: 186
   # fueling/prediction/learning: 343
   find "$1" -type f -name '*.py' | \
       grep -v 'apps/k8s/warehouse/display_util.py' | \
@@ -29,7 +28,6 @@ function LintDir {
       grep -v 'fueling/common/record/kinglong/cybertron' | \
       \
       grep -v 'fueling/audio' | \
-      grep -v 'fueling/planning' | \
       grep -v 'fueling/prediction/learning' | \
       xargs ${FLAKE}
 }

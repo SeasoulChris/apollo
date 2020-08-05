@@ -1,16 +1,8 @@
 #!/usr/bin/env python
-import os
-import shutil
-
 import numpy as np
 import cv2 as cv
 
-from modules.map.proto import map_pb2
-from modules.map.proto import map_lane_pb2
-from modules.map.proto import map_signal_pb2
-from modules.map.proto import map_overlap_pb2
 from modules.perception.proto import traffic_light_detection_pb2
-from modules.planning.proto import learning_data_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils

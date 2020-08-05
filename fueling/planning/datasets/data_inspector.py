@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 import argparse
-import os
-import re
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 import fueling.common.logging as logging

@@ -3,7 +3,6 @@
 
 import os
 import resource
-import sys
 from datetime import datetime, timedelta
 from os import path
 

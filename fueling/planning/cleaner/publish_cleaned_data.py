@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Clean records."""
 
-import os
 import shutil
 
 import fueling.common.logging as logging

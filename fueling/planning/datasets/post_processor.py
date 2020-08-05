@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-import operator
 import os
-import time
 
 from modules.planning.proto import learning_data_pb2
 
@@ -70,7 +68,7 @@ class PostProcessor(BasePipeline):
     def _write_data_frame(folder_data_frame, frame_len=100, is_debug=False):
         learning_data = learning_data_pb2.LearningData()
         dst_dir, data_frames = folder_data_frame
-        total_frames = len([data_frames])
+        # total_frames = len([data_frames])
         frame_count = 0
         file_count = 0
         file_utils.makedirs(dst_dir)

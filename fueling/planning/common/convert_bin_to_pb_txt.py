@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 import os
-import time
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 from modules.planning.proto import learning_data_pb2

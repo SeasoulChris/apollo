@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import json
 from shapely.geometry import LineString, Point
 
 from modules.planning.proto import planning_pb2

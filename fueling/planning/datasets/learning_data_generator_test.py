@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from absl import logging
 from absl.testing import absltest
 
 from fueling.common.base_pipeline import BasePipelineTest

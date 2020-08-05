@@ -6,7 +6,6 @@ import cv2 as cv
 import pyproj
 
 from modules.map.proto import map_pb2
-from modules.map.proto import map_lane_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.logging as logging
