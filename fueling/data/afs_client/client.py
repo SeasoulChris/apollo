@@ -24,12 +24,14 @@ class AfsClient(object):
 
     def __init__(self):
         """init common variables"""
-        self.SERVER_URL = '180.76.160.238:50053'
+        self.SERVER_URL = '180.76.117.150:50053'
         self.GRPC_OPTIONS = [
             ('grpc.max_send_message_length', 512 * 1024 * 1024),
             ('grpc.max_receive_message_length', 512 * 1024 * 1024)
         ]
         self.respect_existing = True
+        # Timeout in seconds for grpc calls
+        self.timeout = 10 * 60
 
     def scan(self, tablename, columns, where):
         """Scan data from table"""
@@ -42,7 +44,7 @@ class AfsClient(object):
                 table_name=tablename,
                 columns=columns,
                 where=where)
-            response = stub.Scan(request)
+            response = stub.Scan(request, timeout=self.timeout)
             for resItem in response.records:
                 json_rets = json.loads(resItem)
                 if json_rets is None:
@@ -58,8 +60,8 @@ class AfsClient(object):
         query_ret = self.scan(table_name, columns, where)
         for item in query_ret:
             task_id = item.get('task_id', '')
-            start_time = int(str(item.get('start_time', ''))[:10])
-            end_time = int(str(item.get('end_time', ''))[:10])
+            start_time = int(float(str(item.get('start_time', ''))[:10]))
+            end_time = int(float(str(item.get('end_time', ''))[:10]))
             res.append((task_id, start_time, end_time))
             logging.info(F'task id: {task_id}, start_time: {start_time}, end_time: {end_time}')
         return res
@@ -113,7 +115,7 @@ class AfsClient(object):
         """Read and transfer afs messages into apollo format, then insert them into bos"""
         task_id, ((start_time, end_time), target_dir) = task_params
         target_file = os.path.join(target_dir, F'{start_time}.record')
-        logging.info(F'writing to target file: {target_file}')
+        logging.info(F'writing to target file: {target_file}, message table name: {message_namespace}')
         if os.path.exists(target_file) and self.respect_existing:
             logging.info(F'target file {target_file} exists already, skip it')
             return target_file
@@ -128,7 +130,7 @@ class AfsClient(object):
                 topics=topics,
                 skip_topics=skip_topics,
                 with_data=True)
-            response = stub.ReadMessages(request)
+            response = stub.ReadMessages(request, timeout=self.timeout)
             # Write message to BOS
             writer = AfsRecordWriter(target_file)
             for cyber_message in response:
@@ -158,7 +160,6 @@ class AfsClient(object):
         task_id, log_dir = task_target
         task_parts = task_id.split('_')
         vehicle_id, log_date = task_parts[0], task_parts[1][:8]
-        file_utils.makedirs(log_dir)
         logging.info(F'task_id: {task_id}, target log dir: {log_dir}')
         with grpc.insecure_channel(self.SERVER_URL, self.GRPC_OPTIONS) as channel:
             stub = afs_data_service_pb2_grpc.AfsDataTransferStub(channel)
@@ -168,9 +169,10 @@ class AfsClient(object):
                 vehicle_id=vehicle_id,
                 log_date=log_date,
                 log_names=log_names)
-            response = stub.GetLogs(request)
+            response = stub.GetLogs(request, timeout=self.timeout)
             for log in response:
                 log_file_path = os.path.join(log_dir, os.path.basename(log.log_file_name))
                 logging.info(F'writing log file: {log_file_path}')
+                file_utils.makedirs(log_dir)
                 with open(log_file_path, 'w') as log_file:
-                    log_file.write(log.log_content)
+                    log_file.write(log.log_content.encode('utf-8').decode())

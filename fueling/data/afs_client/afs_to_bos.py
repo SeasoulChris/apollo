@@ -71,6 +71,7 @@ class AfsToBosPipeline(BasePipeline):
         SummaryTuple = collections.namedtuple('Summary', ['TaskDirectory'])
         title = F'Transfered AFS data for {len(completed_dirs)} tasks'
         message = [SummaryTuple(TaskDirectory=task_dir) for task_dir in completed_dirs]
+
         try:
             email_utils.send_email_info(title, message, email_utils.DATA_TEAM)
         except Exception as error:
@@ -90,19 +91,20 @@ class AfsToBosPipeline(BasePipeline):
         logging.info(F'copying for {task_tbl} {start_date} to {end_date} with {exact_task_id}')
         # output bos directory
         target_dir = self.our_storage().abs_path(afs_config.TARGET_PATH)
-        # skip topics
+        # topics and skip topics
+        topics = '*' if self.FLAGS.get('all_topics') else ','.join(afs_config.TOPICS)
         skip_topics = '' if self.FLAGS.get('all_topics') else ','.join(afs_config.SKIP_TOPICS)
-        logging.info(F'copying with skipping topics {skip_topics} to {target_dir}')
+        logging.info(F'copying with topics {topics}, skipping topics {skip_topics} to {target_dir}')
 
         todo_tasks = spark_helper.cache_and_log(
-            'CopyPreparing',
+            'TodoTasks',
             # RDD(days)
             self.to_rdd([self.get_date(start_date, i) for i in range(interval.days + 1)])
             # PairRDD(task_id, start_time, end_time)
             .flatMap(lambda x: afs_client.scan_tasks(task_tbl, x)))
 
-        filtered_tasks = spark_helper.cache_and_log(
-            'CopyPreparing-Filter',
+        tasks_key_data = spark_helper.cache_and_log(
+            'Tasks-Keydata',
             # PairRDD(task_id, start_time, end_time)
             todo_tasks
             # RDD(task_id)
@@ -110,7 +112,11 @@ class AfsToBosPipeline(BasePipeline):
             # RDD(task_id)
             .distinct()
             # PairRDD(task_id, capture_place, region_id, task_purpose)
-            .flatMap(lambda x: afs_client.scan_keydata(keydata_tbl, x))
+            .flatMap(lambda x: afs_client.scan_keydata(keydata_tbl, x)))
+
+        filtered_tasks = spark_helper.cache_and_log(
+            'FilteredTasks',
+            tasks_key_data 
             # PairRDD(task_id, target_dir)
             .map(lambda x: self.filter_tasks(x, project, exact_task_id, target_dir))
             # PairRDD(task_id, target_dir)
@@ -118,7 +124,7 @@ class AfsToBosPipeline(BasePipeline):
 
         partitions = int(os.environ.get('APOLLO_EXECUTORS', 10)) * 10
         process_tasks = spark_helper.cache_and_log(
-            'CopyProcessing',
+            'ProcessTasks',
             todo_tasks
             # PairRDD(task_id, (start_time, end_time))
             .map(lambda x: (x[0], (x[1], x[2])))
@@ -127,7 +133,7 @@ class AfsToBosPipeline(BasePipeline):
             # PairRDD(task_id, ((start_time, end_time), target_dir))
             .repartition(partitions)
             # RDD((messages))
-            .map(lambda x: afs_client.transfer_messages(x, message_tbl, skip_topics))
+            .map(lambda x: afs_client.transfer_messages(x, message_tbl, skip_topics, topics))
             # RDD(completed dirs)
             .map(os.path.dirname)
             # RDD(completed dirs)

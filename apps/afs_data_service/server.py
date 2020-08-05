@@ -27,8 +27,8 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
         logging.info('Running AfsDataTransfer server.')
         self.adb_client = AdbClient()
         # TODO(weixiao): Replace IP with a list
-        self.adb_client.set_config('adb.server.hosts', '10.197.199.17:8010')
-        self.adb_client.set_config('adb.export_server.hosts', '10.90.222.37:8000')
+        self.adb_client.set_config('adb.server.hosts', '10.197.198.23:8010')
+        self.adb_client.set_config('adb.export_server.hosts', '10.104.102.30:8000')
         self.adb_client.set_config('adb.user', os.environ.get('ADB_SDK_USER'))
         self.adb_client.set_config('adb.pass', os.environ.get('ADB_SDK_PASSWD'))
         logging.info('AfsDataTransfer server running with adbsdk client setup.')
@@ -51,6 +51,7 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
             for k, v in scan_result.meta.items():
                 json_rets[k] = self._get_value(v)
             response.records.append(json.dumps(json_rets))
+        logging.info('scanned table {} with where {}'.format(request.table_name, request.where))
         return response
 
     def ReadMessages(self, request, context):
@@ -63,7 +64,8 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
             end_time_s=request.end_time_second,
             namespace=request.namespace)
         skip_topics = request.skip_topics.split(',')
-        logging.info('read messages for {} with skipping {}'.format(request.task_id, skip_topics))
+        logging.info('read messages for {} with topics {}, skipping {}'.format(
+            request.task_id, request.topics, skip_topics))
         for topic, message, data_type, timestamp in messages:
             if request.skip_topics != '' and any(topic.find(x) != -1 for x in skip_topics):
                 continue
@@ -74,6 +76,7 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
             response.data_type = data_type
             response.timestamp = timestamp
             yield response
+        logging.info('finished read messages for {}'.format(request.task_id))
 
     def GetLogs(self, request, context):
         """Retrieve logs from particular task"""
@@ -94,6 +97,7 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
                     response.log_content = self._retrieve_file_content(log_file_path.path)
                     logging.info('got log for: {}'.format(log_file_path.path))
                     yield response
+        logging.info('finished getting {} from path: {}'.format(log_names, log_path))
 
     def _get_value(self, data):
         """get scan result meta column value"""

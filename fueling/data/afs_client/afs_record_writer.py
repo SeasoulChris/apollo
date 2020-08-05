@@ -8,7 +8,6 @@ from cyber.python.cyber_py3.record import RecordWriter
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.data.afs_client.config as afs_config
-import fueling.data.afs_client.conversions as conversions
 
 
 class AfsRecordWriter(object):
@@ -25,7 +24,6 @@ class AfsRecordWriter(object):
         self.converted_message_writer = RecordWriter(0, 0)
         self.writer.open(target_file)
         self.converted_message_writer.open(converted_file)
-        conversions.register_conversions()
         logging.info(F'converted message file: {converted_file}')
 
     def close(self):
@@ -45,11 +43,4 @@ class AfsRecordWriter(object):
             self.channels[cyber_message.topic] = cyber_message.data_type
         self.writer.write_message(
             cyber_message.topic, cyber_message.message, cyber_message.timestamp)
-        apollo_params = conversions.ConversionsCenter.convert(cyber_message)
-        if not apollo_params:
-            return
-        apollo_topic, apollo_datatype, apollo_message = apollo_params
-        if apollo_topic not in self.converted_channels:
-            self.converted_channels[apollo_topic] = apollo_datatype
-        self.converted_message_writer.write_message(
-            apollo_topic, apollo_message.SerializeToString(), cyber_message.timestamp)
+        logging.log_every_n(logging.INFO, F'write message {cyber_message.topic}', 1000)

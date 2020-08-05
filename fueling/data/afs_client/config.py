@@ -18,7 +18,7 @@ PROJ_TO_TABLE = {
         'auto_car/cyberecord',
         'auto_car',
         'auto_car/task_keydata',
-        '/operation/auto_car'),
+        'auto_car'),
 }
 
 # Maps (capture place/areas)
@@ -27,11 +27,13 @@ MAP_KL_BAIDU_DASHA_CESHI = 'FengTian-BaiDuDaShaCeShi'
 MAP_KL_XIONGAN_ZHONGXIN = 'XiongAnShiMinZhongXin-Apollo'
 MAP_KL_XIAMEN_APOLLO = 'XiaMen-Apollo'
 MAP_KL_XIAMEN_RUANJIANYUAN = 'xiamenruanjianyuan-jinlong'
+MAP_PL_YIZHUANG_DALU = 'YiZhuangDaLuWang'
 
 # Regions (not real region, but a general place that covers mutiple maps)
 REGION_KL_BAIDUDASHA = 'BaiduDaSha'
 REGION_KL_XIONGAN = 'XiongAn'
 REGION_KL_XIAMEN = 'XiaMen'
+REGION_PL_YIZHUANG = 'YiZhuangDaDiTu'
 
 MAP_TO_REGION = {
     MAP_KL_BAIDU_DASHA: REGION_KL_BAIDUDASHA,
@@ -39,31 +41,79 @@ MAP_TO_REGION = {
     MAP_KL_XIONGAN_ZHONGXIN: REGION_KL_XIONGAN,
     MAP_KL_XIAMEN_APOLLO: REGION_KL_XIAMEN,
     MAP_KL_XIAMEN_RUANJIANYUAN: REGION_KL_XIAMEN,
+    MAP_PL_YIZHUANG_DALU: REGION_PL_YIZHUANG,
 }
 
 # Task purposes
 # http://wiki.baidu.com/pages/viewpage.action?pageId=545138637
 # Skip getting data from the ones that are commented out
 TASK_TO_PURPOSE = {
-    0: 'debug',
-    1: 'ads',
+    #0: 'debug',
+    #1: 'ads',
     2: 'collection',
-    3: 'dailybuild',
-    4: 'roadtest',
+    #3: 'dailybuild',
+    #4: 'roadtest',
     # 5: 'calibration',
-    6: 'operation',
+    #6: 'operation',
     # 7: 'mapcollection',
-    8: 'prerelease',
-    9: 'prepublish',
-    10: 'publish',
+    #8: 'prerelease',
+    #9: 'prepublish',
+    #10: 'publish',
     # 11: 'mapchecking'
 }
 
+# Topics that need to be present
+TOPICS = [
+    '/adu/carall',
+    '/pnc/carstatus',
+    '/planning/proxy/DuDriveChassis',
+    '/localization/10hz/localization_pose',
+    '/localization/100hz/localization_pose',
+
+    '/perception/obstacles',
+    '/perception/traffic_light_status',
+    '/perception/traffic_light_frame',
+    '/perception/traffic_light_trigger',
+
+    '/router/continue_routing',
+    '/router/routing_signal',
+    '/datavision/routing_path',
+
+    '/pnc/decision',
+    '/pnc/canbus_sniffing',
+    '/pnc/prediction',
+    '/pnc/planning',
+]
+
 # Topics that can be skipped by default
-SKIP_TOPICS = ['PointCloud', 'camera']
+SKIP_TOPICS = [
+    'PointCloud',
+    'camera',
+    'sensor',
+    '/perception/landmarks',
+    '/perception/traffic_light_simulation',
+    '/tf',
+    '/patrol/control/role_agent',
+    '/integrated/localization/measuredata_non_rtk',
+    '/integrated/localization/measuredata_heading',
+    '/integrated/localization/measuredata_rtk',
+    '/meta_stat',
+    '/adu/carsound',
+    '/perception/LidarDebug',
+    '/pnc/control',
+    '/patrol/agent/discode',
+    '/pnc/control/interactive',
+    '/patrol/errcode',
+    '/monitor/channel_metric_alarm',
+    '/localization/lio_pose_graph/localization_pose',
+    '/localization/measure_data',
+    '/perception/surround_vision_obstacles',
+    '/patrol/agent/collision_detect',
+    '/eap/data_recorder/status',
+]
 
 # Logs names we need to retrieve
-LOG_NAMES = ['planning.log', 'prediction.log']
+LOG_NAMES = ['routing.log']
 
 # Target paths and paths after on the fly conversions
 TARGET_PATH = 'modules/data/afs-data'

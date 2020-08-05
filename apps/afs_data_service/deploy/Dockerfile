@@ -29,10 +29,9 @@ RUN apt update -y && \
 RUN pip install --no-cache-dir \
     absl-py \
     future \
-    protobuf \
+    protobuf==3.12.2 \
     pyyaml \
-    grpcio \
-    grpcio-tools
+    grpcio-tools==1.29.0
 
 # Setup adbsdk
 COPY adbsdk /home/afs_data_service/adbsdk
