@@ -13,9 +13,9 @@ from absl import flags
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
 from fueling.common.partners import partners
-import fueling.common.logging as logging
-import fueling.common.file_utils as file_utils
 import fueling.common.email_utils as email_utils
+import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.spark_helper as spark_helper
@@ -82,16 +82,6 @@ class LocalMapPipeline(BasePipeline):
         job_type = 'VIRTUAL_LANE_GENERATION'
         redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
 
-        if not velodyne16_ext_list:
-            logging.error('velodyne16_novatel_extrinsics_example.yaml not exists')
-            title = 'Your localmap is not generated!'
-            email_utils.send_email_info(title, content, receivers)
-            redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
-                           'job_status': 'failed', 'sub_type': 'base_map'}
-            redis_utils.redis_extend_dict(redis_key, redis_value)
-            JobUtils(job_id).save_job_failure_code('E303')
-            return
-
         fbags = sorted(glob.glob(os.path.join(source_dir, '*.record*')))
         lidar_channel = F'/apollo/sensor/{lidar_type}/compensator/PointCloud2'
         reader = record_utils.read_record([lidar_channel,
@@ -103,11 +93,28 @@ class LocalMapPipeline(BasePipeline):
             lidar_message = get_message_by_topic(messages, lidar_channel)
             odometry_message = get_message_by_topic(messages, record_utils.GNSS_ODOMETRY_CHANNEL)
             ins_stat_message = get_message_by_topic(messages, record_utils.GNSS_INS_STAT_CHANNEL)
-            if not (lidar_message and odometry_message and ins_stat_message):
-                JobUtils(job_id).save_job_failure_code('E304')
-                title = 'Your localmap is not generated!'
+            if lidar_message and odometry_message and ins_stat_message:
+                continue
+            elif not (lidar_message or odometry_message or ins_stat_message):
+                title = 'Your base map is generated!'
+                JobUtils(job_id).save_job_progress(100)
                 email_utils.send_email_info(title, content, receivers)
                 return
+            else:
+                JobUtils(job_id).save_job_failure_code('E304')
+                title = 'Your localmap is not generated!'
+                email_utils.send_email_error(title, content, receivers)
+                raise Exception("One or more channels are missing in %s" % fbag)
+
+        if not velodyne16_ext_list:
+            logging.error('velodyne16_novatel_extrinsics_example.yaml not exists')
+            title = 'Your localmap is not generated!'
+            email_utils.send_email_error(title, content, receivers)
+            redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+                           'job_status': 'failed', 'sub_type': 'base_map'}
+            redis_utils.redis_extend_dict(redis_key, redis_value)
+            JobUtils(job_id).save_job_failure_code('E303')
+            raise Exception("Novatel extrinsics.yaml not exits!")
 
         # RDD(tasks), the tasks without source_dir as prefix
         # RDD(record_path)
@@ -127,10 +134,10 @@ class LocalMapPipeline(BasePipeline):
                     JobUtils(job_id).save_job_failure_code('E305')
                 else:
                     JobUtils(job_id).save_job_failure_code('E306')
-                JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                     'Unknow error, \
-                                                     please contact after-sales technical support',
-                                                     False)
+                error = 'Unknow error, please contact after-sales technical support!'
+                JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com', error, False)
+                email_utils.send_email_error(title, content, receivers)
+                raise Exception("Unknown error!")
         else:
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                            'job_status': 'success', 'sub_type': 'All'}

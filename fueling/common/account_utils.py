@@ -12,14 +12,14 @@ class AccountUtils(object):
         """Init"""
         self.db = Mongo().account_collection()
 
-    def apply_account_info(self, com_name, com_email, vehicle_sn, bos_bucker_name, bos_region,
+    def apply_account_info(self, com_name, com_email, vehicle_sn, bos_bucket_name, bos_region,
                            bos_ak, bos_sk, purpose, apply_date=None):
         """Apply account info"""
         date = apply_date if apply_date else datetime.datetime.now()
         result = self.db.insert_one({'com_name': com_name,
                                      'com_email': com_email,
                                      'vehicle_sn': vehicle_sn,
-                                     'bos_bucker_name': bos_bucker_name,
+                                     'bos_bucket_name': bos_bucket_name,
                                      'bos_region': bos_region,
                                      'bos_ak': bos_ak,
                                      'bos_sk': bos_sk,
@@ -30,12 +30,12 @@ class AccountUtils(object):
         logging.info(f"apply_account_info: {result.inserted_id}")
         return result.inserted_id
 
-    def upadate_account_info(self, account_id, com_email, bos_bucker_name, bos_region,
+    def upadate_account_info(self, account_id, com_email, bos_bucket_name, bos_region,
                              bos_ak, bos_sk):
         """update account info"""
         self.db.update_one({'_id': ObjectId(account_id)},
                            {'$set': {'com_email': com_email,
-                                     'bos_bucker_name': bos_bucker_name,
+                                     'bos_bucket_name': bos_bucket_name,
                                      'bos_region': bos_region,
                                      'bos_ak': bos_ak,
                                      'bos_sk': bos_sk}})

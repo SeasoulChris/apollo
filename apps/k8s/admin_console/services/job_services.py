@@ -6,6 +6,7 @@ import flask_restful
 from flask_restful.reqparse import RequestParser
 
 from controllers import job
+from controllers import account
 import fueling.common.logging as logging
 
 
@@ -30,7 +31,12 @@ class JobService(flask_restful.Resource):
         if args["offset"]:
             offset = args["offset"]
 
+        accounts = account.account_db.get_account_info({"vehicle_sn": vehicle_sn})
+        if not accounts:
+            return {"desc": "Cannot find any job logs,please check the vehicle_sn!",
+                    "total_num": 0, "result": {}}, 400
         filter_job["vehicle_sn"] = vehicle_sn
+
         if args["job_type"]:
             filter_job["job_type"] = args["job_type"]
         if args["starttime"]:
@@ -39,24 +45,19 @@ class JobService(flask_restful.Resource):
             filter_job["end_time"] = {"$lt": datetime.datetime.fromtimestamp(args["endtime"])}
 
         job.get_job_objs(filter_job, res, True)
-        logging.info(f"vehicle_sn: {vehicle_sn}")
-        logging.info(f"job_type: {args['job_type']}")
-        logging.info(f"start_time: {args['starttime']}")
-        total_num = len(res["data"]["job_objs"])
-        current_page_obj, (index_start, index_end) = job.get_job_paginator(offset / limit + 1,
-                                                                           total_num, limit)
         if res["code"] != 200:
-            result["code"] = 400
             result["desc"] = "Cannot find any job logs,please check the vehicle_sn!"
             result["total_num"] = 0
             result["result"] = []
-            return result
+            return result, 400
+        total_num = len(res["data"]["job_objs"])
+        current_page_obj, (index_start, index_end) = job.get_job_paginator(offset / limit + 1,
+                                                                           total_num, limit)
         job_list = res["data"]["job_objs"][index_start: index_end]
 
-        result["code"] = 200
         result["desc"] = "success"
         result["total_num"] = total_num
         result["result"] = job_list
         logging.info(f"(index_start, index_end): {(index_start, index_end)}")
         logging.info(f"res_data: {job_list}")
-        return result
+        return result, 200

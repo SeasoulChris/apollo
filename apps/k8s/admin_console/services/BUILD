@@ -21,6 +21,7 @@ py_library(
     srcs = ["job_services.py"],
     data = ["//apps/k8s/admin_console:resource"],
     deps = [
+        "//apps/k8s/admin_console/controllers:account",
         "//apps/k8s/admin_console/controllers:job",
         "//fueling/common:logging",
     ],

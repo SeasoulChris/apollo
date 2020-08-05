@@ -19,8 +19,10 @@ from modules.map.proto import map_road_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
-import fueling.common.logging as logging
+from fueling.map.sanity_check import sanity_check
+import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.common.redis_utils as redis_utils
 import fueling.common.spark_helper as spark_helper
@@ -43,6 +45,8 @@ class MapGenSingleLine(BasePipeline):
         dst_prefix = os.path.join(src_dir, 'result')
         self.lane_width = 3.3
         self.extra_roi_extension = 1.0
+        job_id = self.FLAGS.get('job_id')
+        logging.info("job_id: %s" % job_id)
 
         if not os.path.exists(dst_prefix):
             logging.warning('target_path: {} not exists'.format(dst_prefix))
@@ -71,12 +75,6 @@ class MapGenSingleLine(BasePipeline):
         self.lane_width = self.FLAGS.get('lane_width')
         self.extra_roi_extension = self.FLAGS.get('extra_roi_extension')
 
-        # if src_prefix == dst_prefix:
-        #     logging.error('The input data path must be different from the output data path!')
-        #     JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-        #                                          'base map not generated', False)
-        #     return
-
         # Access partner's storage if provided.
         object_storage = self.partner_storage() or self.our_storage()
 
@@ -95,9 +93,10 @@ class MapGenSingleLine(BasePipeline):
 
         JobUtils(job_id).save_job_input_data_size(source_dir)
         JobUtils(job_id).save_job_sub_type('')
-        if file_utils.getInputDirDataSize(source_dir) >= 5 * 1024 * 1024 * 1024:
-            JobUtils(job_id).save_job_failure_code('E300')
-            return
+        receivers = email_utils.SIMPlEHDMAP_TEAM + email_utils.D_KIT_TEAM
+        if not sanity_check(source_dir, object_storage.abs_path(dst_prefix),
+                            job_owner, job_id, receivers):
+            raise Exception("Sanity_check failed!")
         job_type, job_size = 'VIRTUAL_LANE_GENERATION', file_utils.getDirSize(source_dir)
         redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
         redis_value = {'begin_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
@@ -138,12 +137,7 @@ class MapGenSingleLine(BasePipeline):
         reader = record_utils.read_record([record_utils.LOCALIZATION_CHANNEL])
         i = 0
         job_id = self.FLAGS.get('job_id')
-        if len(fbags) == 0:
-            JobUtils(job_id).save_job_failure_code('E301')
         for fbag in fbags:
-            logging.info('reader(fbag) channel num: {}'.format(len(reader(fbag))))
-            if(len(reader(fbag)) == 0):
-                JobUtils(job_id).save_job_failure_code('E302')
             for msg in reader(fbag):
                 pos = record_utils.message_to_proto(msg).pose.position
                 points.append((pos.x, pos.y))

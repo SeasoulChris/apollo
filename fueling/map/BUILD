@@ -3,10 +3,25 @@ load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
 package(default_visibility = ["//visibility:public"])
 
 py_library(
+    name = "sanity_check",
+    srcs = ["sanity_check.py"],
+    deps = [
+        "//fueling/common:email_utils",
+        "//fueling/common:file_utils",
+        "//fueling/common:job_utils",
+        "//fueling/common:logging",
+        "//fueling/common:record_utils",
+        "@apollo//cyber/python/cyber_py3:record",
+    ],
+)
+
+py_library(
     name = "generate_base_map",
     srcs = ["generate_base_map.py"],
     deps = [
+        ":sanity_check",
         "//fueling/common:base_pipeline",
+        "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:job_utils",
         "//fueling/common:record_utils",

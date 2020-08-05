@@ -170,6 +170,12 @@ class JobUtils(object):
                            {'$set': {'failure_code': err_code}})
         logging.info(f"save_job_failure_code: {err_code}")
 
+    def save_job_failure_detail(self, err_detail):
+        """Save job err_detail"""
+        self.db.update_one({'job_id': self.job_id},
+                           {'$set': {'failure_detail': err_detail}})
+        logging.info(f"save_job_failure_detail: {err_detail}")
+
     def get_job_info(self):
         """get job info"""
         result = []

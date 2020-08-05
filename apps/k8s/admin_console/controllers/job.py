@@ -140,6 +140,7 @@ def get_job_objs(filters, res, service_flag=False):
             objs = format_job_for_services(job_collection.find(filters))
         else:
             objs = format_job_time(job_collection.find(filters))
+
         sorted_objs = sorted(objs, key=lambda x: x["start_time"], reverse=True)
         res["data"]["job_objs"] = sorted_objs
         res["code"] = 200
