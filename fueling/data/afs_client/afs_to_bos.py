@@ -116,7 +116,7 @@ class AfsToBosPipeline(BasePipeline):
 
         filtered_tasks = spark_helper.cache_and_log(
             'FilteredTasks',
-            tasks_key_data 
+            tasks_key_data
             # PairRDD(task_id, target_dir)
             .map(lambda x: self.filter_tasks(x, project, exact_task_id, target_dir))
             # PairRDD(task_id, target_dir)

@@ -48,17 +48,17 @@ MAP_TO_REGION = {
 # http://wiki.baidu.com/pages/viewpage.action?pageId=545138637
 # Skip getting data from the ones that are commented out
 TASK_TO_PURPOSE = {
-    #0: 'debug',
-    #1: 'ads',
+    0: 'debug',
+    1: 'ads',
     2: 'collection',
-    #3: 'dailybuild',
-    #4: 'roadtest',
+    3: 'dailybuild',
+    4: 'roadtest',
     # 5: 'calibration',
-    #6: 'operation',
+    6: 'operation',
     # 7: 'mapcollection',
-    #8: 'prerelease',
-    #9: 'prepublish',
-    #10: 'publish',
+    8: 'prerelease',
+    9: 'prepublish',
+    10: 'publish',
     # 11: 'mapchecking'
 }
 

@@ -115,7 +115,7 @@ class AfsClient(object):
         """Read and transfer afs messages into apollo format, then insert them into bos"""
         task_id, ((start_time, end_time), target_dir) = task_params
         target_file = os.path.join(target_dir, F'{start_time}.record')
-        logging.info(F'writing to target file: {target_file}, message table name: {message_namespace}')
+        logging.info(F'writing to target file: {target_file}, table name: {message_namespace}')
         if os.path.exists(target_file) and self.respect_existing:
             logging.info(F'target file {target_file} exists already, skip it')
             return target_file
