@@ -25,6 +25,7 @@ class JobService(flask_restful.Resource):
         offset = 0
         res = {}
         filter_job = {}
+        filter_endtime = []
         result = {}
         if args["limit"]:
             limit = args["limit"]
@@ -35,15 +36,21 @@ class JobService(flask_restful.Resource):
         if not accounts:
             return {"desc": "Cannot find any job logs,please check the vehicle_sn!",
                     "total_num": 0, "result": {}}, 400
+
+        if args["endtime"]:
+            filter_endtime.append({"end_time": {'$exists': False}})
+            endtime = datetime.datetime.fromtimestamp(args["endtime"])
+            filter_endtime.append({"end_time": {"$lte": endtime}})
+            filter_job = {"$or": filter_endtime}
+
         filter_job["vehicle_sn"] = vehicle_sn
 
         if args["job_type"]:
             filter_job["job_type"] = args["job_type"]
         if args["starttime"]:
-            filter_job["start_time"] = {"$gt": datetime.datetime.fromtimestamp(args["starttime"])}
-        if args["endtime"]:
-            filter_job["end_time"] = {"$lt": datetime.datetime.fromtimestamp(args["endtime"])}
+            filter_job["start_time"] = {"$gte": datetime.datetime.fromtimestamp(args["starttime"])}
 
+        logging.info(f"filter_job: {filter_job}")
         job.get_job_objs(filter_job, res, True)
         if res["code"] != 200:
             result["desc"] = "Cannot find any job logs,please check the vehicle_sn!"
