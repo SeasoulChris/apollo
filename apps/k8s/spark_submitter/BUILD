@@ -57,6 +57,7 @@ py_library(
         "//fueling/map:generate_maps",
         "//fueling/perception/sensor_calibration:calibration_multi_sensors",
         "//fueling/profiling/control:control_profiling",
+        "//fueling/profiling/open_space_planner:metrics",
     ],
 )
 

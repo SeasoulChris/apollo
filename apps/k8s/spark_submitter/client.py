@@ -217,13 +217,16 @@ class SparkSubmitterClient(object):
             logging.fatal(F'Cannot process entrypoint {entrypoint}')
 
         entrypoint = file_utils.fuel_path(entrypoint)
+        logging.info(entrypoint)
         zip_app = entrypoint[:-3] + '.zip'
         if not os.path.exists(zip_app):
             FUEL_DIR = '/fuel/'
             fuel_pos = zip_app.find(FUEL_DIR)
+            logging.info(fuel_pos)
             if fuel_pos < 0:
                 logging.fatal('Pipeline should be under fuel/ dir.')
             zip_app = os.path.join('/fuel/bazel-bin', zip_app[fuel_pos + len(FUEL_DIR):])
+            logging.info(zip_app)
         return zip_app
 
     @staticmethod
