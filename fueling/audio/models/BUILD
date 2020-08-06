@@ -64,3 +64,12 @@ py_binary(
         "//fueling/learning:train_utils",
     ],
 )
+
+py_binary(
+    name = "jit_trace",
+    srcs = ["jit_trace.py"],
+    deps = [
+        ":siren_net",
+        "//fueling/learning:train_utils",
+    ],
+)
