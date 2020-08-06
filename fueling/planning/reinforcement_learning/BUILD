@@ -34,6 +34,7 @@ py_library(
         "//fueling/common:coord_utils",
         "//fueling/common:logging",
         "//fueling/learning:train_utils",
+        "//fueling/learning:network_utils",
         "//fueling/planning/input_feature_preprocessor:chauffeur_net_feature_generator",
         "@apollo//cyber/python/cyber_py3:cyber",
         "@apollo//cyber/python/cyber_py3:cyber_time",

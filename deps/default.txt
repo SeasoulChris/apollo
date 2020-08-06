@@ -1,6 +1,5 @@
 liegroups
 psycopg2-binary
-keyboard
 
 # TODO(xiaoxq): Required by data/libeling
 # pypcd

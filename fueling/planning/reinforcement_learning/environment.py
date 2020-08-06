@@ -3,7 +3,6 @@
 import math
 import time
 
-import keyboard
 import numpy as np
 from torchvision import transforms
 
@@ -47,10 +46,11 @@ class ADSEnv(object):
         self.birdview_feature_input = None
         self.history_len = history_len
 
-        self.hidden = generate_lstm_states()
+        self.hidden = generate_lstm_states(hidden_size)
         self.delta_t = 0.2
         self.state = None
         self.current_adv_pose = None
+        self.sequence_num = 0
 
         # for reward and done in function step
         self.reward = 0
@@ -61,17 +61,19 @@ class ADSEnv(object):
         self.is_input_ready = False
 
         cyber.init()
-        self.rl_node = cyber.Node("rl_node")
-        self.gradingsub = self.rl_node.create_reader("/apollo/grading",
+        self.rl_node = cyber.Node("rl_node_learning")
+        self.gradingsub = self.rl_node.create_reader("/apollo/grading/1",
                                                      grading_result_pb2.FrameResult,
                                                      self.callback_grading)
-        self.chassissub = self.rl_node.create_reader("/apollo/canbus/chassis",
+        self.chassissub = self.rl_node.create_reader("/apollo/canbus/chassis/1",
                                                      chassis_pb2.Chassis,
                                                      self.callback_chassis)
         self.learning_data_sub = self.rl_node.create_reader(
-            "/apollo/planning/learning_data",
+            "/apollo/planning/learning_data/1",
             learning_data_pb2.PlanningLearningData,
             self.callback_learning_data)
+        self.writer = self.rl_node.create_writer(
+            "/apollo/planning/1", planning_pb2.ADCTrajectory)
 
     def step(self, action):
         """
@@ -81,14 +83,12 @@ class ADSEnv(object):
         """
         self.is_grading_done = False
         self.is_input_ready = False
-        # key input: s
-        keyboard.press_and_release('s')
         # send planning msg (action)
-        writer = self.rl_node.create_writer(
-            "/apollo/planning", planning_pb2.ADCTrajectory)
         planning_message = planning_pb2.ADCTrajectory()
         planning_message.header.timestamp_sec = cyber_time.Time.now().to_sec()
         planning_message.header.module_name = "planning"
+        planning_message.header.sequence_num = self.sequence_num
+        self.sequence_num += 1
         planning_message.total_path_time = 2
 
         current_x, current_y, current_theta = self.current_adv_pose
@@ -139,7 +139,7 @@ class ADSEnv(object):
             point.ddkappa = (nextpoint.dkappa - point.dkappa) / \
                 (nextpoint.s - point.s)
 
-        writer.write(planning_message)
+        self.writer.write(planning_message)
 
         while not self.is_grading_done or not self.is_input_ready:
             time.sleep(0.1)  # second
@@ -160,14 +160,21 @@ class ADSEnv(object):
         return self.state, self.hidden
 
     def close(self):
-        # key input: q
-        keyboard.press_and_release('q')
-        pass
+        planning_message = planning_pb2.ADCTrajectory()
+        planning_message.header.timestamp_sec = cyber_time.Time.now().to_sec()
+        planning_message.header.module_name = "planning"
+        planning_message.header.sequence_num = self.sequence_num
+        self.sequence_num += 1
+        planning_message.decision.main_decision.mission_complete.stop_heading = 0
+
+        self.writer.write(planning_message)
 
     def callback_grading(self, entity):
         self.reward = 0
         # the lane width is defined according to the standard freeway
         self.width_lane = 3.6
+        dist_lane_center = 0
+        dist_end = 10000
 
         for result in entity.detailed_result:
             if result.name == "Collision" and result.is_pass is False:
@@ -211,12 +218,8 @@ class ADSEnv(object):
     def callback_learning_data(self, entity):
         logging.info('PlanningLearningData message received at time {}'
                      .format(entity.header.timestamp_sec))
-        frames_num = len(entity.learning_data.learning_data_frame)
-        if frames_num != 1:
-            logging.info(
-                "learning_data_frame's size is {}, not accepted by renderer".format(frames_num))
 
-        frame = entity.learning_data.learning_data_frame[0]
+        frame = entity.learning_data_frame
         region = frame.map_name
         current_path_point = frame.adc_trajectory_point[-1].trajectory_point.path_point
         current_x = current_path_point.x
