@@ -23,6 +23,7 @@ class OpenserviceRegression(object):
                        'partner': {'id': self.partner_id,
                                    'bos': {'access_key': self.ak, 'secret_key': self.sk}},
                        'flags': job_flags}
+        logging.info(F'requestdata: {json.dumps(requestdata)}')
         try:
             resp = requests.post(self.service_url, json=json.dumps(requestdata))
             http_code, msg = resp.status_code, resp.content
@@ -64,7 +65,7 @@ class OpenserviceRegression(object):
     def submit_vehicle_calibration(self):
         """submit vehicle calibration job"""
         job_type = 'VEHICLE_CALIBRATION'
-        input_data_path = 'test/openservice-regression/VehicleCalibration/input/task001'
+        input_data_path = 'test/openservice-regression/VehicleCalibration/input'
         job_flags = {
             'input_data_path': input_data_path,
         }
@@ -73,9 +74,20 @@ class OpenserviceRegression(object):
     def submit_control_profiling(self):
         """submit control profiling job"""
         job_type = 'CONTROL_PROFILING'
-        input_data_path = 'test/openservice-regression/ControlProfiling/input/DevKit'
+        input_data_path = 'test/openservice-regression/ControlProfiling/input'
         job_flags = {
             'input_data_path': input_data_path,
+        }
+        return self.request_openservice(job_type, job_flags)
+
+    def submit_open_space_planner_profiling(self):
+        """submit open space planner profiling job"""
+        job_type = 'OPEN_SPACE_PLANNER_PROFILING'
+        input_data_path = 'test/openservice-regression/OpenSpacePlannerProfiling/input'
+        output_data_path = 'test/openservice-regression/OpenSpacePlannerProfiling/output'
+        job_flags = {
+            'input_data_path': input_data_path,
+            'output_data_path': output_data_path,
         }
         return self.request_openservice(job_type, job_flags)
 
@@ -85,7 +97,8 @@ if __name__ == '__main__':
     jobs_to_call = ['submit_virtual_lane_generation',
                     'submit_sensor_calibration',
                     'submit_vehicle_calibration',
-                    'submit_control_profiling']
+                    'submit_control_profiling',
+                    'submit_open_space_planner_profiling']
     for job in jobs_to_call:
         msg, http_code = getattr(openservice, job)()
         logging.info(f'{job}: {http_code}: {msg}')
