@@ -8,7 +8,7 @@ from torch.autograd import Variable
 
 import itertools
 import struct  # get_image_size
-import imghdr  # get_image_size
+#import imghdr  # get_image_size
 
 from fueling.perception.emergency_detection.YOLOv4.tool import utils 
 

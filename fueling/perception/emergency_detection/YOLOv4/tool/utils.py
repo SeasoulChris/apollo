@@ -6,7 +6,7 @@ import numpy as np
 
 import itertools
 import struct  # get_image_size
-import imghdr  # get_image_size
+#import imghdr  # get_image_size
 
 
 def sigmoid(x):
