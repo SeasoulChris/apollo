@@ -71,7 +71,8 @@ class OpenServiceSubmitJob(SparkSubmitJob):
         try:
             arg = json_format.Parse(flask.request.get_json(), SaasJobArg())
             http_code, msg = JobProcessor(arg).process()
-        except BaseException:
+        except Exception as err:
+            logging.error(err)
             http_code = HTTPStatus.BAD_REQUEST
             msg = 'Wrong job argument'
         return msg, http_code
