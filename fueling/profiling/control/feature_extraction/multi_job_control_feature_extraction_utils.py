@@ -54,7 +54,7 @@ def parse_vehicle_controller(task, flags):
     if vehicle_message and hasattr(
             record_utils.message_to_proto(vehicle_message), 'current_vehicle'):
         vehicle_type = record_utils.message_to_proto(
-            vehicle_message).current_vehicle
+            vehicle_message).current_vehicle.replace(' ', '_', 1)
     elif flags['ctl_metrics_simulation_only_test']:
         vehicle_type = flags['ctl_metrics_simulation_vehicle']
     else:
@@ -63,8 +63,11 @@ def parse_vehicle_controller(task, flags):
         vehicle_type = "Arbitrary"
     # Compare the vehicle_type from HMI_status channel and the vehicle_type
     # from the input file system.
-    vehicle_type_parsed_from_dir = multi_vehicle_utils.get_vehicle_by_task(task)
-    if vehicle_type == "Arbitrary":
+    vehicle_type_parsed_from_dir = multi_vehicle_utils.get_vehicle_by_task(
+        task).replace(' ', '_', 1)
+    if vehicle_type == "Arbitrary" or "Dev_Kit":
+        # if hmi_status.current_vehicle is empty or linked to Dev_Kit, then re-define
+        # vehicle type with the one from the input file system
         vehicle_type = vehicle_type_parsed_from_dir
     else:
         if vehicle_type.lower() != vehicle_type_parsed_from_dir.lower():
