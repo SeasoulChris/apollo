@@ -11,6 +11,8 @@ import mimetypes
 import os
 import smtplib
 import sys
+import time
+import traceback
 
 import fueling.common.logging as logging
 
@@ -194,5 +196,14 @@ class EmailService(object):
             email.encoders.encode_base64(attachment)
             attachment.add_header('Content-Disposition', 'attachment', filename=filename)
             message.attach(attachment)
-        smtp.sendmail(from_addr, receivers, message.as_string())
+        for i in range(5):
+            try:
+                smtp.sendmail(from_addr, receivers, message.as_string())
+                logging.info('Email has been sent successfully')
+                break
+            except Exception as ex:
+                logging.error(f'Failed to send email: {ex}')
+                logging.error(traceback.format_exc())
+                time.sleep(30)
+                continue
         smtp.quit()
