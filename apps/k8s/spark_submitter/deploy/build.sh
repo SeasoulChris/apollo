@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CONTAINER="fuel"
+CONTAINER="fuel_${USER}"
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 set -ex
