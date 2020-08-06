@@ -217,6 +217,7 @@ class ADSEnv(object):
                 "learning_data_frame's size is {}, not accepted by renderer".format(frames_num))
 
         frame = entity.learning_data.learning_data_frame[0]
+        region = frame.map_name
         current_path_point = frame.adc_trajectory_point[-1].trajectory_point.path_point
         current_x = current_path_point.x
         current_y = current_path_point.y
@@ -224,7 +225,7 @@ class ADSEnv(object):
 
         birdview_feature_input = self.img_transform(
             self.birdview_feature_renderer.
-            render_stacked_img_features(frame.frame_num,
+            render_stacked_img_features(region,
                                         frame.adc_trajectory_point[-1].timestamp_sec,
                                         frame.adc_trajectory_point,
                                         frame.obstacle,
