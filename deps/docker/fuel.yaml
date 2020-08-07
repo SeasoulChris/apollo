@@ -24,6 +24,7 @@ dependencies:
   - conda-forge::pydub
   - conda-forge::python-kubernetes
   - conda-forge::pywavelets
+  - conda-forge::tensorboardx
   - flask
   - flask-socketio
   - graphviz
@@ -57,7 +58,10 @@ dependencies:
   - shapely
   - tensorflow = 1.14  # TF2 changes API.
   - tqdm
+  - scikit-image
 
   - pip:
     - casadi  # The conda-forge version is maintained by third-party.
     - eyeD3
+    - nuscenes-devkit
+
