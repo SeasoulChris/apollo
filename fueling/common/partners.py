@@ -84,4 +84,7 @@ partners = {
     'd-kit-nylg-2020008': Partner(name='NYLG08', email='liuyuan8601@163.com',
                                   bos_bucket='nit-car', bos_region='bj',
                                   vehicle_sn='CH2020008'),
+    'd-kit-xyxn-2020025': Partner(name='xyxn25', email='hongfang.yan@inwinic.com',
+                                  bos_bucket='inwinic-888', bos_region='gz',
+                                  vehicle_sn='CH2020025'),
 }
