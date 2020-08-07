@@ -13,7 +13,15 @@ IGNORES="E402,W503"
 LINT="pycodestyle --max-line-length 100 --show-source --ignore=${IGNORES}"
 FLAKE="pyflakes"
 
-function LintDir {
+function FatalDuildifier() {
+  result=$( buildifier -v $@ 2>&1 )
+  if [ ! -z "${result}" ]; then
+    echo "${result}"
+    return 1
+  fi
+}
+
+function LintDir() {
   find "$1" -type f -name '*.py' | \
       grep -v 'fueling/common/record/kinglong/cybertron' | \
       grep -v 'prediction/learning/datasets/apollo_pedestrian_dataset/data_for_learning_pb2.py' | \
@@ -23,6 +31,8 @@ function LintDir {
       grep -v 'fueling/common/logging.py' | \
       grep -v 'fueling/common/record/kinglong/cybertron' | \
       xargs ${FLAKE}
+
+  FatalDuildifier $( find "$1" -type f -name 'BUILD' )
 }
 
 PATH_ARG=$1
@@ -32,7 +42,9 @@ if [ -z "${PATH_ARG}" ]; then
   LintDir fueling
 elif [ -d "${PATH_ARG}" ]; then
   LintDir "${PATH_ARG}"
-else
+elif [[ "${PATH_ARG}" = "*.py" ]]; then
   ${LINT} "${PATH_ARG}"
   ${FLAKE} "${PATH_ARG}"
+elif [[ "${PATH_ARG}" = "*BUILD" ]]; then
+  FatalDuildifier "${PATH_ARG}"
 fi
