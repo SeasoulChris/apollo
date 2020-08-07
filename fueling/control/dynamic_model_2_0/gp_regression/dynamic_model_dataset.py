@@ -2,6 +2,7 @@
 
 """Extracting and processing dataset"""
 
+import pickle
 import os
 
 from torch.utils.data import Dataset
@@ -26,10 +27,99 @@ POLYNOMINAL_ORDER = feature_config["polynomial_order"]
 PI = 3.14159
 
 
+def get_standardization_factors(datasets):
+    """Compute mean and variance of input data using only training data"""
+    # mean
+    input_segment_mean = np.zeros((1, INPUT_DIM))
+    for dataset in datasets:
+        input_segment = dataset[0]  # input segment (100, 6)
+        input_segment_mean += np.mean(input_segment, axis=0)
+    input_segment_mean = input_segment_mean / len(datasets)
+
+    # standard deviation
+    input_segment_std = np.zeros((1, INPUT_DIM))
+    for dataset in datasets:
+        input_segment = dataset[0]  # dataset[0] : input
+        value = (input_segment - input_segment_mean) ** 2
+        input_segment_std += np.mean(value, axis=0)
+    input_segment_std = np.sqrt(input_segment_std / len(datasets))
+    return (input_segment_mean, input_segment_std)
+
+
+def save_model_param_to_bin(input_mean, input_std, dst_dir):
+    """ dump params to bin file for on-line interface """
+    gp_model_param = GPModelParam()
+    gp_model_param.input_dim = INPUT_DIM
+    gp_model_param.output_dim = OUTPUT_DIM
+    gp_model_param.input_window_size = INPUT_WINDOW_SIZE
+    gp_model_param.standardization_factor.input_mean.columns.extend(input_mean.reshape(-1).tolist())
+    gp_model_param.standardization_factor.input_std.columns.extend(input_std.reshape(-1).tolist())
+
+    # export proto to bin
+    param_bin_file = os.path.join(dst_dir, 'param.bin')
+    proto_utils.write_pb_to_bin_file(gp_model_param, param_bin_file)
+
+    # export proto to txt (for debug)
+    param_txt_file = os.path.join(os.path.dirname(dst_dir), 'param.txt')
+    proto_utils.write_pb_to_text_file(gp_model_param, param_txt_file)
+
+
+class BosDataset(Dataset):
+    """ Dateset for BOS """
+
+    def __init__(self, file_list_dir, is_train=True, param_file=None):
+        super().__init__()
+        self.file_list_dir = file_list_dir
+        self.datasets = []
+        self.get_datasets()
+        if is_train and (not param_file):
+            # generate standardization factors
+            self.input_mean, self.input_std = get_standardization_factors(self.datasets)
+            save_model_param_to_bin(self.input_mean, self.input_std, self.file_list_dir)
+        else:
+            # load standardization factors
+            params = proto_utils.get_pb_from_bin_file(param_file, GPModelParam())
+            self.input_mean = params.standardization_factor.input_mean.columns
+            self.input_std = params.standardization_factor.input_std.columns
+            logging.info(f'param factors are {self.input_mean} and {self.input_std}')
+
+    def get_datasets(self):
+        # load the file from file list
+        files = file_utils.list_files_with_suffix(self.file_list_dir, '.txt')
+        # loop over list files
+        for cur_file in files:
+            logging.info(cur_file)
+            with open(cur_file, "rb") as fp:  # Pickling
+                data_list = pickle.load(fp)
+                # loop over data list
+                for cur_data_file in data_list:
+                    logging.info(cur_data_file)
+                    self.extract_data_from_file(cur_data_file)
+
+    def extract_data_from_file(self, h5_file):
+        """ run in bos; assume there is no NAN files"""
+        with h5py.File(h5_file, 'r') as labeled_data_file:
+            # Get input data
+            input_segment = np.array(labeled_data_file.get('input_segment'))
+            output_segment = np.array(labeled_data_file.get('output_segment'))
+            self.datasets.append((input_segment, output_segment))
+
+    def __len__(self):
+        return len(self.datasets)
+
+    def __getitem__(self, idx):
+        standardized_input = (self.datasets[idx][0] - self.input_mean) / self.input_std
+        return (torch.from_numpy(standardized_input).float(),
+                torch.from_numpy(self.datasets[idx][1]).float())
+
+    def get_len(self):
+        return self.__len__()
+
+
 class DynamicModelDataset(Dataset):
     """ data preparation for dynamic model """
 
-    def __init__(self, data_dir, model_dir=None, factor_file=None,
+    def __init__(self, data_dir, is_train=True, model_dir=None, factor_file=None,
                  is_normalize=False, is_standardize=True):
         super().__init__()
         self.data_dir = data_dir
@@ -44,7 +134,7 @@ class DynamicModelDataset(Dataset):
 
         self.get_datasets()
 
-        if not factor_file:
+        if is_train and (not factor_file):
             self.standardization_factors = dict()
             self.normalization_factors = dict()
             self.standardization_factors_file = os.path.join(
@@ -183,8 +273,6 @@ class DynamicModelDataset(Dataset):
         input_segment_mean = input_segment_mean / len(self.datasets)
 
         # standard deviation
-        # data_length = 0
-
         input_segment_std = np.zeros((1, INPUT_DIM))
         for i, dataset in enumerate(self.datasets):
             input_segment = dataset[0]  # dataset[0] : input

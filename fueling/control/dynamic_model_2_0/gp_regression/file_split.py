@@ -90,7 +90,4 @@ if __name__ == "__main__":
     parser.add_argument('--dst_dir', type=str)
     args = parser.parse_args()
     splitter = TrainTestFileSplitter(args.src_dir, args.dst_dir)
-    # splitter.get_category_list()
-    splitter.get_local_file_list('/fuel/fueling/data/0708_2/train')
-    splitter.get_local_file_list('/fuel/fueling/data/0708_2/test')
-    # /mnt/bos/modules/control/dynamic_model_2_0/labeled_data/notall-segment100-step15-size8000/2020-07-06-21
+    splitter.get_category_list()
