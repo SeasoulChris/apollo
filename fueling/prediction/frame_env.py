@@ -10,25 +10,22 @@ import fueling.common.record_utils as record_utils
 
 class FrameEnv(BasePipeline):
     """Records to FrameEnv proto pipeline."""
+    def __init__(self, origin_prefix, target_prefix):
+        super(FrameEnv, self).__init__()
+        self.origin_prefix = origin_prefix
+        self.target_prefix = target_prefix
 
     def run(self):
-        """Run prod."""
-        origin_prefix = 'modules/prediction/kinglong/'
-        target_prefix = 'modules/prediction/kinglong_frame_envs/'
-        if context_utils.is_local():
-            origin_prefix = "/fuel/kinglong_data/records/"
-            target_prefix = "/fuel/kinglong_data/frame_envs/"
-
         records_dir = (
             # RDD(file), start with origin_prefix
-            self.to_rdd(self.our_storage().list_files(origin_prefix))
+            self.to_rdd(self.our_storage().list_files(self.origin_prefix))
             # RDD(record_file)
             .filter(record_utils.is_record_file)
             # RDD(record_dir), with record_file inside
             .map(os.path.dirname)
             # RDD(record_dir), which is unique
             .distinct())
-        self.run_internal(records_dir, origin_prefix, target_prefix)
+        self.run_internal(records_dir, self.origin_prefix, self.target_prefix)
 
     def run_internal(self, records_dir_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
@@ -100,4 +97,9 @@ class FrameEnv(BasePipeline):
 
 
 if __name__ == '__main__':
-    FrameEnv().main()
+    origin_prefix = 'modules/prediction/kinglong/'
+    target_prefix = 'modules/prediction/kinglong_frame_envs/'
+    if context_utils.is_local():
+        origin_prefix = "/fuel/kinglong_data/records/"
+        target_prefix = "/fuel/kinglong_data/frame_envs/"
+    FrameEnv(origin_prefix, target_prefix).main()

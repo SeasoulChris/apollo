@@ -37,13 +37,12 @@ OFFSET_Y = semantic_map_config['offset_y']
 
 class CombineFrameEnvAndFutureStatus(BasePipeline):
     '''Records to feature proto pipeline.'''
+    def __init__(self, frame_env_prefix):
+        super(CombineFrameEnvAndFutureStatus, self).__init__()
+        self.frame_env_prefix = frame_env_prefix
 
     def run(self):
-        '''Run prod.'''
-        frame_env_prefix = ('/fuel/kinglong_data/frame_envs/' if context_utils.is_local() else
-                            'modules/prediction/kinglong_frame_envs/')
-
-        frame_env_dir = self.to_rdd(self.our_storage().list_end_dirs(frame_env_prefix))
+        frame_env_dir = self.to_rdd(self.our_storage().list_end_dirs(self.frame_env_prefix))
 
         if frame_env_dir.isEmpty():
             logging.info('No frame env dir to be processed!')
@@ -192,4 +191,6 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
 
 
 if __name__ == '__main__':
-    CombineFrameEnvAndFutureStatus().main()
+    frame_env_prefix = ('/fuel/kinglong_data/frame_envs/' if context_utils.is_local() else
+                            'modules/prediction/kinglong_frame_envs/')
+    CombineFrameEnvAndFutureStatus(frame_env_prefix).main()

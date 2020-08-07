@@ -203,3 +203,15 @@ py_binary(
         "//fueling/prediction/common:configure",
     ],
 )
+
+py_binary(
+    name = "prediction_end_to_end",
+    srcs = ["prediction_end_to_end.py"],
+    deps = [
+        ":dump_feature_proto",
+        ":generate_labels",
+        ":frame_env",
+        "combine_frame_env_and_future_status",
+        "//fueling/common:base_pipeline",
+    ],
+)

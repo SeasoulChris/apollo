@@ -7,24 +7,20 @@ import fueling.common.context_utils as context_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
-
 SKIP_EXISTING_DST_FILE = False
-
 
 class DumpFeatureProto(BasePipeline):
     """Records to feature proto pipeline."""
+    def __init__(self, origin_prefix, target_prefix):
+        super(DumpFeatureProto, self).__init__()
+        self.origin_prefix = origin_prefix
+        self.target_prefix = target_prefix
 
     def run(self):
         """Run prod."""
-        origin_prefix = 'modules/prediction/kinglong/'
-        target_prefix = 'modules/prediction/kinglong_labels/'
-        if context_utils.is_local():
-            origin_prefix = "/fuel/kinglong_data/records/"
-            target_prefix = "/fuel/kinglong_data/labels/"
-
         records_dir = (
             # RDD(file), start with origin_prefix
-            self.to_rdd(self.our_storage().list_files(origin_prefix))
+            self.to_rdd(self.our_storage().list_files(self.origin_prefix))
             # RDD(record_file)
             .filter(record_utils.is_record_file)
             # RDD(record_dir), with record_file inside
@@ -34,12 +30,12 @@ class DumpFeatureProto(BasePipeline):
 
         completed_records_dir = (
             # RDD(label_dir). start with target_prefix
-            self.to_rdd(self.our_storage().list_end_dirs(target_prefix))
+            self.to_rdd(self.our_storage().list_end_dirs(self.target_prefix))
             # RDD(record_dir), has been completed
             .map(lambda label_dir: label_dir.replace(os.path.join(
-                target_prefix, label_dir[(label_dir.find(target_prefix)
-                                          + len(target_prefix)):].split('/')[0] + '/'),
-                origin_prefix))
+                self.target_prefix, label_dir[(label_dir.find(self.target_prefix)
+                                          + len(self.target_prefix)):].split('/')[0] + '/'),
+                self.origin_prefix))
             # RDD(record_dir), which is unique
             .distinct())
         # RDD(todo_records_dir)
@@ -49,7 +45,7 @@ class DumpFeatureProto(BasePipeline):
             # RDD(todo_records_dir)
             todo_records_dir = todo_records_dir.subtract(completed_records_dir).distinct()
 
-        self.run_internal(todo_records_dir, origin_prefix, target_prefix)
+        self.run_internal(todo_records_dir, self.origin_prefix, self.target_prefix)
 
     def run_internal(self, records_dir_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
@@ -125,4 +121,10 @@ class DumpFeatureProto(BasePipeline):
 
 
 if __name__ == '__main__':
-    DumpFeatureProto().main()
+    origin_prefix = 'modules/prediction/kinglong/'
+    target_prefix = 'modules/prediction/kinglong_labels/'
+    if context_utils.is_local():
+        origin_prefix = "/fuel/kinglong_data/records/"
+        target_prefix = "/fuel/kinglong_data/labels/"
+    if context_utils.is_local():
+        DumpFeatureProto(origin_prefix, target_prefix).main()

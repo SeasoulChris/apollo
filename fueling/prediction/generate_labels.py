@@ -14,19 +14,18 @@ SKIP_EXISTING_DST_FILE = False
 
 class GenerateLabels(BasePipeline):
     """Records to GenerateLabels proto pipeline."""
+    def __init__(self, source_prefix):
+        super(GenerateLabels, self).__init__()
+        self.source_prefix = source_prefix
 
     def run(self):
-        """Run prod."""
-        source_prefix = ('/fuel/kinglong_data/labels/' if context_utils.is_local() else
-                         'modules/prediction/kinglong_labels/')
-
         # RDD(bin_files)
         bin_files = (
-            self.to_rdd(self.our_storage().list_files(source_prefix)).filter(
+            self.to_rdd(self.our_storage().list_files(self.source_prefix)).filter(
                 spark_op.filter_path(['*feature.*.bin'])))
         labeled_bin_files = (
             # RDD(label_files)
-            self.to_rdd(self.our_storage().list_files(source_prefix, '.bin.future_status.npy'))
+            self.to_rdd(self.our_storage().list_files(self.source_prefix, '.bin.future_status.npy'))
             # RDD(bin_files)
             .map(lambda label_file: label_file.replace('.bin.future_status.npy', '.bin')))
         # RDD(todo_bin_files)
@@ -66,4 +65,6 @@ class GenerateLabels(BasePipeline):
 
 
 if __name__ == '__main__':
-    GenerateLabels().main()
+    source_prefix = ('/fuel/kinglong_data/labels/' if context_utils.is_local() else
+                         'modules/prediction/kinglong_labels/')
+    GenerateLabels(source_prefix).main()
