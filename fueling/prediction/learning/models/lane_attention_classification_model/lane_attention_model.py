@@ -5,10 +5,7 @@ import torch.nn as nn
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 
 from fueling.learning.network_utils import generate_mlp
-
-
-def cuda(x):
-    return x.cuda()
+from fueling.learning.train_utils import cuda
 
 
 class CruiseMLP(nn.Module):

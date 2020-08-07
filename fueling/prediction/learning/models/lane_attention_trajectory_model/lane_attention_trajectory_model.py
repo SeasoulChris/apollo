@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 
 from fueling.learning.network_utils import generate_mlp, generate_lstm_states
+from fueling.learning.train_utils import cuda
 from fueling.prediction.learning.models.lane_attention_trajectory_model.coord_conversion_utils \
     import (
         FindClosestLineSegmentFromLineToPoint,
@@ -13,10 +14,6 @@ from fueling.prediction.learning.models.lane_attention_trajectory_model.coord_co
         ProjPtToSL,
         SLToXY,
     )
-
-
-def cuda(x):
-    return x.cuda()
 
 
 ################################################################################

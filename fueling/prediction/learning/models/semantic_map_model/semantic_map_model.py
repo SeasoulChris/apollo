@@ -15,18 +15,16 @@ from torchvision.models.resnet import BasicBlock
 
 from fueling.common.coord_utils import CoordUtils
 from fueling.learning.network_utils import generate_lstm_states
-from fueling.prediction.learning.models.semantic_map_model.spatial_attention \
-    import SpatialAttention2d
+from fueling.learning.train_utils import cuda
+from fueling.prediction.learning.models.semantic_map_model.spatial_attention import (
+    SpatialAttention2d,
+)
 
 '''
 ========================================================================
 Dataset set-up
 ========================================================================
 '''
-
-
-def cuda(x):
-    return x.cuda()
 
 
 class SemanticMapDataset(Dataset):

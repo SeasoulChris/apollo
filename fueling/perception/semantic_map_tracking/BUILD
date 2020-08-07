@@ -49,5 +49,6 @@ py_test(
     deps = [
         ":semantic_map_single_image_dataset",
         ":semantic_map_single_image_model",
+        "//fueling/learning:train_utils",
     ],
 )

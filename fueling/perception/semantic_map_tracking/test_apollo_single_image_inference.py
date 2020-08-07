@@ -5,8 +5,12 @@ import os
 import cv2 as cv
 import torch
 from torch.utils.data import DataLoader
-from semantic_map_single_image_model import TrajectoryPredictionSingle
-from semantic_map_single_image_dataset import (
+
+from fueling.learning.train_utils import cuda
+from fueling.perception.semantic_map_tracking.semantic_map_single_image_model import (
+    TrajectoryPredictionSingle,
+)
+from fueling.perception.semantic_map_tracking.semantic_map_single_image_dataset import (
     ApolloSinglePredictionTrajectoryDataset,
     custom_collate,
 )
@@ -15,13 +19,6 @@ from semantic_map_single_image_dataset import (
 #########################################################
 # Helper functions
 #########################################################
-def cuda(x):
-    if isinstance(x, list):
-        return [cuda(y) for y in x]
-    if isinstance(x, tuple):
-        return tuple([cuda(y) for y in x])
-    return x.cuda() if torch.cuda.is_available() else x
-
 
 # assuming the input is numobs x 10 x 2
 def plot_img_semantic_map(idx, img, labels, pred, ref_pos):

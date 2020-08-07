@@ -4,9 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-
-def cuda(x):
-    return x.cuda()
+from fueling.learning.train_utils import cuda
 
 
 class SocialInteraction(nn.Module):
