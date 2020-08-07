@@ -6,11 +6,16 @@ RUN apt update -y && \
     apt clean && rm -rf /var/lib/apt/lists/*
 
 # Kubectl.
-RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
-    apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main" && \
-    apt update -y && \
-    apt install -y kubectl && \
-    apt clean && rm -rf /var/lib/apt/lists/*
+#RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
+#    apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main" && \
+#    apt update -y && \
+#    apt install -y kubectl && \
+#    apt clean && rm -rf /var/lib/apt/lists/*
+
+# download the latest kubectl binary file: curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+# download the file from your host to avoid the network issue
+COPY kubectl /usr/local/bin/
+RUN chmod +x /usr/local/bin/kubectl
 
 # Resource.
 # Get dest path with `python -c "import site; print(site.getsitepackages()[0])"`
