@@ -6,6 +6,7 @@ from http import HTTPStatus
 import json
 import subprocess
 import threading
+import traceback
 
 from absl import app
 from absl import flags
@@ -73,6 +74,7 @@ class OpenServiceSubmitJob(SparkSubmitJob):
             http_code, msg = JobProcessor(arg).process()
         except Exception as err:
             logging.error(err)
+            logging.error(traceback.format_exc())
             http_code = HTTPStatus.BAD_REQUEST
             msg = 'Wrong job argument'
         return msg, http_code
