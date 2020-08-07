@@ -439,6 +439,8 @@ def extract_stage_feature(target_group):
     start_timestamp = msgs[0]['planning'].header.timestamp_sec
     end_timestamp = msgs[-1]['planning'].header.timestamp_sec
     gear_shift_times = 1
+    actual_heading = msgs[0]['planning'].debug.planning_data.adc_position.pose.heading
+    initial_heading = actual_heading  # default in case the condition below is not satisfied
     for msg in msgs:
         if is_open_space_ready(msg['planning'].debug.planning_data.open_space):
             gear_shift_times = len(
@@ -450,7 +452,6 @@ def extract_stage_feature(target_group):
             break
     stage_completion_time = (end_timestamp - start_timestamp) / gear_shift_times * 1000.0
 
-    actual_heading = msgs[0]['planning'].debug.planning_data.adc_position.pose.heading
     vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
     initial_heading_diff_ratio = abs(initial_heading - actual_heading) \
         / (vehicle_param.max_steer_angle / vehicle_param.steer_ratio)
