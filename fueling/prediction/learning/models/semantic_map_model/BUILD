@@ -38,5 +38,6 @@ py_binary(
     srcs = ["jit_trace.py"],
     deps = [
         ":semantic_map_model",
+        "//fueling/learning:train_utils",
     ],
 )

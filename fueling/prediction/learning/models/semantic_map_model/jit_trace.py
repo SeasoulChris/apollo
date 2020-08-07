@@ -4,6 +4,7 @@ import argparse
 
 import torch
 
+from fueling.learning.train_utils import cuda
 from fueling.prediction.learning.models.semantic_map_model.semantic_map_model \
     import SemanticMapSelfLSTMModel
 
@@ -18,7 +19,7 @@ def jit_trace_semantic_map_model(torch_model_file, jit_model_file, device):
     if device == 'cpu':
         traced_model = torch.jit.trace(model.cpu(), (X,))
     else:
-        traced_model = torch.jit.trace(model.cuda(), (X.cuda(),))
+        traced_model = torch.jit.trace(model.cuda(), (cuda(X),))
     traced_model.save(jit_model_file)
 
 
