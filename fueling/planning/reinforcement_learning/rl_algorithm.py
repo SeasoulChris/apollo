@@ -39,10 +39,14 @@ class DDPG(object):
         """
         state = tuple([torch.FloatTensor(state_element).unsqueeze(
             0).to(device) for state_element in state])
-        hidden = torch.FloatTensor(hidden).unsqueeze(0).to(device)
-        action, next_hidden, _ = self.rl_net.forward(
-            state, rl=True, hidden=hidden)
-        return action.detach().cpu().numpy()[0], next_hidden.detach().cpu().numpy()[0]
+        hidden = tuple([torch.FloatTensor(hidden_element).unsqueeze(
+            0).to(device) for hidden_element in hidden])
+        action, next_hidden, _ = self.rl_net(
+            state, policy=True, hidden=hidden)
+        action = action.detach().cpu().numpy()[0]
+        next_hidden[0] = next_hidden[0].detach().cpu().numpy()[0]
+        next_hidden[1] = next_hidden[1].detach().cpu().numpy()[0]
+        return action, next_hidden
 
     def learn(self, gamma=0.99, min_value=-np.inf, max_value=np.inf):
         """update actor and critic network"""
@@ -52,28 +56,32 @@ class DDPG(object):
         state, hidden, action, reward, next_state, next_hidden, done = \
             self.replay_buffer.sample(BATCH_SIZE)
 
-        state = torch.FloatTensor(state).to(device)
-        next_state = torch.FloatTensor(next_state).to(device)
-        hidden = torch.FloatTensor(hidden).to(device)
-        next_hidden = torch.FloatTensor(next_hidden).to(device)
+        state = tuple([torch.FloatTensor(state_element).unsqueeze(
+            0).to(device) for state_element in state])
+        next_state = tuple([torch.FloatTensor(state_element).unsqueeze(
+            0).to(device) for state_element in next_state])
+        hidden = tuple([torch.FloatTensor(hidden_element).unsqueeze(
+            0).to(device) for hidden_element in hidden])
+        next_hidden = tuple([torch.FloatTensor(hidden_element).unsqueeze(
+            0).to(device) for hidden_element in next_hidden])
         action = torch.FloatTensor(action).to(device)
         reward = torch.FloatTensor(reward).unsqueeze(1).to(device)
         done = torch.FloatTensor(np.float32(done)).unsqueeze(1).to(device)
 
-        pred_traj, _, _ = self.rl_net(state, rl=True, hidden=hidden)
+        pred_traj, _, _ = self.rl_net(state, policy=True, hidden=hidden)
         _, _, policy_loss = self.rl_net(
-            state, rl=True, action=pred_traj[:, 0, :])
+            state, value=True, action=pred_traj[:, 0, :])
         policy_loss = -policy_loss.mean()
 
         next_pred_traj, _, _ = self.target_net(
-            next_state, rl=True, hidden=next_hidden)
+            next_state, policy=True, hidden=next_hidden)
         next_action = next_pred_traj[:, 0, :]
         _, _, target_value = self.target_net(
-            next_state, rl=True, action=next_action.detach())
+            next_state, value=True, action=next_action.detach())
         expected_value = reward + (1.0 - done) * gamma * target_value
         expected_value = torch.clamp(expected_value, min_value, max_value)
 
-        _, _, value = self.rl_net(state, rl=True, action=action[:, 0, :])
+        _, _, value = self.rl_net(state, value=True, action=action[:, 0, :])
         value_loss = self.value_loss_func(value, expected_value.detach())
 
         self.optimizer.zero_grad()
@@ -123,10 +131,14 @@ class TD3(object):
         """
         state = tuple([torch.FloatTensor(state_element).unsqueeze(
             0).to(device) for state_element in state])
-        hidden = torch.FloatTensor(hidden).unsqueeze(0).to(device)
-        action, next_hidden, _ = self.rl_net1.forward(
-            state, rl=True, hidden=hidden)
-        return action.detach().cpu().numpy()[0], next_hidden.detach().cpu().numpy()[0]
+        hidden = tuple([torch.FloatTensor(hidden_element).unsqueeze(
+            0).to(device) for hidden_element in hidden])
+        action, next_hidden, _ = self.rl_net1(
+            state, policy=True, hidden=hidden)
+        action = action.detach().cpu().numpy()[0]
+        next_hidden[0] = next_hidden[0].detach().cpu().numpy()[0]
+        next_hidden[1] = next_hidden[1].detach().cpu().numpy()[0]
+        return action, next_hidden
 
     def learn(self, gamma=0.99, soft_tau=0.005, noise_std=0.2, noise_clip=0.5, policy_update=2):
         """update actor and critic network"""
@@ -136,17 +148,21 @@ class TD3(object):
         state, hidden, action, reward, next_state, next_hidden, done = \
             self.replay_buffer.sample(BATCH_SIZE)
 
-        state = torch.FloatTensor(state).to(device)
-        next_state = torch.FloatTensor(next_state).to(device)
-        hidden = torch.FloatTensor(hidden).to(device)
-        next_hidden = torch.FloatTensor(next_hidden).to(device)
+        state = tuple([torch.FloatTensor(state_element).unsqueeze(
+            0).to(device) for state_element in state])
+        next_state = tuple([torch.FloatTensor(state_element).unsqueeze(
+            0).to(device) for state_element in next_state])
+        hidden = tuple([torch.FloatTensor(hidden_element).unsqueeze(
+            0).to(device) for hidden_element in hidden])
+        next_hidden = tuple([torch.FloatTensor(hidden_element).unsqueeze(
+            0).to(device) for hidden_element in next_hidden])
         action = torch.FloatTensor(action).to(device)
         reward = torch.FloatTensor(reward).unsqueeze(1).to(device)
         done = torch.FloatTensor(np.float32(done)).unsqueeze(1).to(device)
 
         # target policy smoothing
         next_pred_traj, _, _ = self.target_net1(
-            next_state, rl=True, hidden=next_hidden)
+            next_state, policy=True, hidden=next_hidden)
         next_action = next_pred_traj[:, 0, :]
         noise = torch.normal(torch.zeros(
             next_action.size()), noise_std).to(device)
@@ -155,15 +171,15 @@ class TD3(object):
 
         # clipped double-Q learning
         _, _, target_value1 = self.target_net1(
-            next_state, rl=True, action=next_action.detach())
+            next_state, value=True, action=next_action.detach())
         _, _, target_value2 = self.target_net2(
-            next_state, rl=True, action=next_action.detach())
+            next_state, value=True, action=next_action.detach())
         target_value = torch.min(target_value1, target_value2)
         expected_value = reward + (1.0 - done) * gamma * target_value
 
-        _, _, value1 = self.rl_net1(state, rl=True, action=action[:, 0, :])
+        _, _, value1 = self.rl_net1(state, value=True, action=action[:, 0, :])
         value_loss1 = self.value_loss_func(value1, expected_value.detach())
-        _, _, value2 = self.rl_net1(state, rl=True, action=action[:, 0, :])
+        _, _, value2 = self.rl_net1(state, value=True, action=action[:, 0, :])
         value_loss2 = self.value_loss_func(value2, expected_value.detach())
 
         self.optimizer1.zero_grad()
@@ -176,9 +192,9 @@ class TD3(object):
 
         # delayed update
         if self.learn_step_counter % policy_update == 0:
-            pred_traj, _, _ = self.rl_net1(state, rl=True, hidden=hidden)
+            pred_traj, _, _ = self.rl_net1(state, policy=True, hidden=hidden)
             _, _, policy_loss = self.rl_net1(
-                state, rl=True, action=pred_traj[:, 0, :])
+                state, value=True, action=pred_traj[:, 0, :])
             policy_loss = -policy_loss.mean()
 
             self.optimizer1.zero_grad()
@@ -226,14 +242,19 @@ class ReplayBuffer(object):
         """Saves a transition experience"""
         if len(self.replay_buffer) < self.capacity:
             self.replay_buffer.append(None)
-        self.replay_buffer[self.position] = (state, hidden, action, reward, next_state,
-                                             next_hidden, done)
+        self.replay_buffer[self.position] = state + hidden + (action,) + (reward,) + \
+            next_state + next_hidden + (done,)
         self.position = (self.position + 1) % self.capacity
 
     def sample(self, batch_size):
         batch = random.sample(self.replay_buffer, batch_size)
-        state, hidden, action, reward, next_state, next_hidden, done = \
+        s1, s2, s3, h1, h2, action, reward, s1_, s2_, s3_, h1_, h2_, done = \
             map(np.stack, zip(*batch))
+        # state is a tuple of (s1, s2, s3)
+        state = (s1, s2, s3)
+        hidden = (h1, h2)
+        next_state = (s1_, s2_, s3_)
+        next_hidden = (h1_, h2_)
         return state, hidden, action, reward, next_state, next_hidden, done
 
     def __len__(self):
@@ -245,7 +266,7 @@ class RLNetwork(nn.Module):
 
     def __init__(self, history_len, pred_horizon, embed_size=64,
                  hidden_size=128, cnn_net=models.mobilenet_v2,
-                 pretrained=True, num_actions=4):
+                 pretrained=True, num_actions=40):
         super(RLNetwork, self).__init__()
         self.compression_cnn_layer = nn.Conv2d(12, 3, 3, padding=1)
         self.cnn = cnn_net(pretrained=pretrained)
@@ -273,17 +294,26 @@ class RLNetwork(nn.Module):
         self.valuenet_fc2_layer = nn.Linear(hidden_size, hidden_size)
         self.valuenet_fc3_layer = nn.Linear(hidden_size, 1)
 
-    def forward(self, X, rl=False, hidden=0, action=[[0, 0, 0, 0]]):
+    def forward(self, X, policy=False, value=False, hidden=0, action=0):
+        """
+        This is a two-headed network for both policy and value network.
+
+        When policy = True, it works in the policy network branch.
+        When value = True, it works in the value network branch.
+
+        To reduce the computation of imitation learning, the value branch is cut off
+        by setting x = None when value = False.
+        """
         img_feature, hist_points, hist_points_step = X
         batch_size = img_feature.size(0)
-        if rl:
-            h0, c0 = hidden[0], hidden[1]
+        if policy is True:
+            ht, ct = hidden[0], hidden[1]
         else:
             # manually add the unsqueeze before repeat to avoid onnx to tensorRT parsing error
             h0 = self.h0.unsqueeze(0)   # size: 1, hidden_size
             c0 = self.c0.unsqueeze(0)
-        ht, ct = h0.repeat(1, batch_size, 1),\
-            c0.repeat(1, batch_size, 1)
+            ht, ct = h0.repeat(1, batch_size, 1),\
+                c0.repeat(1, batch_size, 1)
 
         img_embedding = self.cnn(
             self.compression_cnn_layer(img_feature)).view(batch_size, -1)
@@ -312,9 +342,13 @@ class RLNetwork(nn.Module):
 
         # the following calculates the output for value network branch
         # here the action only includes the first point of pred_traj
-        x = torch.cat([img_embedding, action], 1)
-        x = F.relu(self.valuenet_fc1_layer(x))
-        x = F.relu(self.valuenet_fc2_layer(x))
-        x = self.valuenet_fc3_layer(x)
+        if value is True:
+            action = action.view(batch_size, -1)
+            x = torch.cat([img_embedding, action], 1)
+            x = F.relu(self.valuenet_fc1_layer(x))
+            x = F.relu(self.valuenet_fc2_layer(x))
+            x = self.valuenet_fc3_layer(x)
+        else:
+            x = None
 
         return pred_traj[:, 1:, :], (ht, ct), x
