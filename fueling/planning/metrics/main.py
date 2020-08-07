@@ -5,6 +5,7 @@ import sys
 
 import matplotlib.pyplot as plt
 
+from planning_analytics.metrics.imitation_analyzer import ImitationAnalyzer
 from cyber.python.cyber_py3.record import RecordReader
 from modules.control.proto import control_cmd_pb2
 from modules.planning.proto import planning_pb2
@@ -129,10 +130,15 @@ if __name__ == "__main__":
             args.planningrefpath, args.alldata)
 
     if args.simulation:
+        # calculate stability score
         stability_grader = PlanningStabilityGrader()
         score_list = stability_grader.grade_record_file(record_file)
         lat_score_list = stability_grader.lat_score_list
         lon_score_list = stability_grader.lon_score_list
+
+        # calcualte imitation related scores
+        analyzer = ImitationAnalyzer()
+        imitation_scores = analyzer.get_imitation_scores(record_file)
 
         results = planning_analyzer.get_sim_results()
         if len(results) > 0:
@@ -159,6 +165,7 @@ if __name__ == "__main__":
                     stability_score["bin_low"] += 1
 
             results["stability"] = stability_score
+            results["imitation"] = imitation_scores
         print(json.dumps(results))
     elif args.planningpath or args.planningrefpath:
         plt.axis('equal')

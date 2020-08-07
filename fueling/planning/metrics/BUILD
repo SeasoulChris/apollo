@@ -31,6 +31,7 @@ py_binary(
         "@apollo//modules/perception/proto:perception_obstacle_py_pb2",
         "@apollo//modules/planning/proto:planning_py_pb2",
         "@apollo//modules/prediction/proto:prediction_obstacle_py_pb2",
+        "@planning_analytics",
     ],
 )
 
