@@ -6,7 +6,6 @@ import time
 
 from absl import flags
 import numpy as np
-import matplotlib.pyplot as plt
 
 from modules.planning.proto import learning_data_pb2
 
@@ -28,25 +27,6 @@ flags.DEFINE_bool('is_dumping_img', False, 'whether dump imgs for debug')
 
 
 class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
-
-    def visualize_processed_frame(self, frame_file_path, past_trajectory, future_trajectory,
-                                  perturbated_past_trajectory, perturbated_future_trajectory):
-        origin_traj_for_plot = np.vstack(
-            (past_trajectory, future_trajectory))
-        traj_for_plot = np.vstack(
-            (perturbated_past_trajectory, perturbated_future_trajectory))
-
-        fig = plt.figure(0)
-        xy_graph = fig.add_subplot(111)
-        xy_graph.plot(
-            origin_traj_for_plot[:, 0], origin_traj_for_plot[:, 1],
-            linestyle='--', marker='o', color='r')
-        xy_graph.plot(traj_for_plot[:, 0], traj_for_plot[:, 1],
-                      linestyle='--', marker='o', color='g')
-
-        xy_graph.set_aspect('equal')
-        plt.savefig(frame_file_path + ".jpg")
-
     def process_frame(self, frame_file_path):
         frame = proto_utils.get_pb_from_bin_file(
             frame_file_path, learning_data_pb2.LearningDataFrame())
@@ -89,12 +69,22 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
                                                         ref_cost,
                                                         elastic_band_smoothing_cost,
                                                         max_curvature)
-        is_valid, perturbated_past_trajectory, perturbated_future_trajectory = \
-            synthesizer.synthesize_perturbation(
-                past_trajectory, future_trajectory)
 
-        if not is_valid:
-            return frame_file_path
+        is_valid = False
+        perturbated_past_trajectory = None
+        perturbated_future_trajectory = None
+        perturbate_point_idx = None
+        loop_counter = 0
+        while not is_valid:
+            if loop_counter >= 10:
+                logging.error(
+                    "fail to perturbated trajectory of " + frame_file_path)
+                return frame_file_path
+            is_valid, perturbated_past_trajectory, perturbated_future_trajectory,\
+                perturbate_point_idx = \
+                synthesizer.synthesize_perturbation(
+                    past_trajectory, future_trajectory)
+            loop_counter += 1
 
         for i in range(past_trajectory_length):
             path_point = frame.adc_trajectory_point[len(frame.adc_trajectory_point)
@@ -122,11 +112,12 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
 
         if self.is_dumping_img:
             output_fig_name = output_file_name.replace('.bin', '') + '.png'
-            self.visualize_processed_frame(output_fig_name,
-                                           past_trajectory,
-                                           future_trajectory,
-                                           perturbated_past_trajectory,
-                                           perturbated_future_trajectory)
+            synthesizer.visualize_for_debug(output_fig_name,
+                                            past_trajectory,
+                                            future_trajectory,
+                                            perturbated_past_trajectory,
+                                            perturbated_future_trajectory,
+                                            perturbate_point_idx)
 
         return output_file_name
 

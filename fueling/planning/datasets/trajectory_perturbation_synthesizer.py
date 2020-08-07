@@ -4,6 +4,7 @@ import math
 
 from absl import flags
 import casadi as ca
+import matplotlib.pyplot as plt
 import numpy as np
 
 flags.DEFINE_multi_float('perturbate_xy_range', [-1.5, 1.5],
@@ -86,7 +87,8 @@ class TrajectoryPerturbationSynthesizer(object):
         ubx = ca.horzcat(ubx_x, ubx_y)
 
         qp = {'x': ca.horzcat(x, y), 'f': objective}
-        qp_problem = ca.qpsol('smoothing', 'osqp', qp)
+        opt_dict = {'osqp.verbose': False}
+        qp_problem = ca.qpsol('smoothing', 'osqp', qp, opt_dict)
         solution = qp_problem(lbx=lbx, ubx=ubx)
 
         smoothed_xy = np.array(solution['x'])
@@ -124,31 +126,29 @@ class TrajectoryPerturbationSynthesizer(object):
                 return False
         return True
 
-    def visualize_for_debug(self, past_trajectory, future_trajectory,
+    def visualize_for_debug(self, frame_file_path, past_trajectory, future_trajectory,
                             perturbated_past_trajectory, perturbated_future_trajectory,
                             perturbate_point_idx):
         origin_traj_for_plot = np.vstack(
             (past_trajectory, future_trajectory))
         traj_for_plot = np.vstack(
             (perturbated_past_trajectory, perturbated_future_trajectory))
-
-        import matplotlib.pyplot as plt
-        fig = plt.figure(0)
-        xy_graph = fig.add_subplot(111)
-        xy_graph.plot(
+        canvas = plt.figure()
+        fig = canvas.add_subplot(1, 1, 1)
+        fig.plot(
             origin_traj_for_plot[:, 0], origin_traj_for_plot[:, 1],
             linestyle='--', marker='o', color='r')
-        xy_graph.plot(traj_for_plot[:, 0], traj_for_plot[:, 1],
-                      linestyle='--', marker='o', color='g')
-        _ = xy_graph.scatter(origin_traj_for_plot[perturbate_point_idx][0],
-                             origin_traj_for_plot[perturbate_point_idx][1],
-                             marker='D', color='r')
-        _ = xy_graph.scatter(traj_for_plot[perturbate_point_idx][0],
-                             traj_for_plot[perturbate_point_idx][1],
-                             marker='D', color='g')
-
-        xy_graph.set_aspect('equal')
-        plt.show()
+        fig.plot(traj_for_plot[:, 0], traj_for_plot[:, 1],
+                 linestyle='--', marker='o', color='g')
+        fig.scatter(origin_traj_for_plot[perturbate_point_idx][0],
+                    origin_traj_for_plot[perturbate_point_idx][1],
+                    marker='D', color='r')
+        fig.scatter(traj_for_plot[perturbate_point_idx][0],
+                    traj_for_plot[perturbate_point_idx][1],
+                    marker='D', color='g')
+        fig.set_aspect('equal')
+        canvas.savefig(frame_file_path)
+        plt.close(canvas)
 
     def synthesize_perturbation(self, past_trajectory, future_trajectory):
         '''
@@ -192,11 +192,10 @@ class TrajectoryPerturbationSynthesizer(object):
         perturbated_past_trajectory = smoothed_trajectory[:splitting_idx + 1]
         perturbated_future_trajectory = smoothed_trajectory[splitting_idx + 1:]
 
-        # self.visualize_for_debug(past_trajectory, future_trajectory,
-        #                          perturbated_past_trajectory, perturbated_future_trajectory,
-        #                           perturbate_point_idx)
-
-        return is_valid, perturbated_past_trajectory, perturbated_future_trajectory
+        return is_valid, \
+            perturbated_past_trajectory, \
+            perturbated_future_trajectory, \
+            perturbate_point_idx
 
 
 if __name__ == "__main__":
@@ -212,7 +211,8 @@ if __name__ == "__main__":
                                                     elastic_band_smoothing_cost=10.0,
                                                     max_curvature=0.3)
 
-    is_valid, perturbated_past_trajectory, perturbated_future_trajectory = \
+    is_valid, perturbated_past_trajectory, perturbated_future_trajectory, \
+        perturbate_point_idx = \
         synthesizer.synthesize_perturbation(trajectory[:10], trajectory[10:])
 
     traj_for_plot = np.vstack(
@@ -220,7 +220,6 @@ if __name__ == "__main__":
 
     print(is_valid)
 
-    import matplotlib.pyplot as plt
     fig = plt.figure(0)
     xy_graph = fig.add_subplot(111)
     xy_graph.plot(traj_for_plot[:, 0], traj_for_plot[:, 1])

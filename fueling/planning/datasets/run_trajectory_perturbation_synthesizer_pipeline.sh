@@ -6,4 +6,4 @@
  --max_past_history_len=10 \
  --max_future_history_len=10 \
  --is_dumping_txt=False \
- --is_dumping_img=True
+ --is_dumping_img=False
