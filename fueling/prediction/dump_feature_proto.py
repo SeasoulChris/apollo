@@ -9,6 +9,7 @@ import fueling.common.record_utils as record_utils
 
 SKIP_EXISTING_DST_FILE = False
 
+
 class DumpFeatureProto(BasePipeline):
     """Records to feature proto pipeline."""
     def __init__(self, origin_prefix, target_prefix):
@@ -34,7 +35,7 @@ class DumpFeatureProto(BasePipeline):
             # RDD(record_dir), has been completed
             .map(lambda label_dir: label_dir.replace(os.path.join(
                 self.target_prefix, label_dir[(label_dir.find(self.target_prefix)
-                                          + len(self.target_prefix)):].split('/')[0] + '/'),
+                                              + len(self.target_prefix)):].split('/')[0] + '/'),
                 self.origin_prefix))
             # RDD(record_dir), which is unique
             .distinct())

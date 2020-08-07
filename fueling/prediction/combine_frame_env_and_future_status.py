@@ -192,5 +192,5 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
 
 if __name__ == '__main__':
     frame_env_prefix = ('/fuel/kinglong_data/frame_envs/' if context_utils.is_local() else
-                            'modules/prediction/kinglong_frame_envs/')
+                        'modules/prediction/kinglong_frame_envs/')
     CombineFrameEnvAndFutureStatus(frame_env_prefix).main()

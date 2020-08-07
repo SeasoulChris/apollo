@@ -66,5 +66,5 @@ class GenerateLabels(BasePipeline):
 
 if __name__ == '__main__':
     source_prefix = ('/fuel/kinglong_data/labels/' if context_utils.is_local() else
-                         'modules/prediction/kinglong_labels/')
+                     'modules/prediction/kinglong_labels/')
     GenerateLabels(source_prefix).main()
