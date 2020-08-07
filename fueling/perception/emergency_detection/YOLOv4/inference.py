@@ -6,6 +6,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import cv2
+import glob
 from fueling.perception.emergency_detection.YOLOv4.models import *
 from fueling.perception.emergency_detection.YOLOv4.tool.utils import load_class_names, plot_boxes_cv2
 from fueling.perception.emergency_detection.YOLOv4.tool.torch_utils import do_detect
@@ -174,5 +175,63 @@ def inference_yolov4(is_local=False):
     print('number of correct: ', statistics_array[3], '  wrong: ', statistics_array[4], '  unknown: ', statistics_array[5])
     print('ratio of correct: ', statistics_array[3]/tot_gv, '  wrong: ', statistics_array[4]/tot_gv, '  unknown: ', statistics_array[5]/tot_gv)
 
+
+
+def autolabel():
+
+    if len(sys.argv) != 3:
+        print("command format: python inference.py [model_path] [image_folder]")
+        return
+
+    modelfile = sys.argv[1]
+    imagefolder = sys.argv[2]
+
+    n_classes = 80
+    height = 320
+    width = 320
+
+    model = Yolov4(yolov4conv137weight=None, n_classes=n_classes, inference=True)
+
+    pretrained_dict = torch.load(modelfile, map_location=torch.device('cpu'))
+    model.load_state_dict(pretrained_dict)
+
+    use_cuda = False
+
+    img_files_1 = glob.glob(imagefolder+"/*.png")
+    img_files_2 = glob.glob(imagefolder+"/*.jpg")
+    img_files_3 = glob.glob(imagefolder+"/*.jpeg")
+    img_files_4 = glob.glob(imagefolder+"/*.bmp")
+    img_files = img_files_1 + img_files_2 + img_files_3 + img_files_4
+
+    for img_file in img_files:
+        print('processing ', img_file, '...')
+        img = cv2.imread(img_file)
+
+        # Inference input size is 416*416 does not mean training size is the same
+        # Training size could be 608*608 or even other sizes
+        # Optional inference sizes:
+        #   Hight in {320, 416, 512, 608, ... 320 + 96 * n}
+        #   Width in {320, 416, 512, 608, ... 320 + 96 * m}
+        sized = cv2.resize(img, (width, height))
+        sized = cv2.cvtColor(sized, cv2.COLOR_BGR2RGB)
+
+        #for i in range(2):  # This 'for' loop is for speed check
+                            # Because the first iteration is usually longer
+        boxes = do_detect(model, sized, 0.4, 0.6, use_cuda)
+        #plot_boxes_cv2(img, boxes[0], img_path.replace('images', 'predictions'), class_names)
+
+        
+        output_file = img_file.replace('.png', '.txt')
+        output_file = output_file.replace('.jpg', '.txt')
+        output_file = output_file.replace('.jpeg', '.txt')
+        output_file = output_file.replace('.bmp', '.txt')
+        f = open(output_file, "w")
+        for box in boxes[0]:
+            print(box)
+            f.write(str(box[6])+' '+str(box[0])+' '+str(box[1])+' '+str(box[2])+' '+str(box[3])+'\n')
+        f.close()
+
+
 if __name__ == "__main__":
     inference_yolov4(is_local=True)
+    #autolabel()
