@@ -66,8 +66,6 @@ py_library(
     srcs = ["jobs.py"],
     deps = [
         ":client",
-        ":saas_job_arg_py_pb2",
-        "//fueling/common:partners",
     ],
 )
 

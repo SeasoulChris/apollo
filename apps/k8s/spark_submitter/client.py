@@ -49,6 +49,8 @@ flags.DEFINE_string('partner_bos_bucket', None, 'Partner bos bucket.')
 flags.DEFINE_string('partner_bos_region', None, 'Partner bos region.')
 flags.DEFINE_string('partner_bos_access', None, 'Partner bos access.')
 flags.DEFINE_string('partner_bos_secret', None, 'Partner bos secret.')
+flags.DEFINE_string('partner_vehicle_sn', None, 'Partner verhicle_sn.')
+flags.DEFINE_string('partner_job_type', None, 'Partner job type.')
 
 # Internal use.
 # TODO(longtao): Change it back when switch is done
@@ -201,6 +203,10 @@ class SparkSubmitterClient(object):
                 'region': self.client_flags.get('partner_bos_region',
                                                 self.get_default('partner_bos_region')),
             }
+        if self.client_flags.get('partner_vehicle_sn'):
+            partner['vehicle_sn'] = self.client_flags.get('partner_vehicle_sn')
+        if self.client_flags.get('partner_job_type'):
+            partner['job_type'] = self.client_flags.get('partner_job_type')
         return partner
 
     """

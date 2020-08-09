@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 from apps.k8s.spark_submitter.client import SparkSubmitterClient
-from apps.k8s.spark_submitter.saas_job_arg_pb2 import SaasJobArg
-from fueling.common.partners import partners
 
 
 class BaseJob(object):
@@ -54,11 +52,7 @@ class VehicleCalibration(BaseJob):
         client_flags = {'workers': 6, 'cpu': 4, 'memory': 60}
         job_flags = {
             'input_data_path': job_arg.flags.get("input_data_path"),
-            'job_type': SaasJobArg.JobType.Name(job_arg.job_type).lower(),
         }
-        vehicle_sn = partners.get(job_arg.partner.id).vehicle_sn
-        if vehicle_sn:
-            job_flags['vehicle_sn'] = vehicle_sn
         return (entrypoint, client_flags, job_flags)
 
 
@@ -72,11 +66,7 @@ class SensorCalibration(BaseJob):
         job_flags = {
             'input_data_path': job_arg.flags.get("input_data_path"),
             'output_data_path': job_arg.flags.get("output_data_path"),
-            'job_type': SaasJobArg.JobType.Name(job_arg.job_type).lower(),
         }
-        vehicle_sn = partners.get(job_arg.partner.id).vehicle_sn
-        if vehicle_sn:
-            job_flags['vehicle_sn'] = vehicle_sn
         return (entrypoint, client_flags, job_flags)
 
 
@@ -94,9 +84,5 @@ class VirtualLaneGeneration(BaseJob):
             'lidar_type': job_arg.flags.get("lidar_type"),
             'lane_width': job_arg.flags.get("lane_width"),
             'extra_roi_extension': job_arg.flags.get("extra_roi_extension"),
-            'job_type': SaasJobArg.JobType.Name(job_arg.job_type).lower(),
         }
-        vehicle_sn = partners.get(job_arg.partner.id).vehicle_sn
-        if vehicle_sn:
-            job_flags['vehicle_sn'] = vehicle_sn
         return (entrypoint, client_flags, job_flags)

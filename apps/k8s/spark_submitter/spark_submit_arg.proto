@@ -98,4 +98,6 @@ message Partner {
   // Be cautious! This could be risky.
   optional bool storage_writable = 1;
   optional BosConfig bos = 2;
+  optional string vehicle_sn = 3;
+  optional string job_type = 4;
 }

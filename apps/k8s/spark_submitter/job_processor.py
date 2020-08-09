@@ -49,7 +49,12 @@ class JobProcessor(object):
         client_flags = {
             'role': self.job_arg.partner.id,
             'node_selector': 'FOR_OPEN_SERVICES',
+            'partner_job_type': SaasJobArg.JobType.Name(self.job_arg.job_type).lower(),
         }
+        vehicle_sn = partners.get(self.job_arg.partner.id).vehicle_sn
+        if vehicle_sn:
+            client_flags['partner_vehicle_sn'] = vehicle_sn
+
         if not self.populate_storage_config(client_flags):
             msg = 'job_arg format error!'
             logging.error(msg)

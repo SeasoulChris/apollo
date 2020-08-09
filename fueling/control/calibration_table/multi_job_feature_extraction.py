@@ -5,8 +5,6 @@ import glob
 import shutil
 import os
 
-from absl import flags
-
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
 from fueling.common.partners import partners
@@ -24,12 +22,7 @@ import fueling.common.time_utils as time_utils
 import fueling.control.common.multi_job_utils as multi_job_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
-# import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
-
-
-flags.DEFINE_string('vehicle_sn', None, ' verhicle_sn of parner users.')
-flags.DEFINE_string('job_type', 'verhicle_calibration', 'job type.')
 
 
 channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
