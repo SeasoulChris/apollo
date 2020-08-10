@@ -90,7 +90,7 @@
         </div>
 
         {% if job_type == "VIRTUAL_LANE_GENERATION" or job_type == "SENSOR_CALIBRATION" or
-        job_type == "OPEN_SPACE_PLANNER_PROFILING" %}
+        job_type == "OPEN_SPACE_PLANNER_PROFILING" or job_type == "PREDICTION_MODEL_TRAINING" %}
         <div class="col-md-6 mb-3">
           <label for="output_data_path">Output Data Path</label>
           <input type="text" class="form-control" id="output_data_path" placeholder="" required>
@@ -98,6 +98,16 @@
         </div>
         {% endif %}
       </div>
+
+      {% if job_type == "PREDICTION_MODEL_TRAINING" %}
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="map_name">Map Name</label>
+          <input type="text" class="form-control" id="zone_id" placeholder="" required>
+          <div class="invalid-feedback">Map name is required for this job.</div>
+        </div>
+      </div>
+      {% endif %}
 
       {% if job_type == "VIRTUAL_LANE_GENERATION" %}
       <div class="row">
@@ -182,8 +192,11 @@
         },
       };
       if (job_type === 'VIRTUAL_LANE_GENERATION' || job_type === 'SENSOR_CALIBRATION' ||
-          job_type === 'OPEN_SPACE_PLANNER_PROFILING') {
+          job_type === 'OPEN_SPACE_PLANNER_PROFILING' || job_type == 'PREDICTION') {
         job_arg["flags"]["output_data_path"] = $("#output_data_path").val();
+      }
+      if (job_type == 'PREDICTION_MODEL_TRAINING') {
+        job_arg["flags"]["map_name"] = $("#map_name").val();
       }
       if (job_type === 'VIRTUAL_LANE_GENERATION') {
         job_arg["flags"]["zone_id"] = $("#zone_id").val();

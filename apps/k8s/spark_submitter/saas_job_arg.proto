@@ -14,6 +14,7 @@ message SaasJobArg {
     VIRTUAL_LANE_GENERATION = 4;
     VEHICLE_CALIBRATION = 5;
     OPEN_SPACE_PLANNER_PROFILING = 6;
+    PREDICTION_MODEL_TRAINING = 7;
   }
   optional JobType job_type = 1;
 
