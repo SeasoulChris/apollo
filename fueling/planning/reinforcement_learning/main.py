@@ -55,7 +55,7 @@ def main():
     hidden_size = 128
 
     env = ADSEnv(history_len=history_len, hidden_size=hidden_size)
-    ou_noise = OUNoise((10,4))
+    ou_noise = OUNoise((10, 4))   # the dim of the action is 10*4
     # initiate the RL framework
     rl = DDPG(history_len, pred_horizon, hidden_size=hidden_size)
 

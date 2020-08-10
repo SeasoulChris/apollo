@@ -21,11 +21,13 @@ TARGET_REPLACE_ITER = 100   # regulate frequency to update the target network
 
 
 class DDPG(object):
-    def __init__(self, history_len, pred_horizon):
+    def __init__(self, history_len, pred_horizon, hidden_size=128):
         self.learn_step_counter = 0     # counter to update target network
 
-        self.rl_net = RLNetwork(history_len, pred_horizon).to(device)
-        self.target_net = RLNetwork(history_len, pred_horizon).to(device)
+        self.rl_net = RLNetwork(history_len, pred_horizon,
+                                hidden_size=hidden_size).to(device)
+        self.target_net = RLNetwork(history_len, pred_horizon,
+                                    hidden_size=hidden_size).to(device)
 
         self.optimizer = torch.optim.Adam(self.rl_net.parameters(), lr=LR)
         self.value_loss_func = nn.MSELoss()
@@ -56,14 +58,14 @@ class DDPG(object):
         state, hidden, action, reward, next_state, next_hidden, done = \
             self.replay_buffer.sample(BATCH_SIZE)
 
-        state = tuple([torch.FloatTensor(state_element).unsqueeze(
-            0).to(device) for state_element in state])
-        next_state = tuple([torch.FloatTensor(state_element).unsqueeze(
-            0).to(device) for state_element in next_state])
-        hidden = tuple([torch.FloatTensor(hidden_element).unsqueeze(
-            0).to(device) for hidden_element in hidden])
-        next_hidden = tuple([torch.FloatTensor(hidden_element).unsqueeze(
-            0).to(device) for hidden_element in next_hidden])
+        state = tuple([torch.FloatTensor(state_element).to(
+            device) for state_element in state])
+        next_state = tuple([torch.FloatTensor(state_element).to(
+            device) for state_element in next_state])
+        hidden = tuple([torch.FloatTensor(hidden_element).to(
+            device) for hidden_element in hidden])
+        next_hidden = tuple([torch.FloatTensor(hidden_element).to(
+            device) for hidden_element in next_hidden])
         action = torch.FloatTensor(action).to(device)
         reward = torch.FloatTensor(reward).unsqueeze(1).to(device)
         done = torch.FloatTensor(np.float32(done)).unsqueeze(1).to(device)
@@ -107,13 +109,17 @@ class DDPG(object):
 
 
 class TD3(object):
-    def __init__(self, history_len, pred_horizon, lr=3e-4):
+    def __init__(self, history_len, pred_horizon, hidden_size=128, lr=3e-4):
         self.learn_step_counter = 0     # counter to update target network
 
-        self.rl_net1 = RLNetwork(history_len, pred_horizon).to(device)
-        self.rl_net2 = RLNetwork(history_len, pred_horizon).to(device)
-        self.target_net1 = RLNetwork(history_len, pred_horizon).to(device)
-        self.target_net2 = RLNetwork(history_len, pred_horizon).to(device)
+        self.rl_net1 = RLNetwork(history_len, pred_horizon,
+                                 hidden_size=hidden_size).to(device)
+        self.rl_net2 = RLNetwork(history_len, pred_horizon,
+                                 hidden_size=hidden_size).to(device)
+        self.target_net1 = RLNetwork(history_len, pred_horizon,
+                                     hidden_size=hidden_size).to(device)
+        self.target_net2 = RLNetwork(history_len, pred_horizon,
+                                     hidden_size=hidden_size).to(device)
 
         self.target_net1.load_state_dict(self.rl_net1.state_dict())
         self.target_net2.load_state_dict(self.rl_net2.state_dict())
@@ -148,14 +154,14 @@ class TD3(object):
         state, hidden, action, reward, next_state, next_hidden, done = \
             self.replay_buffer.sample(BATCH_SIZE)
 
-        state = tuple([torch.FloatTensor(state_element).unsqueeze(
-            0).to(device) for state_element in state])
-        next_state = tuple([torch.FloatTensor(state_element).unsqueeze(
-            0).to(device) for state_element in next_state])
-        hidden = tuple([torch.FloatTensor(hidden_element).unsqueeze(
-            0).to(device) for hidden_element in hidden])
-        next_hidden = tuple([torch.FloatTensor(hidden_element).unsqueeze(
-            0).to(device) for hidden_element in next_hidden])
+        state = tuple([torch.FloatTensor(state_element).to(
+            device) for state_element in state])
+        next_state = tuple([torch.FloatTensor(state_element).to(
+            device) for state_element in next_state])
+        hidden = tuple([torch.FloatTensor(hidden_element).to(
+            device) for hidden_element in hidden])
+        next_hidden = tuple([torch.FloatTensor(hidden_element).to(
+            device) for hidden_element in next_hidden])
         action = torch.FloatTensor(action).to(device)
         reward = torch.FloatTensor(reward).unsqueeze(1).to(device)
         done = torch.FloatTensor(np.float32(done)).unsqueeze(1).to(device)
@@ -266,8 +272,9 @@ class RLNetwork(nn.Module):
 
     def __init__(self, history_len, pred_horizon, embed_size=64,
                  hidden_size=128, cnn_net=models.mobilenet_v2,
-                 pretrained=True, num_actions=40):
+                 pretrained=True, num_actions=4):
         super(RLNetwork, self).__init__()
+        self.hidden_size = hidden_size
         self.compression_cnn_layer = nn.Conv2d(12, 3, 3, padding=1)
         self.cnn = cnn_net(pretrained=pretrained)
         self.cnn_out_size = 1000
@@ -307,7 +314,8 @@ class RLNetwork(nn.Module):
         img_feature, hist_points, hist_points_step = X
         batch_size = img_feature.size(0)
         if policy is True:
-            ht, ct = hidden[0], hidden[1]
+            ht = hidden[0].view(1, batch_size, self.hidden_size)
+            ct = hidden[1].view(1, batch_size, self.hidden_size)
         else:
             # manually add the unsqueeze before repeat to avoid onnx to tensorRT parsing error
             h0 = self.h0.unsqueeze(0)   # size: 1, hidden_size
