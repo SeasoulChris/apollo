@@ -85,12 +85,13 @@ Generally you need a BUILD target for each python file, which could be one of
 
 We leverage PySpark to orchestrate the jobs on Kubernetes cluster. Good practices are:
 
+1. Run `tools/check.sh` to make sure everything works well before submitting your code, otherwise
+   the CI robot will complain and reject.
 1. Put all Python modules in ./fueling/ folder, and import them with full path like
    `import fueling.common.file_utils`.
 1. Inherit the `fueling.common.base_pipeline.BasePipeline` and implement your own `run()` function.
-   Make sure that `bazel build //path/to/your:target` passes.
 1. Inherit the `fueling.common.base_pipeline.BasePipelineTest` and implement your own `test_xxx`
-   functions. Make sure that `bazel test //path/to/your:target_test` passes.
+   functions.
 1. Comment intensively and accurately. Every RDD should be well described with the pattern.
 
    ```python
@@ -113,13 +114,6 @@ We leverage PySpark to orchestrate the jobs on Kubernetes cluster. Good practice
    * It's OK to use `from package import Type` and `import package as alias` statements.
    * Each section should be in alphabetical order.
 
-1. Python script and package name convention: **lower_case_with_underscores**.
-1. Filter early, filter often.
-1. Cascade simple transformations, instead of making a huge complicate one.
-1. All transformations should be repeatable and consistant. The process and even the executor could
-   fail any time, then the Spark will try to re-allocate the task to other peers. So be careful
-   about letting `flatMap()` and `flatMapValues()` work with "yield" mappers. Because it's stateful,
-   if a task failed unexpectedly, the pipeline have no idea about how to recover.
 1. Reading record header is much faster than reading record, if you can do significant filtering on
    records according to its header, do it.
 1. Use `absl.flags` for script argument. refer to
@@ -131,8 +125,6 @@ We leverage PySpark to orchestrate the jobs on Kubernetes cluster. Good practice
    1) Use absolute path like `/apollo/...` to refer to files in Apollo.
    1) Goto next tip for cloud data usage.
 
-1. Run `tools/check.sh` to make sure everything works well before submitting your code, otherwise
-   the CI robot will complain and reject.
 1. We use [bosfs](https://cloud.baidu.com/doc/BOS/s/Ajwvyqhya) to mount Apollo's BOS storage at
    `/mnt/bos`, which can be used as a POSIX file system. But if you want to list many files under a
    folder, a better way is to call
