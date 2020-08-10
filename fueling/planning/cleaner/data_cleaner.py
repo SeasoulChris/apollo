@@ -23,7 +23,7 @@ class CleanPlanningRecords(BasePipeline):
         self.RUN_IN_DRIVER = True
         now = datetime.now() - timedelta(hours=7)
         dt_string = now.strftime("%Y%m%d_%H%M%S")
-        self.dst_prefix = '/mnt/bos/modules/planning/temp/cleaned_data/batch_' + dt_string + "/"
+        self.dst_prefix = '/mnt/bos/modules/planning/cleaned_data/batch_' + dt_string + "/"
 
         self.cnt = 1
         self.cleaner = None
@@ -46,9 +46,24 @@ class CleanPlanningRecords(BasePipeline):
         logging.info(task_list_file)
 
         tasks_descs = []
+        tasks_map_dict = dict()
         with open(task_list_file, 'r') as f:
             for line in f:
-                tasks_descs.append(line)
+                line = line.replace("\n", "")
+                line_elements = line.split(" ")
+                folder = line_elements[0]
+                task_map = line_elements[1]
+                files = self.our_storage().list_files(folder)
+                for fn in files:
+                    if record_utils.is_record_file(fn):
+                        task = "/".join(fn.split("/")[3:-1])
+                        if task not in tasks_map_dict:
+                            tasks_map_dict[task] = task_map
+
+        for task, task_map in tasks_map_dict.items():
+            task_desc = task + " " + task_map
+            logging.info(task_desc)
+            tasks_descs.append(task_desc)
 
         if self.RUN_IN_DRIVER:
             for task_desc in tasks_descs:
@@ -68,6 +83,9 @@ class CleanPlanningRecords(BasePipeline):
         elif task_map == "sunnyvale_with_two_offices":
             map_file \
                 = "/mnt/bos/code/baidu/adu-lab/apollo-map/sunnyvale_with_two_offices/sim_map.bin"
+        elif task_map == "yizhuangdaluwang":
+            map_file \
+                = "/mnt/bos/code/baidu/adu-lab/apollo-map/yizhuangdaluwang/sim_map.bin"
 
         self.cleaner = RecordCleaner(map_file)
 
