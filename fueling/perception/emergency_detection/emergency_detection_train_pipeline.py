@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 '''
 Train on cloud:
-bazel run emergency_detection_train_pipeline -- --cloud --gpu=1 --gpu_id=0 --classes=2 \
+bazel run //fueling/perception/emergency_detection:emergency_detection_train_pipeline -- \
+--cloud --gpu=1 --gpu_id=0 --classes=2 \
 --learning_rate=0.001 --optimizer=adam --iou_type=iou \
 --pretrained=/mnt/bos/modules/perception/emergency_detection/pretrained_model/yolov4.conv.137.pth \
 --image_dir=/mnt/bos/modules/perception/emergency_detection/data/emergency_vehicle/images \

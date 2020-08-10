@@ -7,7 +7,6 @@ local_repository(
 
 load("@apollo//tools:workspace.bzl", "apollo_repositories")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
 apollo_repositories()
 
@@ -96,9 +95,8 @@ http_archive(
     strip_prefix = "perception_pointpillars",
 )
 
-new_git_repository(
+new_local_repository(
     name = "yolov4",
-    branch = "master",
-    remote = "https://github.com/ApolloAuto/pytorch-YOLOv4.git",
-    build_file = "yolov4.BUILD",
+    path = "/fuel/deps/libs/pytorch-YOLOv4",
+    build_file = "external/yolov4.BUILD",
 )
