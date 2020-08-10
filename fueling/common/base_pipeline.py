@@ -112,39 +112,41 @@ class BasePipeline(object):
 
     def __cloud_job_post_process__(self, job_failed=False):
         kubectl = Kubectl()
-        driver_pod_name_pattern = F'job-{flags.FLAGS.job_id}-*-driver'
-        driver_pod = kubectl.get_pods_by_pattern(driver_pod_name_pattern)
-        if len(driver_pod) == 1:
-            pod_name = driver_pod[0].metadata.name
-            pod_namespace = driver_pod[0].metadata.namespace
-            if flags.FLAGS.auto_delete_driver_pod:
-                kubectl.delete_pod(pod_name, pod_namespace)
-            else:
-                pod_desc = kubectl.describe_pod(pod_name, pod_namespace, tojson=True)
-                if job_failed:
-                    pod_desc['status']['phase'] = phase = 'Failed'
+        pod_name_pattern = F'job-{flags.FLAGS.job_id}-*'
+        pod_list = kubectl.get_pods_by_pattern(pod_name_pattern)
+        if len(pod_list) > 0:
+            for pod in pod_list:
+                pod_name = pod.metadata.name
+                pod_namespace = pod.metadata.namespace
+                if flags.FLAGS.auto_delete_driver_pod:
+                    kubectl.delete_pod(pod_name, pod_namespace)
                 else:
-                    if pod_desc['status']['phase'] == 'Running':
-                        pod_desc['status']['phase'] = phase = 'Succeeded'
+                    pod_desc = kubectl.describe_pod(pod_name, pod_namespace, tojson=True)
+                    if job_failed:
+                        pod_desc['status']['phase'] = phase = 'Failed'
                     else:
-                        phase = pod_desc['status']['phase']
-                creation_timestamp = (dateutil.parser
-                                      .parse(pod_desc['metadata']['creationTimestamp'])
-                                      .replace(tzinfo=timezone.utc))
-                JobUtils(flags.FLAGS.job_id).save_job_phase(phase)
-                pod_log = kubectl.logs(pod_name, pod_namespace)
-                Mongo().job_log_collection().insert_one(
-                    {'logs': pod_log,
-                     'desc': json.dumps(pod_desc, sort_keys=True, indent=4,
-                                        separators=(', ', ': ')),
-                     'phase': phase,
-                     'job_id': flags.FLAGS.job_id,
-                     'pod_name': pod_name,
-                     'namespace': pod_namespace,
-                     'creation_timestamp': creation_timestamp.timestamp()})
-                logging.info('Save driver log success')
+                        if pod_desc['status']['phase'] == 'Running':
+                            pod_desc['status']['phase'] = phase = 'Succeeded'
+                        else:
+                            phase = pod_desc['status']['phase']
+                    creation_timestamp = (dateutil.parser
+                                          .parse(pod_desc['metadata']['creationTimestamp'])
+                                          .replace(tzinfo=timezone.utc))
+                    pod_log = kubectl.logs(pod_name, pod_namespace)
+                    pod_desc_str = json.dumps(pod_desc, sort_keys=True, indent=4,
+                                              separators=(', ', ': '))
+                    pod_data = {'pod_name': pod_name, 'namespace': pod_namespace, 'phase': phase,
+                                'desc': pod_desc_str, 'job_id': flags.FLAGS.job_id, 'logs': pod_log,
+                                'creation_timestamp': creation_timestamp.timestamp()}
+                    if pod_name.endswith('-driver'):
+                        JobUtils(flags.FLAGS.job_id).save_job_phase(phase)
+                        pod_data.update({'pod_type': 'driver'})
+                    else:
+                        pod_data.update({'pod_type': 'executor'})
+                    Mongo().job_log_collection().insert_one(pod_data)
+                    logging.info(F'Save {pod_name} log success')
         else:
-            logging.info(F'Failed to find exact driver pod for "{driver_pod_name_pattern}"')
+            logging.info(F'Failed to find exact pod for "{pod_name_pattern}"')
 
     def __main__(self, argv):
         """Run the pipeline."""

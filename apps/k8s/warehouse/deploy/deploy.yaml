@@ -20,7 +20,7 @@ spec:
         nodezone: czone
       containers:
       - name: warehouse
-        image: hub.baidubce.com/apollofuel/warehouse:20200511_0744
+        image: hub.baidubce.com/apollofuel/warehouse:20200810_1351
         ports:
         - containerPort: 8000
         env:

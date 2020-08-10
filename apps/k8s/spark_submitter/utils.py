@@ -108,6 +108,7 @@ class Utils(object):
             f'--conf spark.driver.memory={arg.driver.driver_memory}g '
             '--conf spark.kubernetes.authenticate.driver.serviceAccountName=spark '
             # Executor
+            f'--conf spark.kubernetes.executor.deleteOnTermination=false '
             f'--conf spark.executor.instances={arg.worker.count} '
             f'--conf spark.default.parallelism={arg.worker.count} '
             f'--conf spark.executor.memory={arg.worker.memory}g '

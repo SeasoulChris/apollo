@@ -81,10 +81,10 @@
          {% for job_id, job_info in jobs_list %}
          <div class="item">
             <div class="head">
-              <div style="width: 75%;">{{ job_info.name }}</div>
-              <div style="width: 5%; text-align: right" class="phase">{{ job_info.phase }}</div>
-              <div style="width: 15%; text-align: right">{{ job_info.creation_timestamp | timestamp_to_time }}</div>
-              <div style="width: 5%; text-align: right"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAOCAMAAADt5EdyAAAAdVBMVEUAAACZmZmZmZmZmZmZmZmZmZmZmZmZmZmYmJiYmJiYmJiUlJSampqWlpaUlJSZmZmZmZmZmZmYmJiZmZmZmZmYmJiampqZmZmYmJiXl5eYmJiYmJiYmJiYmJiXl5eZmZmZmZmYmJiXl5eVlZWZmZmVlZWZmZmeopVCAAAAJnRSTlMA+uPL9PDrxKw0JRIMCAT42r+0o5mQhHppYVhPPiwYz828R0YeHdDVMpMAAACDSURBVBjTbclXDoMwAATRtU3vvUP63v+IiUgxwbyvkQa5CmEKlQvFs7kixROWjG60Hy6zBXhI5jG24gvlHS+BZLFdSUEZYBU49BI9PDozPmaHJb5K2j5+fJsV3qp1aJPFeo2a1oQ/t5QNgIbpFTujYIuWYoRhEPQoBhzoSfY41FkdtCdWvgi2uS1VaQAAAABJRU5ErkJggg==" alt=""></div>
+               <div style="width: 75%;">{{ job_info.name }}</div>
+               <div style="width: 5%; text-align: right">{{ job_info.phase }}</div>
+               <div style="width: 15%; text-align: right">{{ job_info.creation_timestamp | timestamp_to_time }}</div>
+               <div style="width: 5%; text-align: right"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAOCAMAAADt5EdyAAAAdVBMVEUAAACZmZmZmZmZmZmZmZmZmZmZmZmZmZmYmJiYmJiYmJiUlJSampqWlpaUlJSZmZmZmZmZmZmYmJiZmZmZmZmYmJiampqZmZmYmJiXl5eYmJiYmJiYmJiYmJiXl5eZmZmZmZmYmJiXl5eVlZWZmZmVlZWZmZmeopVCAAAAJnRSTlMA+uPL9PDrxKw0JRIMCAT42r+0o5mQhHppYVhPPiwYz828R0YeHdDVMpMAAACDSURBVBjTbclXDoMwAATRtU3vvUP63v+IiUgxwbyvkQa5CmEKlQvFs7kixROWjG60Hy6zBXhI5jG24gvlHS+BZLFdSUEZYBU49BI9PDozPmaHJb5K2j5+fJsV3qp1aJPFeo2a1oQ/t5QNgIbpFTujYIuWYoRhEPQoBhzoSfY41FkdtCdWvgi2uS1VaQAAAABJRU5ErkJggg==" alt=""></div>
             </div>
             <div class="ctx hide" job_id="{{ job_id }}" open="0">
                <div class="content">
@@ -104,7 +104,7 @@
                         {% for pod in job_info.pods %}
                         <tr>
                            <td>{{ pod.podname }}</td>
-                           <td>{{ pod.phase }}</td>
+                           <td class="phase">{{ pod.phase }}</td>
                            <td>{{ pod.creation_timestamp | timestamp_to_time }}</td>
                            <td>{{ pod.duration_ns | ns_to_duration }}</td>
                            <td class="stop"><a href="javascript:void(0);" onclick="delete_pod('{{ pod.podname }}', '{{ job_info.namespace }}')">Stop</a></td>
@@ -129,7 +129,7 @@
        "WebkitTransition": "webkitTransitionEnd"
    }
    
-
+   
    for (var key in transitions) {
        for (var i = 0, l = ctx.length; i < l; i++) {
            ctx[i].addEventListener(transitions[key], function () {
@@ -161,22 +161,27 @@
                }
            }
        });
-       var div_phase = head[i].querySelector(".phase");
+   
+       var div_phase_list = head[i].parentNode.querySelectorAll(".phase");
+       for (var j = 0; j < div_phase_list.length; j++) { 
+       div_phase = div_phase_list[j];
        if(div_phase){
         if(div_phase.textContent == "Succeeded" || div_phase.textContent == "Failed"){
-          var stopitem = head[i].parentNode.querySelector(".stop");
+          var stopitem = div_phase.parentNode.querySelector(".stop");
           if(stopitem){
             stopitem.setAttribute("onclick", "#");
             stopitem.textContent = "";
           }
         }
        }
+     }
+   
    }
    
-
+   
    function delete_pod(name, namespace){
-   	if(confirm('Confirm stop?')){
-   		$.ajax({
+    if(confirm('Confirm stop?')){
+      $.ajax({
         url:$("#pod_delete_url").attr('href'), 
         async:false,
         data:{"pod_name": name, "namespace": namespace},
@@ -188,7 +193,7 @@
           console.log('Error in deleting ' + name);
         }
       });
-   	  }
+      }
    }
 </script>
 {% endblock %}
