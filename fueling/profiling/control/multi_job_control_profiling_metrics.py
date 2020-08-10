@@ -149,7 +149,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             #                           value: relative path with base_dir of vehicle type
             #   (2) target_vehicle_dir: key: vehicle_type,
             #                           value: relative path with base_dir of vehicle type
-            # RDD(origin_dir)
+            # RDD(origin_dir with the base_dir of vehicle type)
             origin_vehicle_dir = spark_helper.cache_and_log(
                 'origin_vehicle_dir',
                 self.to_rdd([origin_dir])
@@ -163,12 +163,17 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             # Partner [('Mkz7', 'profiling/multi_job/Mkz7'), ...]
             logging.info(F'origin_vehicle_dir: {origin_vehicle_dir.collect()}')
 
-            # Copy vehicle parameter config file
+            # RDD(target_dir with the base_dir of vehicle type)
             target_vehicle_abs_dir = spark_helper.cache_and_log(
                 'target_vehicle_abs_dir',
                 origin_vehicle_dir
-                .mapValues(object_storage.abs_path)
-                .mapValues(lambda path: path.replace(origin_dir, target_dir, 1))
+                # RDD([vehicle_type])
+                .keys()
+                # PairRDD(vehicle_type, [vehicle_type])
+                .keyBy(lambda vehicle_type: vehicle_type)
+                # PairRDD(vehicle_type, abs_path_to_vehicle_type)
+                .mapValues(lambda vehicle_type: os.path.join(target_dir,
+                                                             vehicle_type.replace(' ', '_', 1)))
             )
             # target_vehicle_abs_dir: [('Mkz7',
             # '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),...]
@@ -214,7 +219,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             #   /Mkz7/2019-05-01/20190501110414'), ...]
             logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
 
-            # Addtional process for internal daily-test
+            # Addtional process only for apollo internal daily-job: skip the processed data
             if not self.is_partner_job():
                 processed_dirs = spark_helper.cache_and_log(
                     'processed_dirs',
@@ -252,42 +257,38 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                             target_dir, vehicle_controller_parsed)
                         return vehicle, target_
 
-                    target_vehicle_dir = spark_helper.cache_and_log(
-                        'target_vehicle_dir',
-                        origin_vehicle_dir
-                        # PairRDD(vehicle_type, records)
-                        .flatMapValues(object_storage.list_files)
-                        # PairRDD(vehicle_type, filterd absolute_path_to_records)
-                        .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file)
-                                                      or record_utils.is_bag_file(file)))
-                        # PairRDD(vehicle_type, absolute_path_to_records)
-                        .mapValues(os.path.dirname)
+                    processed_dirs_list = processed_dirs.values().collect()
+
+                    # Build the target task dirs and filter the processed ones
+                    target_task_dirs = spark_helper.cache_and_log(
+                        'target_task_dirs',
+                        todo_task_dirs
                         # PairRDD(vehicle_controller_parsed, task_dir_with_target_prefix)
                         .mapValues(lambda task:
                                    feature_utils.parse_vehicle_controller(task, self.FLAGS))
                         # PairRDD(vehicle_type, task_dir)
                         .map(_reorg_rdd_by_vehicle)
+                        # PairRDD(vehicle_type, task_dir)
+                        .filter(spark_op.filter_value(lambda dir: dir not in processed_dirs_list))
                         .distinct()
                     )
                     logging.info(
-                        F'target_vehicle_dir: {target_vehicle_dir.collect()}')
+                        F'target_task_dirs after subtracting: {target_task_dirs.collect()}')
 
-                    todo_task_dirs = target_vehicle_dir.subtract(
-                        processed_dirs)
-                    logging.info(
-                        F'todo_task_dirs after subtracting: {todo_task_dirs.collect()}')
-
-                    # REMOVE CONTROLLER AND REPLACE ORIGIN PREFIX
+                    # Replace origin prefix, remove controller and reformat vehicle type
                     todo_task_dirs = spark_helper.cache_and_log(
                         'todo_task_dirs',
-                        todo_task_dirs
+                        target_task_dirs
                         # PairRDD(vehicle_type, directory replaced by origin_dir)
                         .mapValues(lambda dir: dir.replace(target_dir, origin_dir, 1))
                         # PairRDD(vehicle_type, origin directory)
                         .mapValues(multi_vehicle_utils.get_target_removed_controller)
+                        # PairRDD(vehicle_type, origin directory)
+                        .map(lambda dirs: (dirs[0], dirs[1].replace(dirs[0].replace(' ', '_', 1),
+                                                                    dirs[0], 1)))
                     )
                     logging.info(
-                        F'todo_task_dirs after postprocess: {todo_task_dirs.collect()}')
+                        F'todo_task_dirs after subtracting: {todo_task_dirs.collect()}')
 
             logging.info(
                 F'todo_tasks to run: {todo_task_dirs.values().collect()}')
