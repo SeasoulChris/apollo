@@ -38,10 +38,11 @@ if __name__ == '__main__':
 
     labels_path = records_path.replace('records', 'labels')
     frame_envs_path = records_path.replace('records', 'frame_envs')
+    train_path = records_path.replace('records', 'train')
     SequentialPipeline([
         DumpFeatureProto(records_path, labels_path),
         GenerateLabels(labels_path),
         FrameEnv(records_path, frame_envs_path),
         CombineFrameEnvAndFutureStatus(frame_envs_path),
-        PedestrianTraining(region)
+        PedestrianTraining(region, train_path)
     ]).main()

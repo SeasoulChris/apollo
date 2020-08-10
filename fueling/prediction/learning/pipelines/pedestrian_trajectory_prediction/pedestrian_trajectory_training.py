@@ -16,20 +16,17 @@ from fueling.prediction.learning.models.semantic_map_model.semantic_map_model \
 
 
 class PedestrianTraining(BasePipeline):
-    def __init__(self, region):
+    def __init__(self, region, data_dir):
         super(PedestrianTraining, self).__init__()
         self.region = region
+        self.data_dir = data_dir
 
     def run(self):
-        """Run."""
-        train_folder = "/mnt/bos/modules/prediction/kinglong_train_clean/" + \
-                       "baidudasha/jinlong-JinLongBaiduDaSha/20200226/"
-        # train_folder = "/fuel/kinglong_train_clean_split/"
         time_start = time.time()
-        self.to_rdd(range(1)).foreach(lambda instance: self.train(instance, train_folder))
+        self.to_rdd(range(1)).foreach(lambda instance: self.train(instance, self.data_dir))
         logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
 
-    def train(self, instance_id, train_folder):
+    def train(self, instance_id, data_dir):
         """Run training task"""
         logging.info('nvidia-smi on Executor {}:'.format(instance_id))
         if os.system('nvidia-smi') != 0:
@@ -43,7 +40,7 @@ class PedestrianTraining(BasePipeline):
         # Use gpu0 for training
         # device = torch.device('cuda:0')
 
-        dataset = PedestrianTrajectoryDatasetCloud(train_folder, self.region)
+        dataset = PedestrianTrajectoryDatasetCloud(data_dir, self.region)
         valid_size = dataset.__len__() // 5
         train_dataset, valid_dataset = torch.utils.data.random_split(
             dataset, [dataset.__len__() - valid_size, valid_size])
@@ -63,4 +60,4 @@ class PedestrianTraining(BasePipeline):
 
 
 if __name__ == '__main__':
-    PedestrianTraining('baidusasha').main()
+    PedestrianTraining('baidusasha', '/fuel/kinglong_data/train/').main()
