@@ -1,21 +1,15 @@
-# -*- coding: utf-8 -*-
-'''
-@Time          : 2020/05/06 15:07
-@Author        : Tianxiaomo
-@File          : train.py
-@Noice         :
-@Modificattion :
-    @Author    :
-    @Time      :
-    @Detail    :
+import sys
+sys.path.append("/fuel")
 
-'''
+from absl import flags
+
 import time
 import logging
 import os, sys, math
 import argparse
 from collections import deque
 import datetime
+import time
 
 import cv2
 from tqdm import tqdm
@@ -565,9 +559,11 @@ def _get_date_str():
 def train_yolov4(cfg):
     logging = init_logger(log_dir=cfg.TRAIN_TENSORBOARD_DIR)
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    logging.info(f'Using device {device}')
+    if cfg.gpu == '-1' or (not torch.cuda.is_available()):
+        device = torch.device('cpu')
+    else:
+        os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if cfg.use_darknet_cfg:
         model = Darknet(cfg.cfgfile)

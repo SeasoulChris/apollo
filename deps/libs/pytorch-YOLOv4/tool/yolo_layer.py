@@ -94,12 +94,8 @@ def yolo_forward_alternative(output, conf_thresh, num_classes, anchors, num_anch
     print(anchor_tensor.size())
     bwh *= anchor_tensor
 
-    bx1y1 = bxy - bwh * 0.5
-    bx2y2 = bxy + bwh
-
-    # Shape: [batch, num_anchors, 4, H * W] --> [batch, num_anchors * H * W, 1, 4]
-    boxes = torch.cat((bx1y1, bx2y2), dim=2).permute(0, 1, 3, 2).reshape(batch, num_anchors * H * W, 1, 4)
-    # boxes = boxes.repeat(1, 1, num_classes, 1)
+    # Shape: [batch, num_anchors, 4, H * W] --> [batch, num_anchors * H * W, 4]
+    boxes = torch.cat((bxy, bwh), dim=2).permute(0, 1, 3, 2).reshape(batch, num_anchors * H * W, 4)
 
     print(normal_tensor.size())
     boxes *= normal_tensor
@@ -107,7 +103,7 @@ def yolo_forward_alternative(output, conf_thresh, num_classes, anchors, num_anch
     det_confs = det_confs.view(batch, num_anchors * H * W, 1)
     confs = cls_confs * det_confs
 
-    # boxes: [batch, num_anchors * H * W, 1, 4]
+    # boxes: [batch, num_anchors * H * W, 4]
     # confs: [batch, num_anchors * H * W, num_classes]
 
     return  boxes, confs
@@ -235,23 +231,17 @@ def yolo_forward(output, conf_thresh, num_classes, anchors, num_anchors, scale_x
     bw = bx_bw[:, num_anchors:].view(batch, num_anchors * H * W, 1)
     bh = by_bh[:, num_anchors:].view(batch, num_anchors * H * W, 1)
 
-    bx1 = bx - bw * 0.5
-    by1 = by - bh * 0.5
-    bx2 = bx1 + bw
-    by2 = by1 + bh
+    # Shape: [batch, num_anchors * h * w, 4]
+    boxes = torch.cat((bx, by, bw, bh), dim=2).view(batch, num_anchors * H * W, 4)
 
-    # Shape: [batch, num_anchors * h * w, 4] -> [batch, num_anchors * h * w, 1, 4]
-    boxes = torch.cat((bx1, by1, bx2, by2), dim=2).view(batch, num_anchors * H * W, 1, 4)
-    # boxes = boxes.repeat(1, 1, num_classes, 1)
-
-    # boxes:     [batch, num_anchors * H * W, 1, 4]
+    # boxes:     [batch, num_anchors * H * W, num_classes, 4]
     # cls_confs: [batch, num_anchors * H * W, num_classes]
     # det_confs: [batch, num_anchors * H * W]
 
     det_confs = det_confs.view(batch, num_anchors * H * W, 1)
     confs = cls_confs * det_confs
 
-    # boxes: [batch, num_anchors * H * W, 1, 4]
+    # boxes: [batch, num_anchors * H * W, 4]
     # confs: [batch, num_anchors * H * W, num_classes]
 
     return  boxes, confs
