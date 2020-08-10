@@ -11,12 +11,12 @@ from fueling.prediction.learning.pipelines.pedestrian_trajectory_prediction \
     .pedestrian_trajectory_training import PedestrianTraining
 
 
-def get_region_from_map_path(map_path):
-    index = map_path.find('map/')
+def get_region_from_map_path(map_region_path):
+    index = map_region_path.find('map/')
     if index == -1:
         return ''
     index += 4
-    sub_path = map_path[index:]
+    sub_path = map_region_path[index:]
     end = sub_path.find('/')
     if end == -1:
         return sub_path
@@ -28,13 +28,16 @@ if __name__ == '__main__':
 
     records_path = os.path.join(input_path, 'records')
     map_path = os.path.join(input_path, 'map/')
+    map_list = os.listdir(map_path)
+    assert len(map_list) == 1
+    map_region_path = os.path.join(map_path, map_list[0])
+    region = get_region_from_map_path(map_region_path)
+
     map_target_path = 'code/apollo_map/'  # TODO(all) verify if it works
     if context_utils.is_local():
         map_target_path = '/apollo/modules/map/data/'
-    copy_map_command = 'cp -r {}* {}'.format(map_path, map_target_path)
+    copy_map_command = 'cp -r {} {}'.format(map_region_path, map_target_path)
     os.system(copy_map_command)  # TODO(all) verify if it works
-
-    region = get_region_from_map_path(map_path)
 
     labels_path = records_path.replace('records', 'labels')
     frame_envs_path = records_path.replace('records', 'frame_envs')

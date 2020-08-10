@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+SHIFT = False
+
 parameters = {
     'config': {
         'need_to_label': True,
@@ -102,3 +104,7 @@ semantic_map_config = {
 }
 
 labels = {'go_false': 0, 'go_true': 1, 'cutin_false': -1, 'cutin_true': 2}
+
+if not SHIFT:
+    semantic_map_config['offset_x'] = 0
+    semantic_map_config['offset_y'] = 0

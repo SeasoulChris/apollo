@@ -18,13 +18,13 @@ class ObstacleMapping(object):
                  has_mapping=False):
         """contruct function to init ObstacleMapping object"""
         if has_mapping:
-            self.init_with_mapping(region, mapping, obstacles_history, ego_history, shift)
+            self.init_with_mapping(mapping, world_coord, obstacles_history, ego_history, shift)
         else:
             self.init_without_mapping(region, base_map, world_coord, obstacles_history,
                                       ego_history, shift)
 
     def init_without_mapping(self, region, base_map, world_coord,
-                             obstacles_history, ego_history=None, shift=True):
+                             obstacles_history, ego_history, shift):
         self.shift = shift
         center_point = world_coord[0:2]
         map_coords = semantic_map_config['map_coords']
@@ -54,7 +54,7 @@ class ObstacleMapping(object):
         self.draw_ego_history(self.ego_history)
 
     def init_with_mapping(self, mapping, world_coord,
-                          obstacles_history, ego_history=None, shift=True):
+                          obstacles_history, ego_history, shift):
         """contruct function to init ObstacleMapping object"""
         self.shift = shift
         center_point = world_coord[0:2]

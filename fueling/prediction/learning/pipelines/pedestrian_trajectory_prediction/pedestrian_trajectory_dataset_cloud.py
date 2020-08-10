@@ -184,7 +184,7 @@ class PedestrianTrajectoryDatasetCloud(Dataset):
         world_coord = self.reference_world_coord[s_idx + predicting_idx]
         target_obs_future_traj = self.future_traj[s_idx + predicting_idx][0, :, :]
         obs_mapping = ObstacleMapping(None, None, world_coord, obs_polygons,
-                                      mapping=self.mapping, has_mapping=True)
+                                      mapping=self.mapping, has_mapping=True, shift=False)
         img = obs_mapping.crop_by_history(obs_polygons[predicting_idx])
         # cv.imwrite('/fuel/hehe.png', img)
         origin_img = img.copy()
@@ -220,5 +220,5 @@ class PedestrianTrajectoryDatasetCloud(Dataset):
 
 if __name__ == '__main__':
     pedestrian_dataset = PedestrianTrajectoryDatasetCloud(
-        '/data/kinglong_train_clean/train/baidudasha/jinlong-JinLongBaiduDaSha/20200226/')
+        '/fuel/kinglong_data/train/train/')
     pedestrian_dataset.getitem(10)
