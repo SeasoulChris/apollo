@@ -566,8 +566,11 @@ def _get_date_str():
 def train_yolov4(cfg):
     logging = init_logger(log_dir=cfg.TRAIN_TENSORBOARD_DIR)
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if cfg.gpu == '-1' or (not torch.cuda.is_available()):
+        device = torch.device('cpu')
+    else:
+        os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if cfg.use_darknet_cfg:
         model = Darknet(cfg.cfgfile)
