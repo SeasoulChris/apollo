@@ -1,5 +1,5 @@
+import flask
 import flask_restful
-from flask_restful import reqparse
 
 from controllers import account
 from fueling.common import file_utils
@@ -9,35 +9,29 @@ from utils import conf_utils
 class AccountServices(flask_restful.Resource):
     def get(self, account_id):
         if len(account_id) != 24:
-            return {"desc": "The id is invalid",
-                    "result": {}}, 400
+            return None, 404
         accounts = account.account_db.get_account_info({"_id": account_id})
         if not accounts:
-            return {"desc": "Don't find the account obj, please check the id",
-                    "result": {}}, 400
+            return None, 404
         accounts_used = account.get_job_used(accounts)
         accounts_objs = account.stamp_account_time(accounts_used)
         return {"desc": "success", "result": accounts_objs[0]}
 
     def post(self):
-        parse = reqparse.RequestParser()
-        parse.add_argument("com_name", type=str, required=True,
-                           help="Com name cannot be blank!")
-        parse.add_argument("com_email", type=str, required=True,
-                           help="Com name cannot be blank!")
-        parse.add_argument("vehicle_sn", type=str, required=False)
-        parse.add_argument("bos_bucket_name", type=str, required=True,
-                           help="Bos bucket name cannot be blank!")
-        parse.add_argument("bos_region", type=str, required=True,
-                           help="Bos region cannot be blank!")
-        parse.add_argument("bos_ak", type=str, required=True,
-                           help="Bos AK cannot be blank!")
-        parse.add_argument("bos_sk", type=str, required=True,
-                           help="Bos Sk cannot be blank!")
-        parse.add_argument("purpose", type=str, required=True,
-                           help="Purpose cannot be blank!")
-        args = parse.parse_args()
-        account_dict = args.copy()
+        must_args = ["com_name", "com_email",
+                     "bos_bucket_name", "bos_region",
+                     "bos_ak", "bos_sk", "purpose"]
+        args = flask.request.form
+        account_dict = {}
+        message_dict = {"message": {}}
+        for key in args:
+            account_dict[key] = args.get(key)
+        for arg in must_args:
+            if arg not in account_dict:
+                message_dict["message"]["details"] = "{} cannot be empty!".format(arg)
+                message_dict["message"]["code"] = "E01"
+                message_dict["message"]["fields"] = arg
+                return message_dict, 400
         vehicle_sn = account_dict.get("vehicle_sn")
         account_dict["no_vehicle_sn"] = False
         if not vehicle_sn:
@@ -59,33 +53,28 @@ class AccountServices(flask_restful.Resource):
         return {"desc": "success", "result": accounts_objs[0]}
 
     def put(self, account_id):
-        parse = reqparse.RequestParser()
         if len(account_id) != 24:
-            return {"desc": "The id is invalid",
-                    "result": {}}, 400
+            return None, 404
         accounts = account.account_db.get_account_info({"_id": account_id})
         if not accounts:
-            return {"desc": "Don't find the account obj, please check the id",
-                    "result": {}}, 400
+            return None, 404
+        must_args = ["com_name", "com_email",
+                     "bos_bucket_name", "bos_region",
+                     "bos_ak", "bos_sk", "purpose"]
+        args = flask.request.form
+        account_dict = {}
+        for key in args:
+            account_dict[key] = args.get(key)
         account_obj = accounts[0]
+        message_dict = {"message": {}}
         if account_obj["status"] == "Rejected":
-            parse.add_argument("com_name", type=str, required=True,
-                               help="Com name cannot be blank!")
-            parse.add_argument("com_email", type=str, required=True,
-                               help="Com name cannot be blank!")
-            parse.add_argument("vehicle_sn", type=str, required=False)
-            parse.add_argument("bos_bucket_name", type=str, required=True,
-                               help="Bos bucket name cannot be blank!")
-            parse.add_argument("bos_region", type=str, required=True,
-                               help="Bos region cannot be blank!")
-            parse.add_argument("bos_ak", type=str, required=True,
-                               help="Bos AK cannot be blank!")
-            parse.add_argument("bos_sk", type=str, required=True,
-                               help="Bos Sk cannot be blank!")
-            parse.add_argument("purpose", type=str, required=True,
-                               help="Purpose cannot be blank!")
-            args = parse.parse_args()
-            account_dict = args.copy()
+            must_args.extend(["bos_region", "purpose"])
+            for arg in must_args:
+                if arg not in account_dict:
+                    message_dict["message"]["details"] = "{} cannot be empty!".format(arg)
+                    message_dict["message"]["code"] = "E01"
+                    message_dict["message"]["fields"] = arg
+                    return message_dict, 400
             vehicle_sn = account_dict.get("vehicle_sn")
             account_dict["no_vehicle_sn"] = False
             if not vehicle_sn:
@@ -101,22 +90,19 @@ class AccountServices(flask_restful.Resource):
                                                ("apps/k8s/admin_console/conf/admin.json")))
             account.account_db.update_account_msg(account_id, account_dict)
         elif account_obj["status"] == "Enabled":
-            parse.add_argument("com_name", type=str, required=True,
-                               help="Com name cannot be blank!")
-            parse.add_argument("com_email", type=str, required=True,
-                               help="Com name cannot be blank!")
-            parse.add_argument("bos_bucket_name", type=str, required=True,
-                               help="Bos bucket name cannot be blank!")
-            parse.add_argument("bos_ak", type=str, required=True,
-                               help="Bos AK cannot be blank!")
-            parse.add_argument("bos_sk", type=str, required=True,
-                               help="Bos Sk cannot be blank!")
-            args = parse.parse_args()
-            account_dict = args.copy()
+            for arg in must_args:
+                if arg not in account_dict:
+                    message_dict["message"]["details"] = "{} cannot be empty!".format(arg)
+                    message_dict["message"]["code"] = "E01"
+                    message_dict["message"]["fields"] = arg
+                    return message_dict, 400
             account.account_db.update_account_msg(account_id, account_dict)
         else:
-            return {"desc": "The status is error, the data hasn't changed",
-                    "result": {}}, 400
+            message_dict["message"]["details"] = (
+                "Account data can't be updated in current account status"
+            )
+            message_dict["message"]["code"] = "E02"
+            return message_dict, 400
         new_accounts = account.account_db.get_account_info({"_id": account_id})
         accounts_used = account.get_job_used(new_accounts)
         accounts_objs = account.stamp_account_time(accounts_used)

@@ -34,8 +34,7 @@ class JobService(flask_restful.Resource):
 
         accounts = account.account_db.get_account_info({"vehicle_sn": vehicle_sn})
         if not accounts:
-            return {"desc": "Cannot find any job logs,please check the vehicle_sn!",
-                    "total_num": 0, "result": {}}, 400
+            return None, 404
 
         if args["endtime"]:
             filter_endtime.append({"end_time": {'$exists': False}})
