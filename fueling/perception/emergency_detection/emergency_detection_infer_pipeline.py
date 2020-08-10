@@ -20,7 +20,6 @@ from fueling.common.base_pipeline import BasePipeline
 from yolov4.inference import inference_yolov4
 
 
-
 class EmergencyVehicleDetector(BasePipeline):
     """Demo pipeline."""
 
@@ -30,4 +29,3 @@ class EmergencyVehicleDetector(BasePipeline):
 
 if __name__ == '__main__':
     EmergencyVehicleDetector().main()
-    #inference_yolov4(is_local=True)
