@@ -213,5 +213,6 @@ py_binary(
         ":frame_env",
         ":generate_labels",
         "//fueling/common:base_pipeline",
+        "//fueling/prediction/learning/pipelines/pedestrian_trajectory_prediction:pedestrian_trajectory_training",
     ],
 )

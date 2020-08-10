@@ -14,8 +14,17 @@ class ObstacleMapping(object):
     """class of ObstacleMapping to create an obstacle feature_map"""
 
     def __init__(self, region, base_map, world_coord,
-                 obstacles_history, ego_history=None, shift=True):
+                 obstacles_history, mapping=None, ego_history=None, shift=True,
+                 has_mapping=False):
         """contruct function to init ObstacleMapping object"""
+        if has_mapping:
+            self.init_with_mapping(region, mapping, obstacles_history, ego_history, shift)
+        else:
+            self.init_without_mapping(region, base_map, world_coord, obstacles_history,
+                                      ego_history, shift)
+
+    def init_without_mapping(self, region, base_map, world_coord,
+                             obstacles_history, ego_history=None, shift=True):
         self.shift = shift
         center_point = world_coord[0:2]
         map_coords = semantic_map_config['map_coords']
@@ -32,6 +41,25 @@ class ObstacleMapping(object):
             cv.imwrite(mapping.region + ".png", base_map)
             print("Drawing map: " + mapping.region + ".png")
             center_idx = mapping.get_trans_point(center_point)
+
+        self.world_coord = world_coord
+        self.obstacles_history = obstacles_history
+        self.ego_history = ego_history
+        self.base_point = np.array(center_point) - 100
+        self.GRID = [2000, 2000]
+        self.resolution = 0.1
+        self.feature_map = base_map[center_idx[1] - 1000:center_idx[1] + 1000,
+                                    center_idx[0] - 1000:center_idx[0] + 1000].copy()
+        self.draw_obstacles_history()
+        self.draw_ego_history(self.ego_history)
+
+    def init_with_mapping(self, mapping, world_coord,
+                          obstacles_history, ego_history=None, shift=True):
+        """contruct function to init ObstacleMapping object"""
+        self.shift = shift
+        center_point = world_coord[0:2]
+        base_map = mapping.base_map
+        center_idx = mapping.get_trans_point(center_point)
 
         self.world_coord = world_coord
         self.obstacles_history = obstacles_history
