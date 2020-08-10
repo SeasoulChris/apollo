@@ -1,0 +1,16 @@
+syntax = "proto2";
+
+message VideoLabel{
+    enum EmergencyVehicleType{
+        None = 1;
+        Ambulance = 2;
+        Firetruck = 3;
+        Police = 4;
+    }
+
+    optional EmergencyVehicleType type = 1;
+    optional int boundingbox_top = 2;
+    optional int boundingbox_bottom = 3;
+    optional int boundingbox_left = 4;
+    optional int boundingbox_right = 5;
+}
