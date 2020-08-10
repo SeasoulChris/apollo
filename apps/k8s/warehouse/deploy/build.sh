@@ -6,15 +6,16 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 set -ex
 
 # Build binary.
-docker exec -u ${USER} ${CONTAINER} bazel build //apps/k8s/openservice_regression:openservice_regression
+docker exec -u ${USER} ${CONTAINER} bazel build //apps/k8s/warehouse:index
 docker exec -u ${USER} ${CONTAINER} \
-	    cp -f /fuel/bazel-bin/apps/k8s/openservice_regression/openservice_regression.zip /fuel/apps/k8s/openservice_regression/deploy
+    cp -f /fuel/bazel-bin/apps/k8s/warehouse/index.zip /fuel/apps/k8s/warehouse/deploy
 
 # Build image.
-REPO="hub.baidubce.com/apollofuel/openservice_regression"
+REPO="hub.baidubce.com/apollofuel/warehouse"
 IMAGE="${REPO}:$(date +%Y%m%d_%H%M)"
 docker build -t ${IMAGE} --network host .
 
-docker push ${IMAGE}
+# Deploy.
 sed -i "s|image: ${REPO}.*|image: ${IMAGE}|g" deploy.yaml
+docker push ${IMAGE}
 kubectl apply -f deploy.yaml
