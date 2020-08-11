@@ -14,8 +14,6 @@ Run in cloud:
 import sys
 sys.path.append("/fuel")
 
-from absl import flags
-
 from fueling.common.base_pipeline import BasePipeline
 from yolov4.inference import inference_yolov4
 
