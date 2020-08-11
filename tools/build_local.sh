@@ -26,3 +26,4 @@ else
 fi
 
 env USE_CACHE="${USE_CACHE}" bash tools/build.sh $@
+rm -f WORKSPACE.bazel
