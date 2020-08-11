@@ -140,7 +140,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             else:
                 logging.error(sanity_status)
                 summarize_tasks([], origin_dir, target_dir,
-                                job_email, sanity_status)
+                                job_owner, job_email, sanity_status)
                 logging.info('Control Profiling Metrics: No Results')
                 return
 
@@ -296,7 +296,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             if not todo_task_dirs.collect():
                 error_msg = 'No grading results: no new qualified data uploaded.'
                 summarize_tasks([], origin_dir, target_dir,
-                                job_email, error_msg)
+                                job_owner, job_email, error_msg)
                 logging.info('Control Profiling Metrics: No Results')
                 return
 
@@ -334,7 +334,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
 
             """Step 8: Summarize by scanning the target directory and send out emails"""
             summarize_tasks(complete_target_task.keys().collect(),
-                            origin_dir, target_dir, job_email)
+                            origin_dir, target_dir, job_owner, job_email)
 
         logging.info(
             f"Timer: total run() - {time.perf_counter() - tic_start: 0.04f} sec")
@@ -385,12 +385,12 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                 for group_id, group in enumerate(msgs_groups)]
 
 
-def summarize_tasks(targets, original_prefix, target_prefix, job_email='', error_msg=''):
+def summarize_tasks(targets, original_prefix, target_prefix, job_owner, job_email='', error_msg=''):
     """Make summaries to specified tasks"""
     SummaryTuple = namedtuple(
         'Summary', [
             'Task', 'Records', 'HDF5s', 'Profling', 'Primary_Gradings', 'Sample_Sizes'])
-    title = 'Control Profiling Gradings Results'
+    title = 'Control Profiling Gradings Results for {}'.format(job_owner)
     receivers = email_utils.DATA_TEAM + \
         email_utils.CONTROL_TEAM + email_utils.D_KIT_TEAM
     receivers.append(job_email)

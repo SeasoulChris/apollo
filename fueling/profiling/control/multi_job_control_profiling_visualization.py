@@ -104,7 +104,7 @@ class MultiJobControlProfilingVisualization(BasePipeline):
 
             if not os.path.isdir(origin_dir):
                 error_msg = 'No visualization results: the source data path does not exist.'
-                summarize_tasks([], origin_dir, target_dir, job_email, error_msg)
+                summarize_tasks([], origin_dir, target_dir, job_owner, job_email, error_msg)
                 logging.info('Control Profiling Visualization: No Results, PROD')
                 return
 
@@ -154,7 +154,7 @@ class MultiJobControlProfilingVisualization(BasePipeline):
 
             if not todo_tasks.collect():
                 error_msg = 'No visualization results: no new qualified data uploaded.'
-                summarize_tasks([], origin_dir, target_dir, job_email, error_msg)
+                summarize_tasks([], origin_dir, target_dir, job_owner, job_email, error_msg)
                 logging.info('Control Profiling Visualization: No Results, PROD')
                 return
 
@@ -168,7 +168,7 @@ class MultiJobControlProfilingVisualization(BasePipeline):
 
             if not todo_tasks.collect():
                 error_msg = 'No visualization results: all the data have been processed before.'
-                summarize_tasks([], origin_dir, target_dir, job_email, error_msg)
+                summarize_tasks([], origin_dir, target_dir, job_owner, job_email, error_msg)
                 logging.info('Control Profiling Visualization: No Results, PROD')
                 return
 
@@ -176,7 +176,7 @@ class MultiJobControlProfilingVisualization(BasePipeline):
             self.process(todo_tasks.values())
 
             """Step 4: Summarize by scanning the target directory and send out emails"""
-            summarize_tasks(todo_tasks.values().collect(), origin_dir, target_dir, job_email)
+            summarize_tasks(todo_tasks.values().collect(), origin_dir, target_dir, job_owner, job_email)
 
         logging.info(f"Timer: total run() - {time.perf_counter() - tic_start: 0.04f} sec")
         logging.info('Control Profiling Visualization: All Done, PROD')
@@ -206,11 +206,11 @@ class MultiJobControlProfilingVisualization(BasePipeline):
             data_rdd.foreach(visual_utils.plot_h5_features_hist)
 
 
-def summarize_tasks(tasks, original_prefix, target_prefix, job_email='', error_msg=''):
+def summarize_tasks(tasks, original_prefix, target_prefix, job_owner, job_email='', error_msg=''):
     """Make summaries to specified tasks"""
     SummaryTuple = namedtuple(
         'Summary', ['Task', 'Target', 'HDF5s', 'VisualPlot'])
-    title = 'Control Profiling Visualization Results'
+    title = 'Control Profiling Visualization Results for {}'.format(job_owner)
     receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM + email_utils.D_KIT_TEAM
     receivers.append(job_email)
     if tasks:
