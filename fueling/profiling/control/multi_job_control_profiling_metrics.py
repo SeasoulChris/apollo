@@ -385,7 +385,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                 for group_id, group in enumerate(msgs_groups)]
 
 
-def summarize_tasks(targets, original_prefix, target_prefix, job_owner, job_email='', error_msg=''):
+def summarize_tasks(targets, original_prefix, target_prefix, job_owner, job_email='',
+                    error_msg=''):
     """Make summaries to specified tasks"""
     SummaryTuple = namedtuple(
         'Summary', [
