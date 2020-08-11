@@ -45,6 +45,7 @@ py_library(
     deps = [
         ":multi_vehicle_utils",
         "//fueling/common:email_utils",
+        "//fueling/common:job_utils",
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/common:record_utils",

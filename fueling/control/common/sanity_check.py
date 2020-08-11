@@ -8,6 +8,7 @@ import google.protobuf.text_format as text_format
 from cyber.python.cyber_py3.record import RecordReader
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
+from fueling.common.job_utils import JobUtils
 import fueling.common.email_utils as email_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
@@ -36,19 +37,22 @@ def list_records(path):
 def missing_file(path):
     vehicles = multi_vehicle_utils.get_vehicle(path)
     logging.info("vehicles %s" % vehicles)
+    result = []
     for vehicle in vehicles:
         # config file
         conf = os.path.join(path, vehicle, ConfFile)
         logging.info("vehicles conf %s" % conf)
         if os.path.exists(conf) is False:
             logging.error('Missing configuration file in %s' % vehicle)
-            return True
+            result.append(ConfFile)
         # record file
         logging.info("list of records:" % list_records(os.path.join(path, vehicle)))
         if len(list_records(os.path.join(path, vehicle))) == 0:
             logging.error('No record files in %s' % vehicle)
-            return True
-    return False
+            result.append("record")
+        if len(result):
+            return True, result
+    return False, []
 
 
 def parse_error(path):
@@ -76,6 +80,7 @@ def check_vehicle_id(conf):
 def missing_field(path):
     vehicles = multi_vehicle_utils.get_vehicle(path)
     logging.info("vehicles in missing field: %s" % vehicles)
+    result = []
     for vehicle in vehicles:
         conf_file = os.path.join(path, vehicle, ConfFile)
         logging.info("conf_file: %s" % conf_file)
@@ -84,7 +89,7 @@ def missing_field(path):
         conf = proto_utils.get_pb_from_text_file(conf_file, pb_value)
         logging.info("vehicles conf %s" % conf)
         if not check_vehicle_id(conf):
-            return True
+            result.append("vehicle_id")
         # required field
         fields = [conf.vehicle_param.brake_deadzone,
                   conf.vehicle_param.throttle_deadzone,
@@ -94,31 +99,46 @@ def missing_field(path):
         # has field is always true since a default value is given
         for field in fields:
             if math.isnan(field):
-                return True
-    return False
+                result.append(field)
+        if len(result):
+            return True, result
+    return False, result
 
 
 def missing_message_data(path, channels=CHANNELS):
+    result = []
     for record in list_records(path):
         logging.info("reading records %s" % record)
         reader = RecordReader(record)
         for channel in channels:
             logging.info("has %d messages" % reader.get_messagenumber(channel))
             if reader.get_messagenumber(channel) == 0:
-                return True
-    return False
+                result.append(record)
+    if len(result):
+        return True, result
+    return False, []
 
 
 def sanity_check(input_folder, job_owner, job_id, email_receivers=None):
     err_msg = None
-    if missing_file(input_folder):
+    field_flag, field_result = missing_field(input_folder)
+    channel_flag, channel_result = missing_message_data(input_folder)
+    file_flag, file_result = missing_file(input_folder)
+    if file_flag:
         err_msg = "One or more files are missing in %s" % input_folder
+        JobUtils(job_id).save_job_failure_code('E400')
+        JobUtils(job_id).save_job_failure_detail(file_result)
     elif parse_error(input_folder):
         err_msg = "Config file cannot be parsed in %s" % input_folder
-    elif missing_field(input_folder):
+        JobUtils(job_id).save_job_failure_code('E401')
+    elif field_flag:
         err_msg = "One or more fields are missing in config file %s" % input_folder
-    elif missing_message_data(input_folder):
+        JobUtils(job_id).save_job_failure_code('E402')
+        JobUtils(job_id).save_job_failure_detail(field_result)
+    elif channel_flag:
         err_msg = "Messages are missing in records of %s" % input_folder
+        JobUtils(job_id).save_job_failure_code('E403')
+        JobUtils(job_id).save_job_failure_detail(channel_result)
     else:
         logging.info("%s Passed sanity check." % input_folder)
         if email_receivers:
