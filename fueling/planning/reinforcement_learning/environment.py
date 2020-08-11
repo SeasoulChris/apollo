@@ -47,8 +47,8 @@ class ADSEnv(object):
         self.history_len = history_len
 
         self.hidden = generate_lstm_states(hidden_size)
-        self.hidden = tuple([hidden_element.detach().numpy()
-                             for hidden_element in self.hidden])
+        self.hidden = tuple(hidden_element.detach().numpy()
+                            for hidden_element in self.hidden)
         self.delta_t = 0.2
         self.state = None
         self.current_adv_pose = None
@@ -159,7 +159,7 @@ class ADSEnv(object):
 
     def reset(self):
         self.close()
-        
+
         self.sequence_num = 0
 
         # for reward and done in function step
@@ -170,7 +170,7 @@ class ADSEnv(object):
         self.speed = 0
         self.is_grading_done = False
         self.is_input_ready = False
-        
+
         return self.state, self.hidden
 
     def close(self):
@@ -272,7 +272,6 @@ class ADSEnv(object):
         hist_points_step = np.zeros_like(hist_points)
         hist_points_step[1:, :] = hist_points[1:, :] - hist_points[:-1, :]
 
-        self.state = tuple([birdview_feature_input.detach().numpy()
-                            , hist_points, hist_points_step])
+        self.state = tuple(birdview_feature_input.detach().numpy(), hist_points, hist_points_step)
         self.current_adv_pose = tuple(ref_coords)
         self.is_input_ready = True

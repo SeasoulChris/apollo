@@ -39,15 +39,15 @@ class DDPG(object):
         select an action based on the current state and hidden
         return action and next_hidden
         """
-        state = tuple([torch.FloatTensor(state_element).unsqueeze(
-            0).to(device) for state_element in state])
-        hidden = tuple([torch.FloatTensor(hidden_element).unsqueeze(
-            0).to(device) for hidden_element in hidden])
+        state = tuple(torch.FloatTensor(state_element).unsqueeze(
+            0).to(device) for state_element in state)
+        hidden = tuple(torch.FloatTensor(hidden_element).unsqueeze(
+            0).to(device) for hidden_element in hidden)
         action, next_hidden, _ = self.rl_net(
             state, policy=True, hidden=hidden)
         action = action.detach().cpu().numpy()[0]
-        next_hidden[0] = next_hidden[0].detach().cpu().numpy()[0]
-        next_hidden[1] = next_hidden[1].detach().cpu().numpy()[0]
+        next_hidden = tuple(hidden_element.detach().cpu().numpy(
+        )[0] for hidden_element in hidden)
         return action, next_hidden
 
     def learn(self, gamma=0.99, min_value=-np.inf, max_value=np.inf):
@@ -58,14 +58,14 @@ class DDPG(object):
         state, hidden, action, reward, next_state, next_hidden, done = \
             self.replay_buffer.sample(BATCH_SIZE)
 
-        state = tuple([torch.FloatTensor(state_element).to(
-            device) for state_element in state])
-        next_state = tuple([torch.FloatTensor(state_element).to(
-            device) for state_element in next_state])
-        hidden = tuple([torch.FloatTensor(hidden_element).to(
-            device) for hidden_element in hidden])
-        next_hidden = tuple([torch.FloatTensor(hidden_element).to(
-            device) for hidden_element in next_hidden])
+        state = tuple(torch.FloatTensor(state_element).to(
+            device) for state_element in state)
+        next_state = tuple(torch.FloatTensor(state_element).to(
+            device) for state_element in next_state)
+        hidden = tuple(torch.FloatTensor(hidden_element).to(
+            device) for hidden_element in hidden)
+        next_hidden = tuple(torch.FloatTensor(hidden_element).to(
+            device) for hidden_element in next_hidden)
         action = torch.FloatTensor(action).to(device)
         reward = torch.FloatTensor(reward).unsqueeze(1).to(device)
         done = torch.FloatTensor(np.float32(done)).unsqueeze(1).to(device)
@@ -135,15 +135,15 @@ class TD3(object):
         select an action based on the current state and hidden
         return action and next_hidden
         """
-        state = tuple([torch.FloatTensor(state_element).unsqueeze(
-            0).to(device) for state_element in state])
-        hidden = tuple([torch.FloatTensor(hidden_element).unsqueeze(
-            0).to(device) for hidden_element in hidden])
+        state = tuple(torch.FloatTensor(state_element).unsqueeze(
+            0).to(device) for state_element in state)
+        hidden = tuple(torch.FloatTensor(hidden_element).unsqueeze(
+            0).to(device) for hidden_element in hidden)
         action, next_hidden, _ = self.rl_net1(
             state, policy=True, hidden=hidden)
         action = action.detach().cpu().numpy()[0]
-        next_hidden[0] = next_hidden[0].detach().cpu().numpy()[0]
-        next_hidden[1] = next_hidden[1].detach().cpu().numpy()[0]
+        next_hidden = tuple(hidden_element.detach().cpu().numpy(
+        )[0] for hidden_element in hidden)
         return action, next_hidden
 
     def learn(self, gamma=0.99, soft_tau=0.005, noise_std=0.2, noise_clip=0.5, policy_update=2):
@@ -154,14 +154,14 @@ class TD3(object):
         state, hidden, action, reward, next_state, next_hidden, done = \
             self.replay_buffer.sample(BATCH_SIZE)
 
-        state = tuple([torch.FloatTensor(state_element).to(
-            device) for state_element in state])
-        next_state = tuple([torch.FloatTensor(state_element).to(
-            device) for state_element in next_state])
-        hidden = tuple([torch.FloatTensor(hidden_element).to(
-            device) for hidden_element in hidden])
-        next_hidden = tuple([torch.FloatTensor(hidden_element).to(
-            device) for hidden_element in next_hidden])
+        state = tuple(torch.FloatTensor(state_element).to(
+            device) for state_element in state)
+        next_state = tuple(torch.FloatTensor(state_element).to(
+            device) for state_element in next_state)
+        hidden = tuple(torch.FloatTensor(hidden_element).to(
+            device) for hidden_element in hidden)
+        next_hidden = tuple(torch.FloatTensor(hidden_element).to(
+            device) for hidden_element in next_hidden)
         action = torch.FloatTensor(action).to(device)
         reward = torch.FloatTensor(reward).unsqueeze(1).to(device)
         done = torch.FloatTensor(np.float32(done)).unsqueeze(1).to(device)

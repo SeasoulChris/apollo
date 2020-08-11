@@ -52,6 +52,7 @@ py_binary(
         ":environment",
         ":rl_algorithm",
         "//fueling/learning:train_utils",
+        "@apollo//cyber/python/cyber_py3:cyber",
     ],
 )
 

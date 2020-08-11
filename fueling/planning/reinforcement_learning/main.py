@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 
+from cyber.python.cyber_py3 import cyber
+
 from fueling.planning.reinforcement_learning.environment import ADSEnv
 from fueling.planning.reinforcement_learning.rl_algorithm import DDPG
 
@@ -26,8 +28,8 @@ class OUNoise(object):
         self.min_sigma = min_sigma
         self.decay_period = decay_period
         self.action_dim = action_dim
-        self.low = 0
-        self.high = 1
+        self.low = np.array([0, -100, -30, 0])
+        self.high = np.array([100, 100, 30, 100])
         self.reset()
 
     def reset(self):
