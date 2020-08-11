@@ -87,6 +87,7 @@ def main():
             time_count += 1
         if i_episode % 50 == 0:
             print("Episode finished after {} timesteps".format(time_count + 1))
+    cyber.shutdown()
     env.close()
 
 
