@@ -1,1 +1,2 @@
-modules/data/afs-data/Pilot/YiZhuangDaDiTu/YiZhuangDaLuWang/collection/2020/ _202007
+modules/data/afs-data/Pilot/YiZhuangDaDiTu/YiZhuangDaLuWang/collection/2020/ _202006
+modules/data/afs-data/Pilot/YiZhuangDaDiTu/YiZhuangDaLuWang/collection/2020/ _202005

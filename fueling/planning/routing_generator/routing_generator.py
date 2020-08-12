@@ -36,9 +36,9 @@ class RoutingGenerator(BasePipeline):
             '/apollo/routing_response',
             # '/apollo/routing_response_history',
         ]
+        self.route_generator = None
 
         self.topic_descs = dict()
-
         self.RUN_IN_DRIVER = True
 
     def run_test(self):
@@ -79,6 +79,8 @@ class RoutingGenerator(BasePipeline):
                     if record_utils.is_record_file(file):
                         task_files.append(file)
 
+        self.route_generator = RouteGenerator(self.map_file)
+
         if self.RUN_IN_DRIVER:
             for file in task_files:
                 self.process_file(file)
@@ -91,8 +93,7 @@ class RoutingGenerator(BasePipeline):
         logging.info("")
         logging.info("* input_file: " + record_path_file)
 
-        route_generator = RouteGenerator(self.map_file)
-        route_response_msg = route_generator.generate(record_path_file)
+        route_response_msg = self.route_generator.generate(record_path_file)
 
         self.get_topic_descs()
 
