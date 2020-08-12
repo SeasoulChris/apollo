@@ -37,11 +37,12 @@ OFFSET_Y = semantic_map_config['offset_y']
 
 class CombineFrameEnvAndFutureStatus(BasePipeline):
     '''Records to feature proto pipeline.'''
-    def __init__(self, frame_env_prefix):
+    def __init__(self):
         super(CombineFrameEnvAndFutureStatus, self).__init__()
-        self.frame_env_prefix = frame_env_prefix
 
     def run(self):
+        input_path = self.FLAGS.get('input_path')
+        self.frame_env_prefix = os.path.join(input_path, 'frame_envs')
         frame_env_dir = self.to_rdd(self.our_storage().list_end_dirs(self.frame_env_prefix))
 
         if frame_env_dir.isEmpty():

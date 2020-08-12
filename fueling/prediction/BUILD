@@ -102,6 +102,14 @@ py_binary(
 )
 
 py_binary(
+    name = "copy_map",
+    srcs = ["copy_map.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+    ],
+)
+
+py_binary(
     name = "generate_labels",
     srcs = ["generate_labels.py"],
     deps = [
@@ -209,10 +217,12 @@ py_binary(
     srcs = ["prediction_end_to_end.py"],
     deps = [
         ":combine_frame_env_and_future_status",
+        ":copy_map",
         ":dump_feature_proto",
         ":frame_env",
         ":generate_labels",
         "//fueling/common:base_pipeline",
+        "//fueling/common/storage:bos_client",
         "//fueling/prediction/learning/pipelines/pedestrian_trajectory_prediction:pedestrian_trajectory_training",
     ],
 )

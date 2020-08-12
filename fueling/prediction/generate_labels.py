@@ -14,11 +14,12 @@ SKIP_EXISTING_DST_FILE = False
 
 class GenerateLabels(BasePipeline):
     """Records to GenerateLabels proto pipeline."""
-    def __init__(self, source_prefix):
+    def __init__(self):
         super(GenerateLabels, self).__init__()
-        self.source_prefix = source_prefix
 
     def run(self):
+        input_path = self.FLAGS.get('input_path')
+        self.source_prefix = os.path.join(input_path, 'labels')
         # RDD(bin_files)
         bin_files = (
             self.to_rdd(self.our_storage().list_files(self.source_prefix)).filter(

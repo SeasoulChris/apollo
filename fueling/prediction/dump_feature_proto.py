@@ -12,12 +12,13 @@ SKIP_EXISTING_DST_FILE = False
 
 class DumpFeatureProto(BasePipeline):
     """Records to feature proto pipeline."""
-    def __init__(self, origin_prefix, target_prefix):
+    def __init__(self):
         super(DumpFeatureProto, self).__init__()
-        self.origin_prefix = origin_prefix
-        self.target_prefix = target_prefix
 
     def run(self):
+        self.input_path = self.FLAGS.get('input_path')
+        self.origin_prefix = os.path.join(self.input_path, 'records')
+        self.target_prefix = os.path.join(self.input_path, 'labels')
         """Run prod."""
         records_dir = (
             # RDD(file), start with origin_prefix
@@ -95,7 +96,23 @@ class DumpFeatureProto(BasePipeline):
             return "FuZhouFeiFengShan"
         if "houston" in path_lower:
             return "houston"
-        return "demo"
+        input_abs_path = self.our_storage().abs_path(self.input_path)
+        return self.get_region_from_input_path(input_abs_path)
+
+    def get_region_from_input_path(self, input_path):
+        map_path = os.path.join(input_path, 'map/')
+        map_list = os.listdir(map_path)
+        assert len(map_list) == 1
+        map_region_path = os.path.join(map_path, map_list[0])
+        index = map_region_path.find('map/')
+        if index == -1:
+            return ''
+        index += 4
+        sub_path = map_region_path[index:]
+        end = sub_path.find('/')
+        if end == -1:
+            return sub_path
+        return sub_path[:end]
 
     def get_dirs_map(self, record_dirs):
         """Return the (record_dir, map_name) pair"""
