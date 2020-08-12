@@ -84,6 +84,7 @@ py_binary(
     srcs = ["train_utils.py"],
     deps = [
         ":gp_model",
+        ":train",
     ],
 )
 

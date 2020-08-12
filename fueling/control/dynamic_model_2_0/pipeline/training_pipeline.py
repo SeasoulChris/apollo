@@ -16,7 +16,7 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config
 from fueling.control.dynamic_model_2_0.conf.model_conf import smoke_test_training_config
 from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset import BosDataset
-from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
+from fueling.control.dynamic_model_2_0.gp_regression.encoder import TransformerEncoderCNN
 from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_state_dict
 from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_torch_script
 import fueling.common.distributed_data_parallel as ddp
@@ -24,9 +24,13 @@ import fueling.common.logging as logging
 import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_utils
 
 config = smoke_test_training_config
-training_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/smoke_test_2/train"
-validation_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/smoke_test_2/test"
-result_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/smoke_test_2/result"
+# training_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/smoke_test_2/train"
+# validation_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/smoke_test_2/test"
+# result_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/smoke_test_2/result"
+
+training_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/splitted_file_list/2020-07-06-21_0806_3/train"
+validation_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/splitted_file_list/2020-07-06-21_0806_3/test"
+result_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/splitted_file_list/2020-07-06-21_0806_3/result"
 # time
 timestr = time.strftime('%Y%m%d-%H%M')
 # save files at
@@ -88,8 +92,10 @@ class Training(BasePipeline):
 
         # encoder
         # bench mark encoder
-        encoder_net_model = Encoder(u_dim=feature_config["input_dim"],
-                                    kernel_dim=config["kernel_dim"])
+        # encoder_net_model = Encoder(u_dim=feature_config["input_dim"],
+        #                             kernel_dim=config["kernel_dim"])
+        encoder_net_model = TransformerEncoderCNN(u_dim=feature_config["input_dim"],
+                                                  kernel_dim=config["kernel_dim"])
         model, likelihood, optimizer, loss_fn = train_utils.init_train(
             inducing_points, encoder_net_model, feature_config["output_dim"],
             total_train_number, config["lr"], kernel_dim=config["kernel_dim"])
@@ -97,16 +103,17 @@ class Training(BasePipeline):
         train_loss_plot = os.path.join(result_folder, 'train_loss.png')
 
         if train_model:
-            model, likelihood, final_train_loss = train_utils.train_with_adjusted_lr(
+            for idx, (test_features, test_labels) in enumerate(valid_loader):
+                test_features = torch.transpose(test_features, 0, 1).type(torch.FloatTensor)
+                break
+            model, likelihood, final_train_loss = train_utils.train_save_best_model(
                 config["num_epochs"], train_loader, model, likelihood,
-                loss_fn, optimizer, fig_file_path=train_loss_plot, is_transpose=True)
+                loss_fn, optimizer, test_features, result_folder,
+                fig_file_path=train_loss_plot, is_transpose=True)
             print(f'final train loss is {final_train_loss}')
             # test save and load model
             save_model_state_dict(model, likelihood, offline_model_path)
             # save model as jit script
-            for idx, (test_features, test_labels) in enumerate(valid_loader):
-                test_features = torch.transpose(test_features, 0, 1).type(torch.FloatTensor)
-                break
             save_model_torch_script(model, likelihood, test_features, online_model_path)
             # save inducing points for load model
             np.save(os.path.join(result_folder, 'inducing_points.npy'), inducing_points)

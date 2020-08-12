@@ -64,6 +64,53 @@ def save_model_param_to_bin(input_mean, input_std, dst_dir):
     proto_utils.write_pb_to_text_file(gp_model_param, param_txt_file)
 
 
+def extract_data_from_file(h5_file):
+    """ run in bos; assume there is no NAN files"""
+    with h5py.File(h5_file, 'r') as labeled_data_file:
+        # Get input data
+        input_segment = np.array(labeled_data_file.get('input_segment'))
+        output_segment = np.array(labeled_data_file.get('output_segment'))
+        return (input_segment, output_segment)
+
+
+class BosSetDataset(Dataset):
+    def __init__(self, storage, input_data_dir, validation_set, is_train=True, param_file=None):
+        super().__init__()
+        self.dst_dir = input_data_dir
+        self.is_train = is_train
+        self.files = storage.list_files(input_data_dir, suffix='.h5')
+        self.datasets = []
+        self.get_datasets(validation_set)
+        if is_train and (not param_file):
+            # generate standardization factors
+            self.input_mean, self.input_std = get_standardization_factors(self.datasets)
+            save_model_param_to_bin(self.input_mean, self.input_std, self.dst_dir)
+        else:
+            # load standardization factors
+            params = proto_utils.get_pb_from_bin_file(param_file, GPModelParam())
+            self.input_mean = params.standardization_factor.input_mean.columns
+            self.input_std = params.standardization_factor.input_std.columns
+            logging.info(f'param factors are {self.input_mean} and {self.input_std}')
+
+    def get_datasets(self, validation_set):
+        # loop over list files
+        for cur_file in self.files:
+            if self.is_train == (cur_file not in validation_set):
+                # logging.info(cur_file)
+                self.datasets.append(extract_data_from_file(cur_file))
+
+    def __len__(self):
+        return len(self.datasets)
+
+    def __getitem__(self, idx):
+        standardized_input = (self.datasets[idx][0] - self.input_mean) / self.input_std
+        return (torch.from_numpy(standardized_input).float(),
+                torch.from_numpy(self.datasets[idx][1]).float())
+
+    def get_len(self):
+        return self.__len__()
+
+
 class BosDataset(Dataset):
     """ Dateset for BOS """
 
