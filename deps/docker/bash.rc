@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+export PS1="\[\e[31m\][\[\e[m\]\[\e[32m\]\u\[\e[m\]\[\e[33m\]@\[\e[m\]\[\e[35m\]\h\[\e[m\]:\[\e[36m\]\w\[\e[m\]\[\e[31m\]]\[\e[m\]\[\e[1;32m\]\\$\[\e[m\] "
 
 source /usr/local/miniconda/bin/activate fuel
 source /etc/bash_completion.d/bazel
