@@ -28,9 +28,15 @@ config = smoke_test_training_config
 # validation_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/smoke_test_2/test"
 # result_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/smoke_test_2/result"
 
-training_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/splitted_file_list/2020-07-06-21_0806_3/train"
-validation_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/splitted_file_list/2020-07-06-21_0806_3/test"
-result_data_path = "/mnt/bos/modules/control/dynamic_model_2_0/splitted_file_list/2020-07-06-21_0806_3/result"
+
+platform_path = "/mnt/bos/modules/control/dynamic_model_2_0"
+training_data_path = os.path.join(platform_path, "splitted_file_list/2020-07-06-21_0806_3/train")
+validation_data_path = os.path.join(platform_path, "splitted_file_list/2020-07-06-21_0806_3/test")
+result_data_path = os.path.join(platform_path, "splitted_file_list/2020-07-06-21_0806_3/result")
+param_file_path = os.path.join(
+    platform_path, "splitted_file_list/2020-07-06-21_0806_3/train/param.bin")
+
+
 # time
 timestr = time.strftime('%Y%m%d-%H%M')
 # save files at

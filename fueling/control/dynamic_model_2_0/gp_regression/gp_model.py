@@ -40,7 +40,7 @@ class GPModel(ApproximateGP):
         warpped_input_data = torch.cat(
             (self.warping(input_data[0, :]).unsqueeze(0),
              self.warping(input_data[1, :]).unsqueeze(0)), 0)
-        logging.info(warpped_input_data.shape)
+        # logging.info(warpped_input_data.shape)
         # (batch_size, sequence, channel)
         mean_x = self.mean_module(warpped_input_data)
         covar_x = self.covar_module(warpped_input_data)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import time
 
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import numpy as np
@@ -96,6 +97,7 @@ def train_save_best_model(num_epochs, train_loader, model, likelihood,
     best_train_loss = float('+inf')
     train_loss_all = []
     epochs_iter = tqdm.tqdm(range(num_epochs), desc="Epoch")
+    time_start = time.time()
     for i in epochs_iter:
         # Within each iteration, we will go over each minibatch of data
         tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
@@ -125,23 +127,13 @@ def train_save_best_model(num_epochs, train_loader, model, likelihood,
             likelihood.train()
             model.train()
 
+        logging.info(
+            f'epoch {i} cost time is : {time.time() - time_start} and current loss is {train_loss}')
+        time_start = time.time()
+
     plot_train_loss(train_loss_all, fig_file_path)
     # output last train loss
     return model, likelihood, train_loss_all[-1]
-
-
-# def seve_mode(epoch_num, model, likelihood):
-#     model.eval()
-#     likelihood.eval()
-#     offline_model_path = os.path.join(result_folder, f'{i}', 'gp_model.pth')
-#     online_model_path = os.path.join(result_folder, f'{i}', 'gp_model.pt')
-#     # test save and load model
-#     save_model_state_dict(model, likelihood, offline_model_path)
-#     # save model as jit script
-#     plot_train_loss(train_loss_all, fig_file_path)
-#     save_model_torch_script(model, likelihood, test_features, online_model_path)
-#     likelihood.train()
-#     model.train()
 
 
 def plot_train_loss(train_losses, fig_file_path):

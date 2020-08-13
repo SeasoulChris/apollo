@@ -66,6 +66,7 @@ def save_model_param_to_bin(input_mean, input_std, dst_dir):
 
 def extract_data_from_file(h5_file):
     """ run in bos; assume there is no NAN files"""
+    logging.log_every_n(logging.INFO, f'loading {h5_file}', 500)
     with h5py.File(h5_file, 'r') as labeled_data_file:
         # Get input data
         input_segment = np.array(labeled_data_file.get('input_segment'))
@@ -79,33 +80,31 @@ class BosSetDataset(Dataset):
         self.dst_dir = input_data_dir
         self.is_train = is_train
         self.files = storage.list_files(input_data_dir, suffix='.h5')
-        self.datasets = []
+        self.dataset_file_list = []
         self.get_datasets(validation_set)
-        if is_train and (not param_file):
-            # generate standardization factors
-            self.input_mean, self.input_std = get_standardization_factors(self.datasets)
-            save_model_param_to_bin(self.input_mean, self.input_std, self.dst_dir)
-        else:
-            # load standardization factors
-            params = proto_utils.get_pb_from_bin_file(param_file, GPModelParam())
-            self.input_mean = params.standardization_factor.input_mean.columns
-            self.input_std = params.standardization_factor.input_std.columns
-            logging.info(f'param factors are {self.input_mean} and {self.input_std}')
+        # load standardization factors
+        params = proto_utils.get_pb_from_bin_file(param_file, GPModelParam())
+        self.input_mean = params.standardization_factor.input_mean.columns
+        self.input_std = params.standardization_factor.input_std.columns
+        logging.info(f'param factors are {self.input_mean} and {self.input_std}')
 
     def get_datasets(self, validation_set):
         # loop over list files
         for cur_file in self.files:
             if self.is_train == (cur_file not in validation_set):
                 # logging.info(cur_file)
-                self.datasets.append(extract_data_from_file(cur_file))
+                self.dataset_file_list.append(cur_file)
 
     def __len__(self):
-        return len(self.datasets)
+        return len(self.dataset_file_list)
 
     def __getitem__(self, idx):
-        standardized_input = (self.datasets[idx][0] - self.input_mean) / self.input_std
+        # extract data set
+        cur_dataset = extract_data_from_file(self.dataset_file_list[idx])
+        # standardization
+        standardized_input = (cur_dataset[0] - self.input_mean) / self.input_std
         return (torch.from_numpy(standardized_input).float(),
-                torch.from_numpy(self.datasets[idx][1]).float())
+                torch.from_numpy(cur_dataset[1]).float())
 
     def get_len(self):
         return self.__len__()
