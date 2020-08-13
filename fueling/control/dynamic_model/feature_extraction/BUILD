@@ -11,7 +11,7 @@ py_binary(
     ],
 )
 
-py_binary(
+py_library(
     name = "sample_set",
     srcs = ["sample_set.py"],
     deps = [
@@ -31,7 +31,7 @@ py_binary(
     ],
 )
 
-py_binary(
+py_library(
     name = "uniform_set",
     srcs = ["uniform_set.py"],
     deps = [
