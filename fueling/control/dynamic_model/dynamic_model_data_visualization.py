@@ -1,20 +1,16 @@
 #!/usr/bin/env python
 
+import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
+import fueling.control.dynamic_model.data_generator.feature_extraction as data_generator
+import fueling.common.logging as logging
+import fueling.common.spark_helper as spark_helper
+from fueling.common.base_pipeline import BasePipeline
 import glob
 import os
 import time
 
 import matplotlib
 matplotlib.use('Agg')
-
-from fueling.common.base_pipeline import BasePipeline
-import fueling.common.spark_helper as spark_helper
-from fueling.control.dynamic_model.conf.model_config import feature_config
-import fueling.common.logging as logging
-import fueling.control.dynamic_model.data_generator.feature_extraction as data_generator
-import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
-
-VEHICLE_ID = feature_config["vehicle_id"]
 
 
 class DynamicModelDatasetDistribution(BasePipeline):

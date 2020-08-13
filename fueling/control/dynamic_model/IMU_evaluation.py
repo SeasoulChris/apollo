@@ -5,13 +5,10 @@ import os
 import re
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.control.dynamic_model.conf.model_config import feature_config
 import fueling.common.logging as logging
 import fueling.common.spark_helper as spark_helper
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 import fueling.control.dynamic_model.offline_evaluator.non_holistic_model_evaluator as evaluator
-
-IS_BACKWARD = feature_config["is_backward"]
 
 
 def extract_scenario_name(dataset_path):
@@ -26,8 +23,9 @@ class IMUEvaluation(BasePipeline):
 
     def run(self):
         """run test"""
+        is_backward = self.FLAGS.get('is_backward')
         platform_path = "/fuel/testdata/control/"
-        if IS_BACKWARD:
+        if is_backward:
             evaluation_set = "golden_test_backward"
 
         evaluation_dataset = os.path.join(platform_path, evaluation_set, "*/*.hdf5")

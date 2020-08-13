@@ -14,9 +14,6 @@ if feature_config["is_holistic"]:
 else:
     import fueling.control.dynamic_model.offline_evaluator.non_holistic_model_evaluator as evaluator
 
-VEHICLE_ID = feature_config["vehicle_id"]
-IS_BACKWARD = feature_config["is_backward"]
-
 
 def extract_scenario_name(dataset_path):
     result = re.findall(r"hdf5_evaluation/.+/(.+?).hdf5", dataset_path)[0]
@@ -26,8 +23,10 @@ def extract_scenario_name(dataset_path):
 class DynamicModelEvaluation(BasePipeline):
 
     def run_test(self):
+        is_backward = self.FLAGS.get('is_backward')
+        vehicle_id = self.FLAGS.get('evaluation_vehicle_id')
         platform_path = '/fuel/testdata/control/learning_based_model/'
-        if IS_BACKWARD:
+        if is_backward:
             evaluation_set = 'golden_test_backward'
             mlp_model_path = os.path.join(platform_path,
                                           'dynamic_model_output/h5_model/mlp/backward/*')
@@ -44,7 +43,7 @@ class DynamicModelEvaluation(BasePipeline):
         mlp_model_rdd = self.to_rdd(glob.glob(mlp_model_path)).keyBy(lambda _: 'mlp')
         # PairRDD(model_name, folder_path)
         lstm_model_rdd = self.to_rdd(glob.glob(lstm_model_path)).keyBy(lambda _: 'lstm')
-        evaluation_dataset = os.path.join(platform_path, 'hdf5_evaluation', VEHICLE_ID,
+        evaluation_dataset = os.path.join(platform_path, 'hdf5_evaluation', vehicle_id,
                                           evaluation_set, '*.hdf5')
 
         evaluation_dataset_rdd = (
@@ -58,8 +57,10 @@ class DynamicModelEvaluation(BasePipeline):
         self.model_evaluation(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
 
     def run(self):
+        is_backward = self.FLAGS.get('is_backward')
+        vehicle_id = self.FLAGS.get('evaluation_vehicle_id')
         platform_path = 'modules/control/learning_based_model/'
-        if IS_BACKWARD:
+        if is_backward:
             evaluation_set = 'golden_test_backward'
             mlp_model_prefix = os.path.join(platform_path,
                                             'dynamic_model_output/h5_model/mlp/backward')
@@ -71,7 +72,7 @@ class DynamicModelEvaluation(BasePipeline):
                                             'dynamic_model_output/h5_model/mlp/forward')
             lstm_model_prefix = os.path.join(platform_path,
                                              'dynamic_model_output/h5_model/lstm/forward')
-        data_predix = os.path.join(platform_path, 'hdf5_evaluation', VEHICLE_ID, evaluation_set)
+        data_predix = os.path.join(platform_path, 'hdf5_evaluation', vehicle_id, evaluation_set)
 
         storage = self.our_storage()
         # PairRDD('mlp', folder_path)
