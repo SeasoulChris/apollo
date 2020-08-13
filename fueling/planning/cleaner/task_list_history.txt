@@ -228,3 +228,9 @@ small-records/2020/2020-07-31/2020-07-31-17-20-03 sunnyvale_with_two_offices
 small-records/2020/2020-08-03/2020-08-03-11-07-34 sunnyvale_with_two_offices
 small-records/2020/2020-08-03/2020-08-03-13-02-25 sunnyvale_with_two_offices
 small-records/2020/2020-08-03/2020-08-03-17-04-10 sunnyvale_with_two_offices
+
+>> bj data testing
+
+modules/planning/temp/converted_data_with_routing/batch_20200806_115249 yizhuangdaluwang
+
+>> sv-batch6
