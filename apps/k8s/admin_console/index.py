@@ -10,7 +10,6 @@ from services import account_services
 from services import job_services
 from views import account
 from views import admin
-from views import index
 from views import job
 from views import statistics
 
@@ -26,7 +25,6 @@ application.app.before_request(before_request.process_request)
 
 # Register blueprint
 application.app.register_blueprint(admin.blue_admin)
-application.app.register_blueprint(index.blue_index)
 application.app.register_blueprint(job.blue_job)
 application.app.register_blueprint(statistics.blue_statistics)
 application.app.register_blueprint(account.blue_account)

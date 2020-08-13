@@ -39,7 +39,16 @@ class Config(object):
                      "E201": "找不到所需要的输入文件！请按照使用文档检查输入文件的目录结构是否正确以及相应文件是否齐全。",
                      "E202": "输入文件中缺少XXX配置文件。请按照使用文档提供相关文件。",
                      "E203": "配置文件XXX中缺少XXX配置项。请按照使用文档提供正确的配置文件",
-                     "E204": "传感器标定出错，请联系售后技术支持。"}
+                     "E204": "传感器标定出错，请联系售后技术支持。",
+                     "E307": "输入路径和输出路径相同，请传入不同路径。",
+                     "E400": "请检查提交任务的目录名称是否输入正确，或输入目录内是否缺少xxx文件。"
+                             "例如：xxx可以是vehicle_param.pd.txt，或者是某个具体的record文件缺失或者找不到。",
+                     "E401": "配置文件vehicle_param.pd.txt无法解析，请检查vehicle_param.pd.txt是否是车型配置目录下的文件。",
+                     "E402": "请检查vehicle_param.pd.txt是否缺少以下参数和相应数据：vehicle_id、brake_deadzone、"
+                             "thorttle_deadzone、max_acceleration、max_deceleration。",
+                     "E403": "xxxx record文件内缺失重要channel信息(chassis or localization channel), "
+                             "请重新录制数据包"
+                     }
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
     SUPER_USER_NAME = "apollo"
     ROLE_TYPE = {

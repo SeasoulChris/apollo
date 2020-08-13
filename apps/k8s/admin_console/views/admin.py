@@ -70,7 +70,7 @@ def login():
         "permission": role_dict[admin_obj["role"]]
     }
     flask.session["user_info"] = user_info
-    return flask.redirect('/index')
+    return flask.redirect('/jobs')
 
 
 @blue_admin.route('/logout', methods=["GET", "POST"])

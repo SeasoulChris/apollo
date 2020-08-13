@@ -31,7 +31,6 @@ py_binary(
         "//apps/k8s/admin_console/services:job_services",
         "//apps/k8s/admin_console/views:account",
         "//apps/k8s/admin_console/views:admin",
-        "//apps/k8s/admin_console/views:index",
         "//apps/k8s/admin_console/views:job",
         "//apps/k8s/admin_console/views:statistics",
     ],

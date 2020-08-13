@@ -104,12 +104,15 @@ $(document).ready(function () {
                         var operation_action = account_data["new_operation"]["action"]
                         if (operation_action["status"]){
                             for(var i=0; i<operation_action["status"].length; i++){
-                                operation_history = operation_history + showJobType(operation_action["type"][i])+"被设置为"+showServiceStatus(operation_action["status"][i])+"。";
+                                operation_history = operation_history + showJobType(operation_action["type"][i])+"服务"+showServiceStatus(operation_action["status"][i])+"。";
                             }
                             if (operation_action["remaining_quota"]){
-                                operation_history = operation_history + "剩余配额被设置为"+operation_action["remaining_quota"]+"，截止日期被设置为"+operation_action["due_date"]+"。"
+                                operation_history = operation_history + "剩余配额设置为"+operation_action["remaining_quota"]+"，截止日期设置为"+operation_action["due_date"]+"。"
                             }
-                            operation_history = operation_history + "操作时间为" + operation_time +"。"
+                            operation_history = operation_history + "操作员" + operation_email + "于" + operation_time + "操作。"
+                            if (operation_action["comments"]){
+                                operation_history = operation_history + "备注：" + account_data["new_operation"]["comments"]
+                            }
                         }
                         else if (operation_action["type"] && (!operation_action["remaining_quota"])){
                             operation_history =  "用户账号被"+operation_email+"在"+operation_time+showServiceStatus(operation_action["type"])+"。备注是："+account_data["new_operation"]["comments"]+"。";

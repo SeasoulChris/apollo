@@ -65,7 +65,7 @@ def get_failure_cause(code):
     Get failure cause of job
     """
     failure_cause = application.app.config.get("FAILURE_CAUSE")
-    return failure_cause[code] if code else ""
+    return failure_cause[code] if code and failure_cause.get("code") else code
 
 
 def truncation_job_id(job_id):

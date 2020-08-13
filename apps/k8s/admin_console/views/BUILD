@@ -29,12 +29,6 @@ py_library(
     ],
 )
 
-py_library(
-    name = "index",
-    srcs = ["index.py"],
-    data = ["//apps/k8s/admin_console:resource"],
-)
-
 py_binary(
     name = "job",
     srcs = ["job.py"],
