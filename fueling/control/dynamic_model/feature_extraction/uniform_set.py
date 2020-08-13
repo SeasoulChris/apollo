@@ -3,7 +3,7 @@ import glob
 import os
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.control.dynamic_model.conf.model_config import feature_extraction
+from fueling.control.dynamic_model.conf.model_config import task_config
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.spark_helper as spark_helper
@@ -12,9 +12,9 @@ import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 
 
 # parameters
-INTER_FOLDER = feature_extraction['inter_result_folder']
-OUTPUT_FOLDER = feature_extraction['uniform_output_folder']
-SAMPLE_SIZE = feature_extraction['sample_size']
+INTER_FOLDER = task_config['sample_output_folder']
+OUTPUT_FOLDER = task_config['uniform_output_folder']
+SAMPLE_SIZE = task_config['sample_size']
 
 
 def pick_sample(list_of_segment, sample_size):
@@ -54,16 +54,16 @@ class UniformSet(BasePipeline):
 
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
-        IS_BACKWARD = self.FLAGS.get('is_backward')
+        is_backward = self.FLAGS.get('is_backward')
 
-        if IS_BACKWARD:
+        if is_backward:
             origin_prefix = os.path.join(origin_prefix, job_owner, 'backward', job_id)
             target_prefix = os.path.join(target_prefix, job_owner, 'backward', job_id)
-            logging.info('IS_BACKWARD uniform: %s' % IS_BACKWARD)
+            logging.info('is_backward uniform: %s' % is_backward)
         else:
             origin_prefix = os.path.join(origin_prefix, job_owner, 'forward', job_id)
             target_prefix = os.path.join(target_prefix, job_owner, 'forward', job_id)
-            logging.info('IS_BACKWARD uniform: %s' % IS_BACKWARD)
+            logging.info('is_backward uniform: %s' % is_backward)
 
         # get vehicles
         origin_vehicle_dir = spark_helper.cache_and_log(
@@ -91,11 +91,11 @@ class UniformSet(BasePipeline):
 
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
-        IS_BACKWARD = self.FLAGS.get('is_backward')
+        is_backward = self.FLAGS.get('is_backward')
         bos_client = self.our_storage()
 
         # intermediate result folder
-        if IS_BACKWARD:
+        if is_backward:
             origin_prefix = os.path.join(INTER_FOLDER, job_owner, 'backward', job_id)
             target_prefix = os.path.join(OUTPUT_FOLDER, job_owner, 'backward', job_id)
         else:

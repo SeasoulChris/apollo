@@ -38,31 +38,34 @@ else:
         os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/cpu_config")
 
 # Constants
-IS_HOLISTIC = feature_config["is_holistic"]
-IS_BACKWARD = feature_config["is_backward"]
-DIM_INPUT = feature_config["holistic_input_dim"] if IS_HOLISTIC else feature_config["input_dim"]
-DIM_OUTPUT = feature_config["holistic_output_dim"] if IS_HOLISTIC else feature_config["output_dim"]
 DIM_LSTM_LENGTH = feature_config["sequence_length"]
 EPOCHS = lstm_model_config["epochs"]
 
 
-def setup_model(model_name):
+def setup_model(model_name, is_holistic=False):
     """
     set up neural network based on keras.Sequential
     model: output = relu(w2^T * tanh(w1^T * input + b1) + b2)
     """
     # create and fit the LSTM network
+    if is_holistic:
+        dim_input = feature_config["holistic_input_dim"]
+        dim_output = feature_config["holistic_output_dim"]
+    else:
+        dim_input = feature_config["input_dim"]
+        dim_output = feature_config["output_dim"]
     model = Sequential()
     model.add(LSTM(8, activation='relu', W_regularizer=l2(0.001),
-                   input_shape=(DIM_INPUT, DIM_LSTM_LENGTH), init='he_normal'))
+                   input_shape=(dim_input, DIM_LSTM_LENGTH), init='he_normal'))
     if model_name == 'lstm_three_layer':
         model.add(Dense(4, init='he_normal', activation='relu'))
-    model.add(Dense(DIM_OUTPUT, init='he_normal'))
+    model.add(Dense(dim_output, init='he_normal'))
     model.compile(loss='mean_squared_error', optimizer='adam')
     return model
 
 
-def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_name='lstm_two_layer'):
+def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir,
+               model_name='lstm_two_layer', is_backward=False, is_holistic=False):
     logging.info("Start to train LSTM model")
     (input_fea_mean, input_fea_std), (output_fea_mean, output_fea_std) = param_norm
     for i in range(DIM_LSTM_LENGTH):
@@ -73,7 +76,7 @@ def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_nam
     lstm_input_split = np.split(lstm_input_data, [split_idx])
     lstm_output_split = np.split(lstm_output_data, [split_idx])
 
-    model = setup_model(model_name)
+    model = setup_model(model_name, is_holistic)
     with tf.device('/gpu:0'):
         model.fit(lstm_input_split[0], lstm_output_split[0],
                   validation_data=(lstm_input_split[1], lstm_output_split[1]),
@@ -83,12 +86,12 @@ def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_nam
 
     # save norm_params and model_weights to hdf5
     # save norm_params and model_weights to hdf5
-    if IS_BACKWARD:
+    if is_backward:
         h5_model_dir = os.path.join(out_dir, 'h5_model/lstm/backward')
-        logging.info('IS_BACKWARD lstm: %s' % IS_BACKWARD)
+        logging.info('is_backward lstm: %s' % is_backward)
     else:
         h5_model_dir = os.path.join(out_dir, 'h5_model/lstm/forward')
-        logging.info('IS_BACKWARD lstm: %s' % IS_BACKWARD)
+        logging.info('is_backward lstm: %s' % is_backward)
 
     h5_file_dir = os.path.join(h5_model_dir, timestr)
     file_utils.makedirs(h5_file_dir)

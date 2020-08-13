@@ -11,14 +11,11 @@ import fueling.control.dynamic_model.data_generator.non_holistic_data_generator 
 
 
 # Constants
-IS_HOLISTIC = feature_config["is_holistic"]
-DIM_INPUT = feature_config["holistic_input_dim"] if IS_HOLISTIC else feature_config["input_dim"]
-DIM_OUTPUT = feature_config["holistic_output_dim"] if IS_HOLISTIC else feature_config["output_dim"]
 DIM_SEQUENCE_LENGTH = feature_config["sequence_length"]
 DIM_DELAY_STEPS = feature_config["delay_steps"]
 
 
-def generate_training_data(segment):
+def generate_training_data(segment, is_holistic=False):
     """
     extract usable features from the numpy array for model training
     """
@@ -26,16 +23,20 @@ def generate_training_data(segment):
     total_sequence_num = segment.shape[0] - DIM_DELAY_STEPS - DIM_SEQUENCE_LENGTH
     logging.info('Total length: {}'.format(total_len))
 
-    if IS_HOLISTIC:
+    if is_holistic:
+        dim_input = feature_config["holistic_input_dim"]
+        dim_output = feature_config["holistic_output_dim"]
         mlp_input_data, mlp_output_data = holistic_data_generator.generate_mlp_data(
             segment, total_len)
     else:
+        dim_input = feature_config["input_dim"]
+        dim_output = feature_config["output_dim"]
         mlp_input_data, mlp_output_data = non_holistic_data_generator.generate_mlp_data(
             segment, total_len)
 
     lstm_input_data = np.zeros(
-        [total_sequence_num, DIM_INPUT, DIM_SEQUENCE_LENGTH], order='C')
-    lstm_output_data = np.zeros([total_sequence_num, DIM_OUTPUT], order='C')
+        [total_sequence_num, dim_input, DIM_SEQUENCE_LENGTH], order='C')
+    lstm_output_data = np.zeros([total_sequence_num, dim_output], order='C')
 
     for k in range(mlp_input_data.shape[0] - DIM_SEQUENCE_LENGTH):
         lstm_input_data[k, :, :] = np.transpose(

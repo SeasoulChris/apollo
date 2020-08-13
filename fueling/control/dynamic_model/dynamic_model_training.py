@@ -3,20 +3,16 @@
 import os
 
 import glob
-import shutil
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
+from fueling.control.dynamic_model.conf.model_config import task_config
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 import fueling.control.dynamic_model.data_generator.training_data_generator as data_generator
 import fueling.control.dynamic_model.model_factory.lstm_keras as lstm_keras
 import fueling.control.dynamic_model.model_factory.mlp_keras as mlp_keras
-
-
-MODEL_CONF = 'model_config.py'
 
 
 class DynamicModelTraining(BasePipeline):
@@ -24,62 +20,49 @@ class DynamicModelTraining(BasePipeline):
     def run_test(self):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
-        IS_BACKWARD = self.FLAGS.get('is_backward')
+        is_backward = self.FLAGS.get('is_backward')
+        is_holistic = self.FLAGS.get('is_holistic')
         data_dir = '/fuel/testdata/control/generated_uniform'
-        if IS_BACKWARD:
+        if is_backward:
             training_data_path = os.path.join(data_dir, job_owner, 'backward', job_id)
         else:
             training_data_path = os.path.join(data_dir, job_owner, 'forward', job_id)
         model_dir = '/fuel/testdata/control/learning_based_model'
         output_dir = os.path.join(model_dir, 'dynamic_model_output')
-        model_conf_prefix = '/fuel/fueling/control/dynamic_model/conf'
 
         vehicles = multi_vehicle_utils.get_vehicle(training_data_path)
         logging.info('vehicles = {}'.format(vehicles))
         # run test as a vehicle ID
         for vehicle in vehicles:
-            self.load_model_conf(vehicle, model_conf_prefix, IS_BACKWARD)
-            self.execute_task(vehicle, model_conf_prefix, training_data_path, output_dir)
+            self.execute_task(vehicle, training_data_path, output_dir, is_backward, is_holistic)
 
     def run(self):
         # intermediate result folder
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
-        IS_BACKWARD = self.FLAGS.get('is_backward')
-        our_storage = self.our_storage()
-        data_dir = 'modules/control/tmp/uniform'
+        is_backward = self.FLAGS.get('is_backward')
+        is_holistic = self.FLAGS.get('is_holistic')
 
-        if IS_BACKWARD:
+        our_storage = self.our_storage()
+        data_dir = task_config['uniform_output_folder']
+
+        if is_backward:
             data_prefix = os.path.join(data_dir, job_owner, 'backward', job_id)
         else:
             data_prefix = os.path.join(data_dir, job_owner, 'forward', job_id)
 
         training_data_path = our_storage.abs_path(data_prefix)
-        output_dir = self.our_storage().abs_path(
-            'modules/control/learning_based_model/dynamic_model_output/')
-        # TODO: V2.
-        model_conf_prefix = '/fuel/fueling/control/dynamic_model/conf'
+        output_dir = our_storage.abs_path(task_config['model_output_folder'])
+
         # get vehicles
         vehicles = multi_vehicle_utils.get_vehicle(training_data_path)
         logging.info('vehicles = {}'.format(vehicles))
         # run proc as a vehicle ID
         for vehicle in vehicles:
-            self.load_model_conf(vehicle, model_conf_prefix, IS_BACKWARD)
-            self.execute_task(vehicle, model_conf_prefix, training_data_path, output_dir)
+            self.execute_task(vehicle, training_data_path, output_dir, is_backward, is_holistic)
 
-    def load_model_conf(self, vehicle, model_conf_prefix, is_backward):
-        if is_backward:
-            # load backward model_conf for vehicle
-            model_conf_target_prefix = os.path.join(model_conf_prefix, vehicle, 'backward')
-        else:
-            # load farward model_conf for vehicle
-            model_conf_target_prefix = os.path.join(model_conf_prefix, vehicle)
-        file_utils.makedirs(model_conf_prefix)
-        shutil.copyfile(os.path.join(model_conf_target_prefix, MODEL_CONF),
-                        os.path.join(model_conf_prefix, MODEL_CONF))
-        logging.info('model_conf_target_prefix: %s' % model_conf_target_prefix)
-
-    def execute_task(self, vehicle, model_conf_prefix, training_data_path, output_dir):
+    def execute_task(self, vehicle, training_data_path, output_dir,
+                     is_backward=False, is_holistic=False):
         # vehicle dir
         vehicle_dir = os.path.join(training_data_path, vehicle)
         # model output dir
@@ -91,9 +74,9 @@ class DynamicModelTraining(BasePipeline):
         # logging.info('hd5_files_path = {}'.format(hd5_files_path))
         # for file in files_path:
         training_dataset_rdd = self.to_rdd(hd5_files_path)
-        self.run_internal(training_dataset_rdd, model_output_dir)
+        self.run_internal(training_dataset_rdd, model_output_dir, is_backward, is_holistic)
 
-    def run_internal(self, training_dataset_rdd, output_dir):
+    def run_internal(self, training_dataset_rdd, output_dir, is_backward=False, is_holistic=False):
         data = (
             # RDD(absolute_file_path)
             training_dataset_rdd
@@ -106,7 +89,7 @@ class DynamicModelTraining(BasePipeline):
             # RDD(training_data_segment), which is valid after feature_preprocessing.
             .filter(lambda segment: segment is not None)
             # RDD('mlp_data|lstm_data', (input, output)).
-            .flatMap(data_generator.generate_training_data)
+            .flatMap(lambda segment: data_generator.generate_training_data(segment, is_holistic))
             # RDD('mlp_data|lstm_data', (input, output)), which is valid.
             .filter(lambda data: data is not None)
             # RDD('mlp_data|lstm_data', (input, output)), with unique keys.
@@ -125,14 +108,27 @@ class DynamicModelTraining(BasePipeline):
             .first())
         logging.info('Param Norm = {}'.format(param_norm))
 
-        def _train(data_item):
+        def _train(data_item, is_backward=False, is_holistic=False):
             key, (input_data, output_data) = data_item
             if key == 'mlp_data':
-                mlp_keras.mlp_keras(input_data, output_data, param_norm, output_dir)
+                mlp_keras.mlp_keras(
+                    input_data,
+                    output_data,
+                    param_norm,
+                    output_dir,
+                    is_backward,
+                    is_holistic)
             elif key == 'lstm_data':
-                lstm_keras.lstm_keras(input_data, output_data, param_norm, output_dir)
+                lstm_keras.lstm_keras(
+                    input_data,
+                    output_data,
+                    param_norm,
+                    output_dir,
+                    'lstm_two_layer',
+                    is_backward,
+                    is_holistic)
 
-        data.foreach(_train)
+        data.foreach(lambda data_item: _train(data_item, is_backward, is_holistic))
 
 
 if __name__ == '__main__':

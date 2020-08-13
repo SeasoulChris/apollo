@@ -6,7 +6,7 @@ import shutil
 import os
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.control.dynamic_model.conf.model_config import feature_extraction
+from fueling.control.dynamic_model.conf.model_config import task_config
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 
 import fueling.common.file_utils as file_utils
@@ -25,8 +25,8 @@ channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
 MIN_MSG_PER_SEGMENT = 100
 MARKER = 'CompleteSampleSet'
 VEHICLE_CONF = 'vehicle_param.pb.txt'
-INTER_FOLDER = feature_extraction['inter_result_folder']
-INCREMENTAL_PROCESS = feature_extraction['incremental_process']
+INTER_FOLDER = task_config['sample_output_folder']
+INCREMENTAL_PROCESS = task_config['incremental_process']
 
 
 def gen_pre_segment(dir_to_msg):
@@ -118,9 +118,9 @@ class SampleSet(BasePipeline):
         target_prefix = '/fuel/testdata/control/generated'
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
-        IS_BACKWARD = self.FLAGS.get('is_backward')
+        is_backward = self.FLAGS.get('is_backward')
         global GEAR
-        if IS_BACKWARD:
+        if is_backward:
             target_prefix = os.path.join(target_prefix, job_owner, 'backward', job_id)
             GEAR = 2
         else:
@@ -179,11 +179,11 @@ class SampleSet(BasePipeline):
         origin_prefix = self.FLAGS.get('input_data_path', 'modules/control/data/records')
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
-        IS_BACKWARD = self.FLAGS.get('is_backward')
+        is_backward = self.FLAGS.get('is_backward')
         global GEAR
 
         # extract features to intermediate result folder
-        if IS_BACKWARD:
+        if is_backward:
             target_prefix = os.path.join(INTER_FOLDER, job_owner, 'backward', job_id)
             GEAR = 2
         else:

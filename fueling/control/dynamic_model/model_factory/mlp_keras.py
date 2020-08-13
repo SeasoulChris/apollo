@@ -42,10 +42,6 @@ else:
         os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/cpu_config")
 
 # Constants
-IS_HOLISTIC = feature_config["is_holistic"]
-IS_BACKWARD = feature_config["is_backward"]
-DIM_INPUT = feature_config["holistic_input_dim"] if IS_HOLISTIC else feature_config["input_dim"]
-DIM_OUTPUT = feature_config["holistic_output_dim"] if IS_HOLISTIC else feature_config["output_dim"]
 EPOCHS = mlp_model_config["epochs"]
 MLP_MODEL_LAYER = mlp_model_config["fnn_layers"]
 
@@ -59,7 +55,7 @@ def check_output(command):
         logging.info(line.strip())
 
 
-def setup_model():
+def setup_model(is_holistic=False):
     """Run tensorflow training task"""
     check_output('nvidia-smi')
     if tf.test.gpu_device_name():
@@ -71,22 +67,34 @@ def setup_model():
     set up neural network based on keras.Sequential
     model: output = relu(w2^T * tanh(w1^T * input + b1) + b2)
     """
+    if is_holistic:
+        dim_input = feature_config["holistic_input_dim"]
+        dim_output = feature_config["holistic_output_dim"]
+    else:
+        dim_input = feature_config["input_dim"]
+        dim_output = feature_config["output_dim"]
     model = Sequential()
-    model.add(Dense(10, input_dim=DIM_INPUT, init='he_normal',
+    model.add(Dense(10, input_dim=dim_input, init='he_normal',
                     activation='relu', W_regularizer=l2(0.001)))
     if MLP_MODEL_LAYER == 3:
         model.add(Dense(6, init='he_normal', activation='relu', W_regularizer=l2(0.001)))
         logging.info('Load Three-layer MLP Model')
-    model.add(Dense(DIM_OUTPUT, init='he_normal', W_regularizer=l2(0.001)))
+    model.add(Dense(dim_output, init='he_normal', W_regularizer=l2(0.001)))
     model.compile(loss='mse', optimizer='adam', metrics=['mse'])
     return model
 
 
-def save_model(model, param_norm, filename):
+def save_model(model, param_norm, filename, is_holistic=False):
     """
     save the trained model parameters into protobuf binary format file
     """
     (input_fea_mean, input_fea_std), (output_fea_mean, output_fea_std) = param_norm
+    if is_holistic:
+        dim_input = feature_config["holistic_input_dim"]
+        dim_output = feature_config["holistic_output_dim"]
+    else:
+        dim_input = feature_config["input_dim"]
+        dim_output = feature_config["output_dim"]
     net_params = FnnModel()
     net_params.input_feature_mean.columns.extend(input_fea_mean.reshape(-1).tolist())
     net_params.input_feature_std.columns.extend(input_fea_std.reshape(-1).tolist())
@@ -119,13 +127,13 @@ def save_model(model, param_norm, filename):
         for col in weights.tolist():
             row = net_layer.layer_input_weight.rows.add()
             row.columns.extend(col)
-    net_params.dim_input = DIM_INPUT
-    net_params.dim_output = DIM_OUTPUT
+    net_params.dim_input = dim_input
+    net_params.dim_output = dim_output
     with open(filename, 'wb') as params_file:
         params_file.write(net_params.SerializeToString())
 
 
-def mlp_keras(x_data, y_data, param_norm, out_dir):
+def mlp_keras(x_data, y_data, param_norm, out_dir, is_backward=False, is_holistic=False):
     logging.info("Start to train MLP model")
     (input_fea_mean, input_fea_std), (output_fea_mean, output_fea_std) = param_norm
     x_data = (x_data - input_fea_mean) / input_fea_std
@@ -136,7 +144,7 @@ def mlp_keras(x_data, y_data, param_norm, out_dir):
                                                         test_size=0.2, random_state=42)
     logging.info("x_train shape = {}, y_train shape = {}".format(x_train.shape, y_train.shape))
 
-    model = setup_model()
+    model = setup_model(is_holistic)
     with tf.device('/gpu:0'):
         model.fit(x_train, y_train, shuffle=True, nb_epoch=EPOCHS, batch_size=32, verbose=2)
 
@@ -147,15 +155,15 @@ def mlp_keras(x_data, y_data, param_norm, out_dir):
     bin_file_dir = os.path.join(bin_model_dir, timestr)
     file_utils.makedirs(bin_file_dir)
     model_bin = os.path.join(bin_file_dir, 'fnn_model.bin')
-    save_model(model, param_norm, model_bin)
+    save_model(model, param_norm, model_bin, is_holistic)
 
     # save norm_params and model_weights to hdf5
-    if IS_BACKWARD:
+    if is_backward:
         h5_model_dir = os.path.join(out_dir, 'h5_model/mlp/backward')
-        logging.info('IS_BACKWARD mlp: %s' % IS_BACKWARD)
+        logging.info('is_backward mlp: %s' % is_backward)
     else:
         h5_model_dir = os.path.join(out_dir, 'h5_model/mlp/forward')
-        logging.info('IS_BACKWARD mlp: %s' % IS_BACKWARD)
+        logging.info('is_backward mlp: %s' % is_backward)
 
     h5_file_dir = os.path.join(h5_model_dir, timestr)
     file_utils.makedirs(h5_file_dir)
