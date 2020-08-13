@@ -7,6 +7,7 @@ import time
 import torch
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 from fueling.learning.train_utils import train_valid_dataloader
 from fueling.prediction.learning.pipelines.pedestrian_trajectory_prediction \
@@ -52,6 +53,9 @@ class PedestrianTraining(BasePipeline):
                                                    num_workers=1, drop_last=True)
         model = SemanticMapSelfLSTMModel(30, 20).cuda()
         loss = WeightedSemanticMapLoss()
+        model_file_path = file_utils.fuel_path(
+            'testdata/prediction/pedestrian_semantic_lstm_torch_model.pt')
+        model.load_state_dict(torch.load(model_file_path))
         learning_rate = 3e-4
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(

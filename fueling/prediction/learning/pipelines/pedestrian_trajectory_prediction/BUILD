@@ -56,9 +56,13 @@ py_binary(
 py_binary(
     name = "pedestrian_trajectory_training",
     srcs = ["pedestrian_trajectory_training.py"],
+    data = [
+        "//testdata/prediction:model_files",
+    ],
     deps = [
         ":pedestrian_trajectory_dataset_cloud",
         "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/learning:loss_utils",
         "//fueling/learning:train_utils",
