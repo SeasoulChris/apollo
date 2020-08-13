@@ -7,6 +7,7 @@ local_repository(
 
 load("@apollo//tools:workspace.bzl", "apollo_repositories")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("//tools:common.bzl", "clean_dep")
 
 apollo_repositories()
 
@@ -38,29 +39,30 @@ rules_proto_toolchains()
 
 http_archive(
     name = "rules_python",
-    url = "file:///fuel/deps/libs/rules_python-8e9004ee8360d541abfcbecb60ba8a6902a53047.tar.gz",
     sha256 = "701b8d84d05c8b867d510d1778bbe12cc6ac79d09274c6bd71db77f053c16bca",
     strip_prefix = "rules_python-8e9004ee8360d541abfcbecb60ba8a6902a53047",
+    url = "file:///fuel/deps/libs/rules_python-8e9004ee8360d541abfcbecb60ba8a6902a53047.tar.gz",
 )
 
 load("@rules_python//python:repositories.bzl", "py_repositories")
 
 py_repositories()
 
-load("@rules_python//python:pip.bzl", "pip_repositories")
+load("@rules_python//python:pip.bzl", "pip3_import", "pip_repositories")
+
 pip_repositories()
 
-# Install python deps.
-load("@rules_python//python:pip.bzl", "pip3_import")
 pip3_import(
-   name = "default_deps",
-   requirements = "//deps:default.txt",
-   timeout = 1000,
-   extra_pip_args = [
-       # EXTRA_PIP_ARGS
-   ],
+    name = "default_deps",
+    timeout = 1000,
+    extra_pip_args = [
+        # EXTRA_PIP_ARGS
+    ],
+    requirements = "//deps:default.txt",
 )
+
 load("@default_deps//:requirements.bzl", "pip_install")
+
 pip_install()
 
 # grpc
@@ -81,22 +83,22 @@ grpc_extra_deps()
 
 http_archive(
     name = "planning_analytics",
-    url = "file:///fuel/deps/libs/planning_analytics.zip",
+    build_file = clean_dep("//third_party:planning_analytics.BUILD"),
     sha256 = "71a46acaf5e5fadcc3f339822551331c7a92d4d463d0f9993015554a377af9be",
-    build_file = "planning_analytics.BUILD",
     strip_prefix = "planning_analytics",
+    url = "file:///fuel/deps/libs/planning_analytics.zip",
 )
 
 http_archive(
     name = "perception_pointpillars",
-    url = "file:///fuel/deps/libs/perception_pointpillars.zip",
+    build_file = clean_dep("//third_party:perception_pointpillars.BUILD"),
     sha256 = "cb18d576990a0fd708d97735a6b461062f8056b581a936778aaea65ef46a8fde",
-    build_file = "perception_pointpillars.BUILD",
     strip_prefix = "perception_pointpillars",
+    url = "file:///fuel/deps/libs/perception_pointpillars.zip",
 )
 
 new_local_repository(
     name = "yolov4",
+    build_file = clean_dep("//third_party:yolov4.BUILD"),
     path = "/fuel/deps/libs/pytorch-YOLOv4",
-    build_file = "external/yolov4.BUILD",
 )
