@@ -13,7 +13,6 @@ from youtube_api import YouTubeDataAPI
 import cv2
 
 
-from absl import flags
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
@@ -39,30 +38,37 @@ print(curr_abs_path)
 
 ##################################
 
+
 class EmergencyVehicleDataCrawler(BasePipeline):
 
-    
     def run(self):
         time_start = time.time()
         keyword = "police car siren"
-        audio_storage_location = "data/PoliceAud"
-        number_of_results=1
-        self.to_rdd(range(1)).foreach(lambda instance: self.downloadAudio(keyword, audio_storage_location, number_of_results))
+        audio_location = "data/PoliceAud"
+        num_of_results = 1
+        self.to_rdd(range(1)).foreach(
+            lambda instance: self.downloadVideo(
+                keyword,
+                audio_location,
+                num_of_results
+            )
+        )
         logging.info(F'Download complete in {time.time() - time_start} seconds.')
 
-    
     @staticmethod
     # Video download function
     def downloadVideo(keyword, video_storage_location, number_of_results=100):
         file_utils.makedirs('{}/{}'.format(curr_abs_path, video_storage_location))
         # get search results of seach_keywords on youtube
         try:
-            result = yt.search(keyword, type="video", video_duration="short", max_results=number_of_results)
+            result = yt.search(keyword, type="video", max_results=number_of_results)
         except Exception as e:
             logging.error(e)
         # video id set for checking replication and downloading
         result_id_set = set()
-        f = open('{}/{}/{}_videoURL.txt'.format(curr_abs_path, video_storage_location, dt_string), 'w')
+        f = open(
+            '{}/{}/{}_videoURL.txt'.format(
+                curr_abs_path, video_storage_location, dt_string), 'w')
         for item in result:
             if "child" in item["video_title"] or "toy" in item["video_title"]:
                 continue
@@ -98,10 +104,13 @@ class EmergencyVehicleDataCrawler(BasePipeline):
             with youtube_dl.YoutubeDL(ydl_vid_opts) as ydl_video:
                 result = ydl_video.extract_info(v_id)
                 file_path_name = ydl_video.prepare_filename(result)
-                # file_name = file_path_name[len(curr_abs_path):]
+                file_name = file_path_name[len(curr_abs_path):]
 
             # create a folder for clip images
-            if not os.path.exists("{}/{}/image_clips".format(curr_abs_path, video_storage_location)):
+            if not os.path.exists(
+                    "{}/{}/image_clips".format(
+                        curr_abs_path, video_storage_location)):
+
                 os.mkdir("{}/{}/image_clips".format(curr_abs_path, video_storage_location))
 
             # Video found, start clipping and storing images, 1 image per 12 frame
@@ -125,19 +134,21 @@ class EmergencyVehicleDataCrawler(BasePipeline):
                         if not cv2.imwrite(address, frame):
                             raise Exception("Could not write image")
                         else:
-                            print('save image:', j)
+                            logging.info('save image: {}'.format(str(j)))
                             try:
-                                sp.Popen(['sh', '-c', 'cd {} && {} --src={} --dst={}/{}/{}/{}'.format(
-                                    bos_tool_path,
-                                    run_bos_fstool,
-                                    address,
-                                    bos_file_path,
-                                    video_storage_location,
-                                    image_folder,
-                                    image_file_name
-                                )])
+                                sp.Popen([
+                                    'sh', '-c', 'cd {} && {} --src={} --dst={}/{}/{}/{}'.format(
+                                        bos_tool_path,
+                                        run_bos_fstool,
+                                        address,
+                                        bos_file_path,
+                                        video_storage_location,
+                                        image_folder,
+                                        image_file_name
+                                    )
+                                ])
                             except sp.CalledProcessError:
-                                print("subprocess call error!")
+                                logging.info("subprocess call error!")
                     success, frame = videoCapture.read()
                 try:
                     sp.Popen(['sh', '-c', 'cd {} && {} --src={}{} --dst={}{}'.format(
@@ -159,14 +170,14 @@ class EmergencyVehicleDataCrawler(BasePipeline):
         file_utils.makedirs('{}/{}'.format(curr_abs_path, audio_storage_location))
         # audio download
         try:
-            result = yt.search(keyword, type="video", video_duration="short", max_results=number_of_results)
+            result = yt.search(keyword, type="video", max_results=number_of_results)
         except Exception as e:
             logging.error(e)
         # video id set for checking replication and downloading
         result_id_set = set()
-        # print("PATH:", file_utils.fuel_path(os.path.dirname(os.path.abspath(__file__))))
-        # print("MY PATH:", file_utils.fuel_path('{}/{}/{}_audioURL.txt'.format(curr_abs_path, audio_storage_location, dt_string)))
-        f = open('{}/{}/{}_audioURL.txt'.format(curr_abs_path, audio_storage_location, dt_string), 'w')
+        f = open(
+            '{}/{}/{}_audioURL.txt'.format(
+                curr_abs_path, audio_storage_location, dt_string), 'w')
         for item in result:
             if "child" in item["video_title"] or "toy" in item["video_title"]:
                 continue
@@ -175,8 +186,9 @@ class EmergencyVehicleDataCrawler(BasePipeline):
         f.close()
 
         try:
-            sp.Popen(['sh', '-c', 'cd {} && ./bos_fstool --src={}/{}/{}_{} --dst={}/{}/{}_{}'.format(
+            sp.Popen(['sh', '-c', 'cd {} && {} --src={}/{}/{}_{} --dst={}/{}/{}_{}'.format(
                 bos_tool_path,
+                run_bos_fstool,
                 curr_abs_path,
                 audio_storage_location,
                 dt_string,
@@ -206,8 +218,9 @@ class EmergencyVehicleDataCrawler(BasePipeline):
                 file_path_name = ydl_audio.prepare_filename(result)
                 file_name = file_path_name[len(curr_abs_path):]
                 try:
-                    sp.Popen(['sh', '-c', 'cd {} && ./bos_fstool --src={} --dst={}{}'.format(
+                    sp.Popen(['sh', '-c', 'cd {} && {} --src={} --dst={}{}'.format(
                         bos_tool_path,
+                        run_bos_fstool,
                         file_path_name,
                         bos_file_path,
                         file_name
@@ -218,6 +231,7 @@ class EmergencyVehicleDataCrawler(BasePipeline):
 
 if __name__ == '__main__':
     EmergencyVehicleDataCrawler().main()
+
 # downloadVideo("police cars responding", 'data/PoliceVid', 5)
 # downloadAudio("police car siren", "data/PoliceAud", 10)
 # downloadVideo("fire truck responding", 'data/FireVid', 1)

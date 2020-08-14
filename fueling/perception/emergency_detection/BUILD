@@ -1,11 +1,11 @@
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@default_deps//:requirements.bzl", "requirement")
+
 package(default_visibility = ["//visibility:public"])
 
-
 py_binary(
-	name = "emergency_vehicle_data_crawler",
-	srcs = ["emergency_vehicle_data_crawler.py"],
+    name = "emergency_vehicle_data_crawler",
+    srcs = ["emergency_vehicle_data_crawler.py"],
     deps = [
         requirement("youtube-dl"),
         requirement("youtube-data-api"),
@@ -13,6 +13,7 @@ py_binary(
         "//fueling/common:file_utils",
     ],
 )
+
 py_binary(
     name = "emergency_detection_train_pipeline",
     srcs = ["emergency_detection_train_pipeline.py"],
