@@ -347,8 +347,8 @@ $(document).ready(function () {
                      // Update the action history
                      $("#flag-" + account_data["account_id"]).before('<tr style="display: none" class="operation_span">' +
                         '<td colspan="11" style="border-top: none">' +
-                        "用户账号" + "在" + result["operation"]["time"] + "时被" + result["operation"]["email"] +
-                        str_label + "。备注是：" + result["operation"]["comments"] + "。</td></tr>");
+                        "用户账号" + "在" + result["operation"]["time"] + "被" + result["operation"]["email"] +
+                        str_label + "。备注：" + result["operation"]["comments"] + "。</td></tr>");
 
                      // Update the message
                      $(document).trigger("widget.mb.show", {type:"ok",message:"用户账号（车辆编号："+account_data["verhicle_sn"]+"）被"+str_label});

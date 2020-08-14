@@ -221,7 +221,7 @@
         <tr style="display: none" class="account_operation_span">
             <td colspan="12" style="border-top: none">
                 {% if opt.action.type %}
-                用户账号在{{ opt.time }}时被{{ opt.email }}{{ opt.action.type | show_account_action }}。备注是：{{ opt.comments }}。
+                用户账号在{{ opt.time }}被{{ opt.email }}{{ opt.action.type | show_account_action }}。备注：{{ opt.comments }}。
                 {% endif %}
             </td>
         </tr>
