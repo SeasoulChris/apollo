@@ -209,8 +209,7 @@ def get_account_objs(filters):
     account_used = get_job_used(accounts)
     account_objs = format_account_time(account_used)
     account_list = sorted(account_objs,
-                          key=lambda x: x.get("due_date")
-                          if x.get("due_date") else x.get("apply_date"))
+                          key=lambda x: x.get("apply_date"), reverse=True)
     return account_list
 
 
