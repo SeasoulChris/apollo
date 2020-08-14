@@ -131,7 +131,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
 
             """Step 2: Sanity Check"""
             #   Exit with error emails if doesn't pass the sanity check
-            sanity_status = sanity_check(origin_dir,
+            sanity_status = sanity_check(origin_dir, job_id,
                                          feature_utils.CONF_FILE, feature_utils.CHANNELS)
             if sanity_status == 'OK':
                 logging.info('Sanity_Check: Passed.')
