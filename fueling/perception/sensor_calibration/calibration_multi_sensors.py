@@ -8,7 +8,6 @@ import time
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
-from fueling.common.partners import partners
 from fueling.perception.sensor_calibration.calibration_config import CalibrationConfig
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
@@ -61,10 +60,8 @@ class SensorCalibrationPipeline(BasePipeline):
 
         # Send result to job owner.
         receivers = email_utils.PERCEPTION_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
-        partner = partners.get(job_owner)
-        if partner:
-            receivers.append(partner.email)
-
+        if os.environ.get('PARTNER_EMAIL'):
+            receivers.append(os.environ.get('PARTNER_EMAIL'))
         logging.info(f"Generated sub_type {len(sub_type)} results: {sub_type}")
         sub_job_type = 'All'
         if len(sub_type) == 1:

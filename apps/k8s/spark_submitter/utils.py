@@ -90,6 +90,8 @@ class Utils(object):
                 'PARTNER_BOS_ACCESS': arg.partner.bos.access_key,
                 'PARTNER_BOS_SECRET': arg.partner.bos.secret_key,
             })
+        if arg.partner.email:
+            ENVS['PARTNER_EMAIL'] = arg.partner.email
 
         # Construct arguments.
         confs = (

@@ -12,7 +12,6 @@ import time
 from absl import flags
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.common.partners import partners
 from fueling.profiling.common.sanity_check import sanity_check
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
@@ -110,8 +109,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             # processing same data repeatedly
             job_id = (self.FLAGS.get('job_id') if self.is_partner_job() else
                       self.FLAGS.get('job_id')[:4])
-            job_email = partners.get(
-                job_owner).email if self.is_partner_job() else ''
+            job_email = os.environ.get('PARTNER_EMAIL', '')
             logging.info(F'email address of job owner: {job_email}')
 
             output_prefix = (self.FLAGS.get('output_data_path')

@@ -12,7 +12,6 @@ from absl import flags
 from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.common.partners import partners
 from fueling.profiling.open_space_planner.feature_extraction.feature_visualization_utils import \
     plot, save
 from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import \
@@ -110,7 +109,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
             vehicle_conf_path = None
             logging.info('No open_space_planner_profiling_vehicle_conf_path specified')
         job_owner = self.FLAGS['job_owner']
-        self.partner_email = partners.get(job_owner).email if self.is_partner_job() else ''
+        if os.environ.get('PARTNER_EMAIL'):
+            self.partner_email = os.environ.get('PARTNER_EMAIL')
         logging.info(F'Email address of job owner {job_owner}: {self.partner_email}')
 
         # Access partner's storage if provided.

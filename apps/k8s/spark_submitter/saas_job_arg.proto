@@ -18,11 +18,7 @@ message SaasJobArg {
   }
   optional JobType job_type = 1;
 
-  optional SaasPartner partner = 2;
+  optional Partner partner = 2;
   map<string, string> flags = 3;
 }
 
-message SaasPartner {
-  optional string id = 1;
-  optional BosConfig bos = 2;
-}

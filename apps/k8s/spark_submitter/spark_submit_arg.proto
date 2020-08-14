@@ -100,4 +100,5 @@ message Partner {
   optional BosConfig bos = 2;
   optional string vehicle_sn = 3;
   optional string job_type = 4;
+  optional string email = 5;
 }

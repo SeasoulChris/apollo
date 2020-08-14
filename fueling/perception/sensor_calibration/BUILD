@@ -10,7 +10,6 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:job_utils",
-        "//fueling/common:partners",
         "//fueling/common:redis_utils",
     ],
 )

@@ -10,7 +10,6 @@ matplotlib.use('Agg')
 import h5py
 import numpy as np
 
-from fueling.common.partners import partners
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
 from fueling.control.common.training_conf import output_folder
@@ -114,9 +113,8 @@ class MultiJobDataDistribution(BasePipeline):
         self.run_internal(hdf5_files, target_dir)
 
         receivers = email_utils.CONTROL_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
-        partner = partners.get(job_owner)
-        if partner:
-            receivers.append(partner.email)
+        if os.environ.get('PARTNER_EMAIL'):
+            receivers.append(os.environ.get('PARTNER_EMAIL'))
         title = 'Your vehicle calibration job is done!'
         content = {'Job Owner': job_owner, 'Job ID': job_id}
         conf_files = glob.glob(os.path.join(target_dir, '*/calibration_table.pb.txt'))

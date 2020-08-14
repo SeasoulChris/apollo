@@ -10,7 +10,6 @@ import tarfile
 from absl import flags
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.common.partners import partners
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -98,7 +97,7 @@ class MultiJobControlProfilingVisualization(BasePipeline):
         # Use year as the job_id if data from apollo-platform, to avoid
         # processing same data repeatedly
         job_id = self.FLAGS.get('job_id') if self.is_partner_job() else self.FLAGS.get('job_id')[:4]
-        job_email = partners.get(job_owner).email if self.is_partner_job() else ''
+        job_email = os.environ.get('PARTNER_EMAIL', '')
         logging.info(F'email address of job owner: {job_email}')
 
         # same origin and target prefix

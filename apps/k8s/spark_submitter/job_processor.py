@@ -6,7 +6,6 @@ import string
 from absl import logging
 
 from apps.k8s.spark_submitter.saas_job_arg_pb2 import SaasJobArg
-from fueling.common.partners import partners
 import apps.k8s.spark_submitter.jobs as jobs
 
 
@@ -26,7 +25,6 @@ class JobProcessor(object):
 
     def __init__(self, job_arg):
         self.job_arg = job_arg
-        self.partner_account = partners.get(job_arg.partner.id)
 
     def process(self):
         # Check flag values.
@@ -40,21 +38,18 @@ class JobProcessor(object):
             msg = 'Unsupported job type.'
             logging.error(msg)
             return HTTPStatus.BAD_REQUEST, msg
-        # User authentication.
-        if self.partner_account is None:
-            msg = 'Sorry, you are not authorized to access this service!'
-            logging.error(msg)
-            return HTTPStatus.UNAUTHORIZED, msg
         # Construct client_flags.
         client_flags = {
-            'role': self.job_arg.partner.id,
+            'role': 'OPEN_SERVICES',
             'node_selector': 'FOR_OPEN_SERVICES',
             'partner_job_type': SaasJobArg.JobType.Name(self.job_arg.job_type).lower(),
         }
-        vehicle_sn = partners.get(self.job_arg.partner.id).vehicle_sn
+        vehicle_sn = self.job_arg.partner.vehicle_sn
         if vehicle_sn:
             client_flags['partner_vehicle_sn'] = vehicle_sn
-
+        partner_email = self.job_arg.partner.email
+        if partner_email:
+            client_flags['partner_email'] = partner_email
         if not self.populate_storage_config(client_flags):
             msg = 'job_arg format error!'
             logging.error(msg)
@@ -71,16 +66,16 @@ class JobProcessor(object):
         if self.job_arg.partner.bos.access_key:
             bos = self.job_arg.partner.bos
             # Bos config sanity check.
-            if not self.partner_account.bos_bucket:
-                logging.error('User requested to use BOS while does not have it on profile.')
+            if not bos.bucket:
+                logging.error('User requested to use BOS while does not indicate the bucket.')
                 return False
             if (set(bos.access_key) > self.BOS_KEY_CHARSET
                     or set(bos.secret_key) > self.BOS_KEY_CHARSET):
                 logging.error('User provided invalid information.')
                 return False
             client_flags.update({
-                'partner_bos_bucket': self.partner_account.bos_bucket,
-                'partner_bos_region': self.partner_account.bos_region,
+                'partner_bos_bucket': bos.bucket,
+                'partner_bos_region': bos.region,
                 'partner_bos_access': bos.access_key,
                 'partner_bos_secret': bos.secret_key,
             })

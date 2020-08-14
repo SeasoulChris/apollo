@@ -52,7 +52,6 @@ py_library(
     deps = [
         ":jobs",
         ":saas_job_arg_py_pb2",
-        "//fueling/common:partners",
         "//fueling/control/calibration_table:vehicle_calibration",
         "//fueling/map:generate_maps",
         "//fueling/perception/sensor_calibration:calibration_multi_sensors",

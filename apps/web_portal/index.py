@@ -11,6 +11,8 @@ import flask
 import gunicorn.app.base
 import requests
 
+from fueling.common.partners import partners
+import fueling.common.logging as logging
 
 flags.DEFINE_boolean('debug', False, 'Start local debug instance.')
 flags.DEFINE_string('kube_proxy', 'localhost', 'Kube proxy.')
@@ -36,7 +38,23 @@ def submit_job():
     handler = 'open-service'
     service_url = F'{kube_proxy_url}/api/v1/{service_name}/proxy/{handler}'
     try:
-        resp = requests.post(service_url, json=json.dumps(flask.request.get_json()))
+        job_arg = flask.request.get_json()
+        partner_id = job_arg['partner']['id']
+        partner = {}
+        partner_account = partners.get(partner_id)
+        if partner_account is None:
+            msg = 'Sorry, you are not authorized to access this service!'
+            logging.error(msg)
+            return msg, HTTPStatus.UNAUTHORIZED
+        partner['vehicle_sn'] = partner_account.vehicle_sn
+        partner['email'] = partner_account.email
+        partner['bos'] = job_arg['partner']['bos']
+        partner['bos']['bucket'] = partner_account.bos_bucket
+        partner['bos']['region'] = partner_account.bos_region
+        job_arg['partner'] = partner
+        request_data = json.dumps(job_arg)
+        logging.info(F'request: {request_data}')
+        resp = requests.post(service_url, json=request_data)
         http_code, msg = resp.status_code, resp.content
     except BaseException:
         http_code = HTTPStatus.BAD_REQUEST

@@ -14,21 +14,27 @@ class OpenserviceRegression(object):
     def __init__(self):
         self.ak = os.environ.get('AWS_ACCESS_KEY_ID')
         self.sk = os.environ.get('AWS_SECRET_ACCESS_KEY')
-        self.partner_id = 'apollo-regression'
+        self.vehicle_sn = 'CH0000001'
+        self.bos_bucket = 'apollo-platform-fuel'
+        self.bos_region = 'bj'
+        self.partner_email = 'weixiao@baidu.com'
         self.service_url = 'http://spark-submitter-service:8000/open-service'
 
     def request_openservice(self, job_type, job_flags):
         """post a request to spark_submitter"""
         requestdata = {'job_type': job_type,
-                       'partner': {'id': self.partner_id,
-                                   'bos': {'access_key': self.ak, 'secret_key': self.sk}},
+                       'partner': {'vehicle_sn': self.vehicle_sn,
+                                   'email': self.partner_email,
+                                   'bos': {'access_key': self.ak, 'secret_key': self.sk,
+                                           'bucket': self.bos_bucket, 'region': self.bos_region}},
                        'flags': job_flags}
         logging.info(F'requestdata: {json.dumps(requestdata)}')
         try:
             resp = requests.post(self.service_url, json=json.dumps(requestdata))
             http_code, msg = resp.status_code, resp.content
             logging.info(f'Regression job - {job_type} has been submitted')
-        except BaseException:
+        except BaseException as ex:
+            logging.error(str(ex))
             http_code = HTTPStatus.BAD_REQUEST
             msg = 'Wrong job argument'
             logging.error(F'{job_type} failed in submitting')

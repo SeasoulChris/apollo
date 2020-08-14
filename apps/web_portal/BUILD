@@ -14,4 +14,8 @@ py_binary(
     name = "index",
     srcs = ["index.py"],
     data = [":resource"],
+    deps = [
+        "//fueling/common:logging",
+        "//fueling/common:partners",
+    ],
 )

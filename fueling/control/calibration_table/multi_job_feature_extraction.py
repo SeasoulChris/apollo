@@ -7,7 +7,6 @@ import os
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
-from fueling.common.partners import partners
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 from fueling.control.common.sanity_check import sanity_check  # include sanity check
 from fueling.control.common.training_conf import inter_result_folder  # intermediate result folder
@@ -158,10 +157,9 @@ class MultiJobFeatureExtraction(BasePipeline):
         JobUtils(job_id).save_job_input_data_size(origin_dir)
 
         # Add sanity check
-        partner = partners.get(job_owner)
         email_receivers = email_utils.CONTROL_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
-        if partner:
-            email_receivers.append(partner.email)
+        if os.environ.get('PARTNER_EMAIL'):
+            email_receivers.append(os.environ.get('PARTNER_EMAIL'))
         if not sanity_check(origin_dir, job_owner, job_id, email_receivers):
             return
 

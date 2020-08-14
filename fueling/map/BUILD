@@ -49,7 +49,6 @@ py_library(
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:job_utils",
-        "//fueling/common:partners",
         "//fueling/common:record_utils",
         "//fueling/common:redis_utils",
         "//fueling/common:spark_helper",

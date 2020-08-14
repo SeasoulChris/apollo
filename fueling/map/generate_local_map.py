@@ -12,7 +12,6 @@ from absl import flags
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
-from fueling.common.partners import partners
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -70,9 +69,8 @@ class LocalMapPipeline(BasePipeline):
             logging.warning('compare_poses: {} not exists'.format(path))
 
         receivers = email_utils.SIMPlEHDMAP_TEAM + email_utils.D_KIT_TEAM
-        partner = partners.get(job_owner)
-        if partner:
-            receivers.append(partner.email)
+        if os.environ.get('PARTNER_EMAIL'):
+            receivers.append(os.environ.get('PARTNER_EMAIL'))
         title = 'Your virtual lane is generated!'
         content = {'Job Owner': job_owner, 'Job ID': job_id}
 
