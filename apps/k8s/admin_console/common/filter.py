@@ -97,6 +97,8 @@ def get_account_show_action(action):
     """
     Get the account action
     """
+    if "account" in action:
+        action = action[8].upper() + action[9:]
     action_dict = application.app.config.get("ACCOUNT_ACTION_FIELD")
     show_action = action_dict.get(action)
     return show_action if show_action else action

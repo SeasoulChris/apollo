@@ -76,7 +76,7 @@ class AccountUtils(object):
         for data in self.db.find(prefix):
             data['_id'] = data['_id'].__str__()
             result.append(data)
-        logging.info(f"get_account_info: {result}")
+        logging.info(f"get_account_info num: {len(result)}")
         return result
 
     def save_account_due_date(self, account_id, date):

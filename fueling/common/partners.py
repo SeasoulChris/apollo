@@ -90,4 +90,7 @@ partners = {
     'd-kit-bh-2020019': Partner(name='bh19', email='ruix2011@126.com',
                                 bos_bucket='ruix2011', bos_region='bj',
                                 vehicle_sn='CH2020019'),
+    'd-kit-bhzhjt-2019092': Partner(name='bh19', email='jsjzhangzhilin@163.com',
+                                    bos_bucket='zhjt', bos_region='bj',
+                                    vehicle_sn='CH2019092'),
 }

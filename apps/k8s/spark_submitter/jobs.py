@@ -74,7 +74,7 @@ class VirtualLaneGeneration(BaseJob):
     def parse_arg(self, job_arg):
         entrypoint = 'fueling/map/generate_maps.py'
         client_flags = {
-            'workers': 2, 'cpu': 1, 'memory': 24,
+            'workers': 4, 'cpu': 4, 'memory': 64,
             'partner_storage_writable': True,
         }
         job_flags = {
