@@ -1,5 +1,7 @@
 liegroups
 psycopg2-binary
+youtube-dl
+youtube-data-api
 
 # TODO(xiaoxq): Required by data/libeling
 # pypcd

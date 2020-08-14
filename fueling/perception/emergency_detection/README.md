@@ -4,5 +4,5 @@
 
 Additional dependencies you need to run this job:
 ```bash
-pip3 install youtube-data-api youtube-dl opencv-python
+pip3 install youtube-data-api youtube-dl
 ```
