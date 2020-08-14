@@ -234,3 +234,12 @@ small-records/2020/2020-08-03/2020-08-03-17-04-10 sunnyvale_with_two_offices
 modules/planning/temp/converted_data_with_routing/batch_20200806_115249 yizhuangdaluwang
 
 >> sv-batch6
+
+small-records/2020/2020-08-04 sunnyvale_with_two_offices
+small-records/2020/2020-08-05 sunnyvale_with_two_offices
+small-records/2020/2020-08-06 sunnyvale_with_two_offices
+small-records/2020/2020-08-07 sunnyvale_with_two_offices
+small-records/2020/2020-08-10 sunnyvale_with_two_offices
+small-records/2020/2020-08-11 sunnyvale_with_two_offices
+
+>> bj-batch1
