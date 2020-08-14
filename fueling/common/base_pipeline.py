@@ -7,6 +7,7 @@ import dateutil.parser
 import json
 import os
 import sys
+import time
 import traceback
 
 from absl import app
@@ -132,7 +133,21 @@ class BasePipeline(object):
                     creation_timestamp = (dateutil.parser
                                           .parse(pod_desc['metadata']['creationTimestamp'])
                                           .replace(tzinfo=timezone.utc))
-                    pod_log = kubectl.logs(pod_name, pod_namespace)
+                    pod_log = None
+                    # add retry in case the kubectl doesn't get log correctly
+                    for i in range(5):
+                        try:
+                            pod_log = kubectl.logs(pod_name, pod_namespace)
+                            logging.info('Querying log successfully')
+                            break
+                        except Exception as ex:
+                            logging.info('Querying job log failed')
+                            logging.error(f'{ex}')
+                            logging.error(traceback.format_exc())
+                            time.sleep(10)
+                            continue
+                    if pod_log is None:
+                        continue
                     pod_desc_str = json.dumps(pod_desc, sort_keys=True, indent=4,
                                               separators=(', ', ': '))
                     pod_data = {'pod_name': pod_name, 'namespace': pod_namespace, 'phase': phase,

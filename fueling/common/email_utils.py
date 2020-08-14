@@ -150,7 +150,16 @@ class EmailService(object):
                     attachments_dict[attachment_name] = fin.read()
             except Exception as err:
                 logging.error('Failed to add attachment {}: {}'.format(attachment, err))
-        cls.send_outlook_email(subject, content, receivers, attachments_dict)
+        for i in range(5):
+            try:
+                cls.send_outlook_email(subject, content, receivers, attachments_dict)
+                logging.info('Email has been sent successfully')
+                break
+            except Exception as ex:
+                logging.error(f'Failed to send email: {ex}')
+                logging.error(traceback.format_exc())
+                time.sleep(30)
+                continue
 
     @classmethod
     def send_outlook_email(cls, subject, content, receivers, attachments={}):
@@ -196,14 +205,5 @@ class EmailService(object):
             email.encoders.encode_base64(attachment)
             attachment.add_header('Content-Disposition', 'attachment', filename=filename)
             message.attach(attachment)
-        for i in range(5):
-            try:
-                smtp.sendmail(from_addr, receivers, message.as_string())
-                logging.info('Email has been sent successfully')
-                break
-            except Exception as ex:
-                logging.error(f'Failed to send email: {ex}')
-                logging.error(traceback.format_exc())
-                time.sleep(30)
-                continue
+        smtp.sendmail(from_addr, receivers, message.as_string())
         smtp.quit()
