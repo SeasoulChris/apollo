@@ -20,7 +20,7 @@ spec:
         nodezone: czone      
       containers:
       - name: spark-submitter
-        image: hub.baidubce.com/apollofuel/spark_submitter:20200810_1356
+        image: hub.baidubce.com/apollofuel/spark_submitter:20200814_1158
         ports:
         - containerPort: 8000
         env:
