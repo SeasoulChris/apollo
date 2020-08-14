@@ -115,3 +115,27 @@ class AccountUtils(object):
         logging.info(f"save_account_operation: {operation_dict},")
         if result.raw_result['nModified'] == 1:
             return operation_dict
+
+
+class AccountSuffixUtils(object):
+    """Admin_console account suffix utils"""
+
+    def __init__(self):
+        """Init"""
+        self.db = Mongo().account_suffix_collection()
+
+    def init_suffix(self, start_num):
+        self.db.insert_one({"vehicle_sn_suffix": start_num})
+
+    def read_suffix(self):
+        obj = self.db.find_one()
+        if obj:
+            return obj
+        else:
+            self.init_suffix(10)
+            return self.db.find_one()
+
+    def update_suffix(self):
+        suffix_obj = self.read_suffix()
+        self.db.update_one({'_id': suffix_obj["_id"]},
+                           {'$set': {"vehicle_sn_suffix": suffix_obj["vehicle_sn_suffix"] + 1}})

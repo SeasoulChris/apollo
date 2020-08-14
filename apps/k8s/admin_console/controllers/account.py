@@ -4,7 +4,6 @@ The logical control of the account in front of the view
 """
 
 import datetime
-import json
 
 import flask
 
@@ -14,6 +13,7 @@ from fueling.common import account_utils
 from utils import time_utils
 
 account_db = account_utils.AccountUtils()
+account_suffix_db = account_utils.AccountSuffixUtils()
 
 
 def get_account_list():
@@ -223,25 +223,21 @@ def get_account_paginator(current_page, nums, default_pages=10):
     return current_page, (first, last)
 
 
-def get_virtual_vehicle_sn(filename):
+def get_virtual_vehicle_sn():
     """
     Get the virtual vehicle sn
     """
     prefix = "SK" + str(datetime.datetime.now().year)
-    with open(filename, "r+") as f:
-        conf_dict = json.load(f)
-        vehicle_sn_num = conf_dict.get("vehicle_sn_suffix")
-        vehicle_sn_suffix = str(vehicle_sn_num)
-        zero_filler = ""
-        len_vehicle_sn_suffix = len(vehicle_sn_suffix)
-        while 3 - len_vehicle_sn_suffix > 0:
-            zero_filler += "0"
-            len_vehicle_sn_suffix += 1
-        vehicle_sn_suffix = zero_filler + vehicle_sn_suffix
-        conf_dict["vehicle_sn_suffix"] = vehicle_sn_num + 1
-        f.seek(0, 0)
-        f.truncate()
-        json.dump(conf_dict, f)
+    suffix_obj = account_suffix_db.read_suffix()
+    vehicle_sn_num = suffix_obj["vehicle_sn_suffix"]
+    vehicle_sn_suffix = str(vehicle_sn_num)
+    zero_filler = ""
+    len_vehicle_sn_suffix = len(vehicle_sn_suffix)
+    while 3 - len_vehicle_sn_suffix > 0:
+        zero_filler += "0"
+        len_vehicle_sn_suffix += 1
+    vehicle_sn_suffix = zero_filler + vehicle_sn_suffix
+    account_suffix_db.update_suffix()
     return prefix + vehicle_sn_suffix
 
 
