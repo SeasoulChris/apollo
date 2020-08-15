@@ -9,6 +9,7 @@ py_library(
         "//fueling/common:base_pipeline",
         "//fueling/common:spark_helper",
         "//fueling/control/common:multi_vehicle_plot_utils",
+        "//fueling/control/dynamic_model:flag",
         "//fueling/control/dynamic_model/conf:model_config",
         "//fueling/control/dynamic_model/data_generator:feature_extraction",
     ],
