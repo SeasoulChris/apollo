@@ -92,12 +92,10 @@ class PredictionModelTraining(BaseJob):
     def parse_arg(self, job_arg):
         entrypoint = 'fueling/prediction/prediction_end_to_end.py'
         client_flags = {
-            'workers': 2, 'cpu': 4, 'gpu': 1, 'memory': 32,
+            'workers': 1, 'gpu': 1, 'memory': 90, 'disk': 200,
             'partner_storage_writable': True,
         }
         job_flags = {
-            'input_data_path': job_arg.flags.get("input_data_path"),
-            'output_data_path': job_arg.flags.get("output_data_path"),
-            'map_name': job_arg.flags.get("map_name"),
+            'input_path': job_arg.flags.get("input_data_path"),
         }
         return (entrypoint, client_flags, job_flags)
