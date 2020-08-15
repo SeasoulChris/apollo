@@ -269,6 +269,10 @@ class ADSEnv(object):
             hist_points = np.vstack((np.asarray(
                 [local_coords[0], local_coords[1], heading_diff, hist_v]), hist_points))
 
+        # assume the vehicle start from static state
+        while hist_points.shape[0] < self.history_len:
+            hist_points = np.vstack((hist_points[0], hist_points))
+
         hist_points_step = np.zeros_like(hist_points)
         hist_points_step[1:, :] = hist_points[1:, :] - hist_points[:-1, :]
 
