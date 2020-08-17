@@ -56,6 +56,7 @@ flags.DEFINE_bool('past_motion_dropout', True,
 flags.DEFINE_string('model_save_dir', '/fuel',
                     'specify the directory to save trained models.')
 
+
 def seed_torch(seed=0):
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -257,7 +258,7 @@ def training(model_type,
     torch.autograd.set_detect_anomaly(True)
 
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=50, save_name=model_save_dir, print_period=50, 
+                           scheduler, epochs=50, save_name=model_save_dir, print_period=50,
                            save_mode=2)
 
 

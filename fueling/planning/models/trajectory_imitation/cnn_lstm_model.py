@@ -246,7 +246,7 @@ class TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet(nn.Module):
                 self.initial_box_x_idx + torch.div(rear_to_initial_box_x_delta,
                                                    self.img_resolution))
             rear_center_y_idx = (
-                self.initial_box_x_idx + torch.div(rear_to_initial_box_y_delta,
+                self.initial_box_y_idx + torch.div(rear_to_initial_box_y_delta,
                                                    self.img_resolution))
 
             box_center_x_idx = (
@@ -268,7 +268,7 @@ class TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet(nn.Module):
                 self.initial_box_x_idx + torch.div(front_to_initial_box_x_delta,
                                                    self.img_resolution))
             front_center_y_idx = (
-                self.initial_box_x_idx + torch.div(front_to_initial_box_y_delta,
+                self.initial_box_y_idx + torch.div(front_to_initial_box_y_delta,
                                                    self.img_resolution))
 
             front_center_guassian = torch.zeros(

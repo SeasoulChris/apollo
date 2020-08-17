@@ -8,7 +8,6 @@ py_library(
     name = "rl_algorithm",
     srcs = ["rl_algorithm.py"],
     deps = [
-        ":rl_math_util",
         "//fueling/common:coord_utils",
         "//fueling/common:logging",
         "//fueling/learning:train_utils",
