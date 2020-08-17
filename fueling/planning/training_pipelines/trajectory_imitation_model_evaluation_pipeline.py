@@ -17,7 +17,8 @@ import fueling.common.file_utils as file_utils
 from fueling.learning.train_utils import cuda
 from fueling.planning.datasets.img_in_traj_out_dataset \
     import TrajectoryImitationCNNFCDataset, \
-    TrajectoryImitationConvRNNDataset
+    TrajectoryImitationConvRNNDataset, \
+    TrajectoryImitationCNNLSTMDataset
 from fueling.planning.models.trajectory_imitation.cnn_fc_model import TrajectoryImitationCNNFC
 from fueling.planning.models.trajectory_imitation.cnn_lstm_model import TrajectoryImitationCNNLSTM
 from fueling.planning.models.trajectory_imitation.conv_rnn_model import TrajectoryImitationConvRNN
@@ -30,16 +31,18 @@ from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator
 flags.DEFINE_string('model_type', None,
                     'model type, cnn, rnn, cnn_lstm, cnn_lstm_aux')
 flags.DEFINE_string('model_file', None, 'trained model')
-flags.DEFINE_string('test_set_folder', None, 'test set data folder')
+flags.DEFINE_string('test_set_dir', None, 'test set data folder')
 flags.DEFINE_string('gpu_idx', None, 'which gpu to use')
 flags.DEFINE_bool('update_base_map', False,
                   'Whether to redraw the base imgs needed for training')
+flags.DEFINE_list('regions_list', 'sunnyvale, san_mateo, sunnyvale_with_two_offices',
+                  'maps supported for training')
 flags.DEFINE_string('renderer_config_file', '/fuel/fueling/planning/input_feature_preprocessor'
                     '/planning_semantic_map_config.pb.txt',
                     'renderer configuration file in pb.txt')
 flags.DEFINE_string('renderer_base_map_img_dir', '/fuel/testdata/planning/semantic_map_features',
                     'location to store map base img')
-flags.DEFINE_string('renderer_base_map_data_dir', None,
+flags.DEFINE_string('renderer_base_map_data_dir', '/apollo/modules/map/data/',
                     'location to store map base img')
 
 
@@ -299,7 +302,7 @@ def rnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_i
 
 def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map,
                renderer_config_file, renderer_base_map_img_dir,
-               renderer_base_map_data_dir, region):
+               renderer_base_map_data_dir, regions_list):
     # TODO(Jinyun): check performance
     cv.setNumThreads(0)
 
@@ -309,7 +312,7 @@ def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map
     test_dataset = None
 
     if update_base_map:
-        ChauffeurNetFeatureGenerator.draw_base_map([region],
+        ChauffeurNetFeatureGenerator.draw_base_map(regions_list,
                                                    renderer_config_file,
                                                    renderer_base_map_img_dir,
                                                    renderer_base_map_data_dir)
@@ -320,10 +323,10 @@ def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map
     if model_type == 'cnn':
         model = TrajectoryImitationCNNFC(pred_horizon=10)
         test_dataset = TrajectoryImitationCNNFCDataset(test_set_folder,
+                                                       regions_list,
                                                        renderer_config_file,
                                                        renderer_base_map_img_dir,
                                                        renderer_base_map_data_dir,
-                                                       region,
                                                        evaluate_mode=True)
     elif model_type == 'rnn':
         model = TrajectoryImitationConvRNN(
@@ -335,22 +338,22 @@ def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map
         # model = TrajectoryImitationConvRNNUnetResnet18v2(
         #     input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
         test_dataset = TrajectoryImitationConvRNNDataset(test_set_folder,
+                                                         regions_list,
                                                          renderer_config_file,
                                                          renderer_base_map_img_dir,
                                                          renderer_base_map_data_dir,
-                                                         region,
                                                          evaluate_mode=True)
-    elif model_type == 'cnn_fc_lstm':
+    elif model_type == 'cnn_lstm' or model_type == 'cnn_lstm_aux':
         model = TrajectoryImitationCNNLSTM(history_len=10, pred_horizon=10, embed_size=64,
                                            hidden_size=128)
-        test_dataset = TrajectoryImitationCNNLSTM(test_set_folder,
-                                                  renderer_config_file,
-                                                  renderer_base_map_img_dir,
-                                                  renderer_base_map_data_dir,
-                                                  region,
-                                                  history_point_num=10,
-                                                  ouput_point_num=10,
-                                                  evaluate_mode=True)
+        test_dataset = TrajectoryImitationCNNLSTMDataset(test_set_folder,
+                                                         regions_list,
+                                                         renderer_config_file,
+                                                         renderer_base_map_img_dir,
+                                                         renderer_base_map_data_dir,
+                                                         history_point_num=10,
+                                                         ouput_point_num=10,
+                                                         evaluate_mode=True)
     else:
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
@@ -371,7 +374,7 @@ def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map
     else:
         print("Not using CUDA.")
 
-    if model_type == 'cnn' or model_type == 'cnn+fc_lstm':
+    if model_type == 'cnn' or model_type == 'cnn_lstm' or model_type == 'cnn_lstm_aux':
         cnn_model_evaluator(test_loader, model,
                             renderer_config_file, renderer_base_map_img_dir)
     elif model_type == 'rnn':
@@ -387,15 +390,12 @@ def main(argv):
     model_type = gflag.model_type
     model_file = gflag.model_file
     test_set_dir = gflag.test_set_dir
+    regions_list = gflag.regions_list
     gpu_idx = gflag.gpu_idx
     update_base_map = gflag.update_base_map
     renderer_config_file = gflag.renderer_config_file
     renderer_base_map_img_dir = gflag.renderer_base_map_img_dir
-    region = "sunnyvale_with_two_offices"
     renderer_base_map_data_dir = gflag.renderer_base_map_data_dir
-    renderer_base_map_data_dir = "/apollo/modules/map/data/" + region + \
-        "/base_map.bin" if renderer_base_map_data_dir is None else \
-        renderer_base_map_data_dir
 
     evaluating(model_type,
                model_file,
@@ -405,7 +405,7 @@ def main(argv):
                renderer_config_file,
                renderer_base_map_img_dir,
                renderer_base_map_data_dir,
-               region)
+               regions_list)
 
 
 if __name__ == "__main__":
