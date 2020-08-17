@@ -1,0 +1,4 @@
+bj-batch1
+
+modules/planning/temp/converted_data/batch_20200803_121003/
+
