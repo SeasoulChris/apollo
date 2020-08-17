@@ -7,6 +7,7 @@ import datetime
 
 import flask
 
+import application
 from common import paginator
 from controllers import job
 from fueling.common import account_utils
@@ -142,6 +143,14 @@ def get_job_used(objs):
         for job_type_count in job_type_counts:
             job_counts_dict[job_type_count["_id"]] = job_type_count["count"]
         if services:
+            current_services = []
+            for service in services:
+                current_services.append(service["job_type"])
+            job_type_conf = list(application.app.config.get("JOB_TYPE").values())
+            job_type_conf.remove("All")
+            for svc in job_type_conf:
+                if svc not in current_services:
+                    services.append({"job_type": svc, "status": "Disabled"})
             services.sort(key=lambda x: x["job_type"])
             sum_counts = 0
             for service in services:

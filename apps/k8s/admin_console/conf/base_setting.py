@@ -17,9 +17,10 @@ class Config(object):
 
     # Job config
     JOB_TYPE = {"A": "All", "VC": "vehicle_calibration",
-                "SC": "sensor_calibration", "CP": "virtual_lane_generation"}
+                "SC": "sensor_calibration", "VLG": "virtual_lane_generation",
+                "CP": "control_profiling"}
     SHOW_JOB_TYPE = {"A": "所有", "VC": "Vehicle Calibration", "SC": "Sensor Calibration",
-                     "CP": "Virtual Lane Generation"}
+                     "VLG": "Virtual Lane Generation", "CP": "Control Profiling"}
     TIME_FIELD = {"All": 0, "7d": 7, "30d": 30, "1y": 365}
     SHOW_TIME_FIELD = {"All": "所有", "7d": "过去7天", "30d": "过去30天", "1y": "1年前"}
     AGGREGATED_FIELD = {"W": "周", "M": "月", "Y": "年"}
@@ -47,7 +48,12 @@ class Config(object):
                      "E402": "请检查vehicle_param.pd.txt是否缺少以下参数和相应数据：vehicle_id、brake_deadzone、"
                              "thorttle_deadzone、max_acceleration、max_deceleration。",
                      "E403": "xxxx record文件内缺失重要channel信息(chassis or localization channel), "
-                             "请重新录制数据包"
+                             "请重新录制数据包",
+                     "E500": "请检查提交任务的目录名称是否输入正确，或者输入目录内是否缺少xxx文件。"
+                             "例如：xxx可以是vehicle_param.pd.txt，或者是某个具体的record文件缺失或者找不到。",
+                     "E501": "配置文件vehicle_param.pd.txt无法解析，配置文件解析有误。",
+                     "E502": "请检查vehicle_param.pd.txt是否缺少以下参数和相应数据：vehicle_id、wheel_base。",
+                     "E503": "xxx record 文件内缺失重要channel信息：chassis、localization、control，请重新录制数据包。"
                      }
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
     SUPER_USER_NAME = "apollo"
