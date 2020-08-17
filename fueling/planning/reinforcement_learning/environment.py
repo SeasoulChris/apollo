@@ -52,7 +52,7 @@ class ADSEnv(object):
         self.delta_t = 0.2
         self.state = None
         self.current_adv_pose = None
-        self.sequence_num = 0
+        self.sequence_num = 1
 
         # for reward and done in function step
         self.reward = 0
@@ -126,21 +126,22 @@ class ADSEnv(object):
             point = planning_message.trajectory_point[i]
             nextpoint = planning_message.trajectory_point[i + 1]
             point.da = (nextpoint.a - point.a) / self.delta_t
+        kepsilon = 1e-6
         for i in range(0, len(planning_message.trajectory_point) - 1):
             point = planning_message.trajectory_point[i].path_point
             nextpoint = planning_message.trajectory_point[i + 1].path_point
             point.kappa = (nextpoint.theta - point.theta) / \
-                (nextpoint.s - point.s)
+                (nextpoint.s - point.s + kepsilon)
         for i in range(0, len(planning_message.trajectory_point) - 1):
             point = planning_message.trajectory_point[i].path_point
             nextpoint = planning_message.trajectory_point[i + 1].path_point
             point.dkappa = (nextpoint.kappa - point.kappa) / \
-                (nextpoint.s - point.s)
+                (nextpoint.s - point.s + kepsilon)
         for i in range(0, len(planning_message.trajectory_point) - 1):
             point = planning_message.trajectory_point[i].path_point
             nextpoint = planning_message.trajectory_point[i + 1].path_point
             point.ddkappa = (nextpoint.dkappa - point.dkappa) / \
-                (nextpoint.s - point.s)
+                (nextpoint.s - point.s + kepsilon)
 
         self.writer.write(planning_message)
 
@@ -160,7 +161,7 @@ class ADSEnv(object):
     def reset(self):
         self.close()
 
-        self.sequence_num = 0
+        self.sequence_num = 1
 
         # for reward and done in function step
         self.reward = 0
@@ -276,6 +277,6 @@ class ADSEnv(object):
         hist_points_step = np.zeros_like(hist_points)
         hist_points_step[1:, :] = hist_points[1:, :] - hist_points[:-1, :]
 
-        self.state = tuple(birdview_feature_input.detach().numpy(), hist_points, hist_points_step)
+        self.state = tuple([birdview_feature_input.detach().numpy(), hist_points, hist_points_step])
         self.current_adv_pose = tuple(ref_coords)
         self.is_input_ready = True
