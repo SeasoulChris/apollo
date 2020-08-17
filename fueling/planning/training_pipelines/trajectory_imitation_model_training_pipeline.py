@@ -5,6 +5,8 @@ import os
 from absl import app
 from absl import flags
 import cv2 as cv
+import numpy as np
+import random
 import torch
 
 from modules.planning.proto import planning_semantic_map_config_pb2
@@ -54,6 +56,15 @@ flags.DEFINE_bool('past_motion_dropout', True,
 flags.DEFINE_string('model_save_dir', '/fuel',
                     'specify the directory to save trained models.')
 
+def seed_torch(seed=0):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+
 
 def training(model_type,
              train_set_dir,
@@ -74,8 +85,8 @@ def training(model_type,
     # Set-up the GPU to use, single gpu is prefererd now because of jit issue
     os.environ['CUDA_VISIBLE_DEVICES'] = gpu_idx
 
-    # random number seed
-    torch.manual_seed(0)
+    # set random number seed(when num_workers!=0, it doesn't work)
+    seed_torch()
 
     # Set-up data-loader
     model = None
@@ -213,6 +224,9 @@ def training(model_type,
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
 
+    # set random seed again to ensure seeding success
+    seed_torch()
+
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=128, shuffle=True,
                                                num_workers=8, drop_last=True)
     valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=128, shuffle=True,
@@ -243,7 +257,8 @@ def training(model_type,
     torch.autograd.set_detect_anomaly(True)
 
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=50, save_name=model_save_dir, print_period=50)
+                           scheduler, epochs=50, save_name=model_save_dir, print_period=50, 
+                           save_mode=2)
 
 
 def main(argv):
