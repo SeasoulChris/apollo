@@ -19,7 +19,7 @@ fi
 
 if [ "$USE_CACHE" = "YES" ]; then
   # For bazel commands, WORKSPACE.bazel has higher priority than WORKSPACE.
-  sed 's|# EXTRA_PIP_ARGS|"--no-index", "--find-links=file:///home/libs/pip-cache/",|g' \
+  sed 's|# EXTRA_PIP_ARGS|"--find-links=file:///home/libs/pip-cache/",|g' \
       WORKSPACE > WORKSPACE.bazel
 else
   rm -f WORKSPACE.bazel

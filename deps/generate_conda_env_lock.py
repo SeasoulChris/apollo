@@ -44,6 +44,7 @@ name_mappings = {
     'pyro_ppl': 'pyro',
     'pytorch': 'torch',
     'scikit_learn': 'sklearn',
+    'youtube_data_api': 'youtube_api',
 }
 usage_counter.update({key : usage_counter[val] for key, val in name_mappings.items()})
 # Used in tool.

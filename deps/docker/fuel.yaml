@@ -25,6 +25,7 @@ dependencies:
   - conda-forge::python-kubernetes
   - conda-forge::pywavelets
   - conda-forge::tensorboardx
+  - conda-forge::youtube-dl
   - flask
   - flask-socketio
   - graphviz
@@ -64,4 +65,4 @@ dependencies:
     - casadi  # The conda-forge version is maintained by third-party.
     - eyeD3
     - nuscenes-devkit
-
+    - youtube-data-api
