@@ -12,6 +12,7 @@ import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
 from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator \
     import ChauffeurNetFeatureGenerator
+from fueling.planning.math_utils.math_utils import NormalizeAngle
 
 
 class TrajectoryImitationCNNFCDataset(Dataset):
@@ -105,7 +106,7 @@ class TrajectoryImitationCNNFCDataset(Dataset):
             pred_theta = pred_point.trajectory_point.path_point.theta
             local_coords = CoordUtils.world_to_relative(
                 [pred_x, pred_y], ref_coords)
-            heading_diff = pred_theta - ref_coords[2]
+            heading_diff = NormalizeAngle(pred_theta - ref_coords[2])
             pred_v = pred_point.trajectory_point.v
             pred_points = np.vstack((pred_points, np.asarray(
                 [local_coords[0], local_coords[1], heading_diff, pred_v])))
@@ -248,7 +249,7 @@ class TrajectoryImitationConvRNNDataset(Dataset):
             pred_v = pred_point.trajectory_point.v
             local_coords = CoordUtils.world_to_relative(
                 [pred_x, pred_y], ref_coords)
-            heading_diff = pred_theta - ref_coords[2]
+            heading_diff = NormalizeAngle(pred_theta - ref_coords[2])
             pred_points = np.vstack((pred_points, np.asarray(
                 [local_coords[0], local_coords[1], heading_diff, pred_v])))
 
@@ -414,7 +415,7 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
             hist_theta = hist_point.trajectory_point.path_point.theta
             local_coords = CoordUtils.world_to_relative(
                 [hist_x, hist_y], ref_coords)
-            heading_diff = hist_theta - ref_coords[2]
+            heading_diff = NormalizeAngle(hist_theta - ref_coords[2])
             hist_v = hist_point.trajectory_point.v
             hist_points = np.vstack((np.asarray(
                 [local_coords[0], local_coords[1], heading_diff, hist_v]), hist_points))
@@ -435,7 +436,7 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
             pred_theta = pred_point.trajectory_point.path_point.theta
             local_coords = CoordUtils.world_to_relative(
                 [pred_x, pred_y], ref_coords)
-            heading_diff = pred_theta - ref_coords[2]
+            heading_diff = NormalizeAngle(pred_theta - ref_coords[2])
             pred_v = pred_point.trajectory_point.v
             pred_points = np.vstack((pred_points, np.asarray(
                 [local_coords[0], local_coords[1], heading_diff, pred_v])))
@@ -577,7 +578,7 @@ class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
             hist_theta = hist_point.trajectory_point.path_point.theta
             local_coords = CoordUtils.world_to_relative(
                 [hist_x, hist_y], ref_coords)
-            heading_diff = hist_theta - ref_coords[2]
+            heading_diff = NormalizeAngle(hist_theta - ref_coords[2])
             hist_v = hist_point.trajectory_point.v
             hist_points = np.vstack((np.asarray(
                 [local_coords[0], local_coords[1], heading_diff, hist_v]), hist_points))
@@ -603,7 +604,7 @@ class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
             pred_theta = pred_point.trajectory_point.path_point.theta
             local_coords = CoordUtils.world_to_relative(
                 [pred_x, pred_y], ref_coords)
-            heading_diff = pred_theta - ref_coords[2]
+            heading_diff = NormalizeAngle(pred_theta - ref_coords[2])
             pred_v = pred_point.trajectory_point.v
             pred_points = np.vstack((pred_points, np.asarray(
                 [local_coords[0], local_coords[1], heading_diff, pred_v])))

@@ -15,7 +15,7 @@ import fueling.common.logging as logging
 from fueling.learning.network_utils import generate_lstm_states
 from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator \
     import ChauffeurNetFeatureGenerator
-from fueling.planning.reinforcement_learning.rl_math_util import NormalizeAngle
+from fueling.planning.math_utils.math_utils import NormalizeAngle
 from fueling.planning.reinforcement_learning import grading_result_pb2
 
 

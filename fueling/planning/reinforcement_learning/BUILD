@@ -5,11 +5,6 @@ load("@apollo//tools:python_rules.bzl", "py_proto_library")
 package(default_visibility = ["//visibility:public"])
 
 py_library(
-    name = "rl_math_util",
-    srcs = ["rl_math_util.py"],
-)
-
-py_library(
     name = "rl_algorithm",
     srcs = ["rl_algorithm.py"],
     deps = [
@@ -18,6 +13,7 @@ py_library(
         "//fueling/common:logging",
         "//fueling/learning:train_utils",
         "//fueling/planning/input_feature_preprocessor:chauffeur_net_feature_generator",
+        "//fueling/planning/math_utils:math_utils",
         "@apollo//modules/canbus/proto:chassis_py_pb2",
         "@apollo//modules/planning/proto:learning_data_py_pb2",
         "@apollo//modules/planning/proto:planning_py_pb2",
@@ -30,12 +26,12 @@ py_library(
     srcs = ["environment.py"],
     deps = [
         ":grading_result_py_pb2",
-        ":rl_math_util",
         "//fueling/common:coord_utils",
         "//fueling/common:logging",
         "//fueling/learning:network_utils",
         "//fueling/learning:train_utils",
         "//fueling/planning/input_feature_preprocessor:chauffeur_net_feature_generator",
+        "//fueling/planning/math_utils:math_utils",
         "@apollo//cyber/python/cyber_py3:cyber",
         "@apollo//cyber/python/cyber_py3:cyber_time",
         "@apollo//modules/canbus/proto:chassis_py_pb2",
