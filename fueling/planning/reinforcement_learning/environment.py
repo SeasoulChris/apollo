@@ -159,8 +159,6 @@ class ADSEnv(object):
         return self.state, self.reward, done, info
 
     def reset(self):
-        self.close()
-
         self.sequence_num = 1
 
         # for reward and done in function step
@@ -171,6 +169,18 @@ class ADSEnv(object):
         self.speed = 0
         self.is_grading_done = False
         self.is_input_ready = False
+        
+        planning_message = planning_pb2.ADCTrajectory()
+        planning_message.header.timestamp_sec = cyber_time.Time.now().to_sec()
+        planning_message.header.module_name = "planning"
+        planning_message.header.sequence_num = self.sequence_num
+        self.sequence_num += 1
+        planning_message.decision.main_decision.mission_complete.stop_heading = 10
+
+        self.writer.write(planning_message)
+        
+        while not self.is_input_ready:
+            time.sleep(1)
 
         return self.state, self.hidden
 
@@ -180,7 +190,7 @@ class ADSEnv(object):
         planning_message.header.module_name = "planning"
         planning_message.header.sequence_num = self.sequence_num
         self.sequence_num += 1
-        planning_message.decision.main_decision.mission_complete.stop_heading = 0
+        planning_message.decision.main_decision.mission_complete.stop_heading = -10
 
         self.writer.write(planning_message)
 
