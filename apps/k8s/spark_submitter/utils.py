@@ -92,6 +92,8 @@ class Utils(object):
             })
         if arg.partner.email:
             ENVS['PARTNER_EMAIL'] = arg.partner.email
+        if arg.partner.vehicle_sn:
+            ENVS['PARTNER_VEHICLE_SN'] = arg.partner.vehicle_sn
 
         # Construct arguments.
         confs = (

@@ -75,12 +75,12 @@ class BasePipeline(object):
     @staticmethod
     def is_partner_job():
         """Test if it's partner's job."""
-        return os.environ.get('PARTNER_BOS_REGION')
+        return os.environ.get('PARTNER_VEHICLE_SN')
 
     @staticmethod
     def partner_storage():
         """Get partner's storage instance."""
-        if os.environ.get('PARTNER_BOS_REGION'):
+        if os.environ.get('PARTNER_VEHICLE_SN'):
             is_partner = True
             return BosClient(is_partner)
         return None
