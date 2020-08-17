@@ -61,10 +61,14 @@ def main():
     # initiate the RL framework
     rl = DDPG(history_len, pred_horizon, hidden_size=hidden_size)
 
+    rewards = []
+
     for i_episode in range(1000):
         state, hidden = env.reset()
         time_count = 1
         ou_noise.reset()
+        episode_reward = 0
+
         while True:
 
             action, next_hidden = rl.choose_action(state, hidden)
@@ -80,6 +84,7 @@ def main():
             # learning
             rl.learn()
 
+            episode_reward += reward
             # episode terminates, enter next episode
             if done:
                 break
@@ -87,6 +92,8 @@ def main():
             state = next_state
             hidden = next_hidden
             time_count += 1
+
+        rewards.append(episode_reward)
         if i_episode % 50 == 0:
             print("Episode finished after {} timesteps".format(time_count + 1))
     cyber.shutdown()

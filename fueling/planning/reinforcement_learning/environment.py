@@ -169,7 +169,7 @@ class ADSEnv(object):
         self.speed = 0
         self.is_grading_done = False
         self.is_input_ready = False
-        
+
         planning_message = planning_pb2.ADCTrajectory()
         planning_message.header.timestamp_sec = cyber_time.Time.now().to_sec()
         planning_message.header.module_name = "planning"
@@ -178,7 +178,7 @@ class ADSEnv(object):
         planning_message.decision.main_decision.mission_complete.stop_heading = 10
 
         self.writer.write(planning_message)
-        
+
         while not self.is_input_ready:
             time.sleep(1)
 
