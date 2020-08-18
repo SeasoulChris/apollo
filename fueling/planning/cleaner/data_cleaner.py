@@ -22,8 +22,8 @@ class CleanPlanningRecords(BasePipeline):
         self.IS_TEST_DATA = False
         self.RUN_IN_DRIVER = True
         now = datetime.now() - timedelta(hours=7)
-        dt_string = now.strftime("%Y%m%d_%H%M%S")
-        self.dst_prefix = '/mnt/bos/modules/planning/cleaned_data/batch_' + dt_string + "/"
+        self.dt_string = now.strftime("%Y%m%d_%H%M%S")
+        self.dst_prefix = '/mnt/bos/modules/planning/cleaned_data/'
 
         self.cnt = 1
         self.cleaner = None
@@ -53,12 +53,15 @@ class CleanPlanningRecords(BasePipeline):
                 line_elements = line.split(" ")
                 folder = line_elements[0]
                 task_map = line_elements[1]
+                city = line_elements[2]
+                batch_prefix = line_elements[3]
+
                 files = self.our_storage().list_files(folder)
                 for fn in files:
                     if record_utils.is_record_file(fn):
                         task = "/".join(fn.split("/")[3:-1])
                         if task not in tasks_map_dict:
-                            tasks_map_dict[task] = task_map
+                            tasks_map_dict[task] = task_map + " " + city + " " + batch_prefix
 
         for task, task_map in tasks_map_dict.items():
             task_desc = task + " " + task_map
@@ -77,6 +80,14 @@ class CleanPlanningRecords(BasePipeline):
         task_elements = task_desc.replace("\n", "").split(" ")
         task_folder = task_elements[0]
         task_map = task_elements[1]
+        city = task_elements[2]
+        batch_prefix = task_elements[3]
+
+        if len(task_folder.split("/")[-1]) == 0:
+            task_id = task_folder.split("/")[-2]
+        else:
+            task_id = task_folder.split("/")[-1]
+
         map_file = None
         if task_map == "san_mateo":
             map_file = "/mnt/bos/code/baidu/adu-lab/apollo-map/san_mateo/sim_map.bin"
@@ -87,9 +98,15 @@ class CleanPlanningRecords(BasePipeline):
             map_file \
                 = "/mnt/bos/code/baidu/adu-lab/apollo-map/yizhuangdaluwang/sim_map.bin"
 
+        dest_folder \
+            = self.dst_prefix + city + "/" \
+            + batch_prefix + "_" + self.dt_string + "/" \
+            + task_map + "/" + task_id + "/"
+
         self.cleaner = RecordCleaner(map_file)
 
         self.cnt = 1
+
         files = self.our_storage().list_files(task_folder)
         logging.info('found file num = ' + str(len(files)))
 
@@ -111,30 +128,24 @@ class CleanPlanningRecords(BasePipeline):
                 self.cleaner.process_file(fn)
                 msgs_list = self.cleaner.get_matured_msg_list()
                 for msgs in msgs_list:
-                    self.write_msgs(task_folder, msgs, task_map)
+                    self.write_msgs(dest_folder, msgs)
                 self.cleaner.clean_mature_msg_list()
 
             if self.cnt > 10 and self.IS_TEST_DATA:
                 break
 
-        self.write_msgs(task_folder, self.cleaner.msgs[-1], task_map)
+        self.write_msgs(dest_folder, self.cleaner.msgs[-1])
 
         logging.info("task is done!")
 
-    def write_msgs(self, task_folder, msgs, task_map):
+    def write_msgs(self, dest_folder, msgs):
 
         if len(msgs) < 200 * 10:
             return
 
         logging.info("write_msgs start: msgs num = " + str(len(msgs)))
 
-        if len(task_folder.split("/")[-1]) == 0:
-            task_id = task_folder.split("/")[-2]
-        else:
-            task_id = task_folder.split("/")[-1]
-
-        dst_record_fn = self.dst_prefix + task_map + "/" + task_id + "/"
-        dst_record_fn += str(self.cnt).zfill(5) + ".record"
+        dst_record_fn = dest_folder + str(self.cnt).zfill(5) + ".record"
 
         self.cnt += 1
 
