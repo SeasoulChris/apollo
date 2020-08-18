@@ -66,8 +66,8 @@ class TrajectoryImitationCNNFCDataset(Dataset):
 
         coordinate_heading = 0.
         if self.img_feature_rotation:
-            coordinate_heading = torch.rand(
-                1) * 2 * self.max_rand_coordinate_heading - self.max_rand_coordinate_heading
+            coordinate_heading = np.random.uniform() * 2 * self.max_rand_coordinate_heading - \
+                self.max_rand_coordinate_heading
 
         is_past_motion_dropout = False
         if self.past_motion_dropout:
@@ -182,8 +182,8 @@ class TrajectoryImitationConvRNNDataset(Dataset):
 
         coordinate_heading = 0.
         if self.img_feature_rotation:
-            coordinate_heading = torch.rand(
-                1) * 2 * self.max_rand_coordinate_heading - self.max_rand_coordinate_heading
+            coordinate_heading = np.random.uniform() * 2 * self.max_rand_coordinate_heading - \
+                self.max_rand_coordinate_heading
 
         is_past_motion_dropout = False
         if self.past_motion_dropout:
@@ -374,8 +374,8 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
 
         coordinate_heading = 0.
         if self.img_feature_rotation:
-            coordinate_heading = torch.rand(
-                1) * 2 * self.max_rand_coordinate_heading - self.max_rand_coordinate_heading
+            coordinate_heading = np.random.uniform() * 2 * self.max_rand_coordinate_heading - \
+                self.max_rand_coordinate_heading
 
         is_past_motion_dropout = False
         if self.past_motion_dropout:
@@ -518,8 +518,8 @@ class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
 
         coordinate_heading = 0.
         if self.img_feature_rotation:
-            coordinate_heading = torch.rand(
-                1) * 2 * self.max_rand_coordinate_heading - self.max_rand_coordinate_heading
+            coordinate_heading = np.random.uniform() * 2 * self.max_rand_coordinate_heading - \
+                self.max_rand_coordinate_heading
 
         is_past_motion_dropout = False
         if self.past_motion_dropout:
