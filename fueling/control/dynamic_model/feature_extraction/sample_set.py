@@ -19,7 +19,6 @@ import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
-# TODO(SHU): redesign proto
 
 channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
 MIN_MSG_PER_SEGMENT = 100
@@ -200,7 +199,7 @@ class SampleSet(BasePipeline):
         logging.info("origin_dir: %s" % origin_dir)
         logging.info("target_prefix: %s" % target_prefix)
 
-        # TODO(SHU): ADD SANITY check
+        # TODO (Longtao /Yu): refer to calibration table feature extraction to add sanity check
 
         """ vehicles """
         vehicles = spark_helper.cache_and_log(

@@ -31,35 +31,39 @@ class DynamicModelTraining(BasePipeline):
         output_dir = os.path.join(model_dir, 'dynamic_model_output')
 
         vehicles = multi_vehicle_utils.get_vehicle(training_data_path)
-        logging.info('vehicles = {}'.format(vehicles))
+        logging.info(f'vehicles = {vehicles}')
         # run test as a vehicle ID
         for vehicle in vehicles:
             self.execute_task(vehicle, training_data_path, output_dir, is_backward, is_holistic)
 
     def run(self):
-        # intermediate result folder
+        # initialize input/output dirs
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         is_backward = self.FLAGS.get('is_backward')
         is_holistic = self.FLAGS.get('is_holistic')
 
+        # TODO (Longtao /Yu): add partner storage for online service
         our_storage = self.our_storage()
-        data_dir = task_config['uniform_output_folder']
 
+        data_dir = task_config['uniform_output_folder']
         if is_backward:
             data_prefix = os.path.join(data_dir, job_owner, 'backward', job_id)
         else:
             data_prefix = os.path.join(data_dir, job_owner, 'forward', job_id)
-
         training_data_path = our_storage.abs_path(data_prefix)
+
         output_dir = our_storage.abs_path(task_config['model_output_folder'])
 
         # get vehicles
         vehicles = multi_vehicle_utils.get_vehicle(training_data_path)
-        logging.info('vehicles = {}'.format(vehicles))
+        logging.info(f'vehicles: {vehicles}')
         # run proc as a vehicle ID
         for vehicle in vehicles:
             self.execute_task(vehicle, training_data_path, output_dir, is_backward, is_holistic)
+
+        # TODO (Longtao /Yu): refer to calibration or control profiling to add email data report
+        # The model output results are stored at task_config['model_output_folder']
 
     def execute_task(self, vehicle, training_data_path, output_dir,
                      is_backward=False, is_holistic=False):
@@ -67,8 +71,8 @@ class DynamicModelTraining(BasePipeline):
         vehicle_dir = os.path.join(training_data_path, vehicle)
         # model output dir
         model_output_dir = os.path.join(output_dir, vehicle)
-        logging.info('vehicle_dir = {}'.format(vehicle_dir))
-        logging.info('model_output_dir = {}'.format(model_output_dir))
+        logging.info(f'vehicle_dir: {vehicle_dir}')
+        logging.info(f'model_output_dir: {model_output_dir}')
         # RDD hd5_dataset
         hd5_files_path = glob.glob(os.path.join(vehicle_dir, '*/*.hdf5'))
         # logging.info('hd5_files_path = {}'.format(hd5_files_path))
@@ -106,7 +110,7 @@ class DynamicModelTraining(BasePipeline):
             # param_norm
             .values()
             .first())
-        logging.info('Param Norm = {}'.format(param_norm))
+        logging.info(f'Param Norm = {param_norm}')
 
         def _train(data_item, is_backward=False, is_holistic=False):
             key, (input_data, output_data) = data_item
