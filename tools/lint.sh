@@ -30,6 +30,9 @@ function LintDir() {
   find "$1" -type f -name '*.py' | \
       grep -v 'fueling/common/logging.py' | \
       grep -v 'fueling/common/record/kinglong/cybertron' | \
+      grep -v 'fueling/perception/pointpillars/second/pytorch/models/voxelnet.py' | \
+      grep -v 'fueling/perception/pointpillars/second/pytorch/builder/second_builder.py' | \
+      grep -v 'fueling/perception/pointpillars/second/builder/dataset_builder.py' | \
       xargs ${FLAKE}
 
   FatalDuildifier $( find "$1" -type f -name 'BUILD' )
