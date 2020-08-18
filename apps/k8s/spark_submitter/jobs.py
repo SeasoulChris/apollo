@@ -20,7 +20,7 @@ class BaseJob(object):
         entrypoint, client_flags, job_flags = self.parse_arg(job_arg)
         client_flags.update(base_client_flags)
         job_flags.update(base_job_flags)
-        SparkSubmitterClient(entrypoint, client_flags, job_flags).submit_via_call()
+        return SparkSubmitterClient(entrypoint, client_flags, job_flags).submit_via_call()
 
 
 class ControlProfiling(BaseJob):

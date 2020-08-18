@@ -56,8 +56,8 @@ class JobProcessor(object):
             logging.error(msg)
             return HTTPStatus.BAD_REQUEST, msg
         job_flags = {}
-        processor().submit(self.job_arg, client_flags, job_flags)
-        msg = ('Your job is in process now! You will receive a '
+        job_id = processor().submit(self.job_arg, client_flags, job_flags)
+        msg = (F'{job_id}: Your job is in process now! You will receive a '
                'notification in your corresponding email when it is finished.')
         logging.info(msg)
         return HTTPStatus.ACCEPTED, msg

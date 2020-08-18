@@ -84,6 +84,7 @@ class SparkSubmitterClient(object):
             threading.Thread(target=Utils.spark_submit, args=(job_id, arg)).start()
         else:
             Utils.spark_submit(job_id, arg)
+        return job_id
 
     def submit(self):
         """Submit via RPC."""
