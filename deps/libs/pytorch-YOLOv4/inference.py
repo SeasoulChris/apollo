@@ -177,14 +177,21 @@ def inference_yolov4(is_local=False):
 
 
 
-def autolabel():
+def autolabel(modelfile=None, imagefolder=None):
 
-    if len(sys.argv) != 3:
-        print("command format: python inference.py [model_path] [image_folder]")
+    # if len(sys.argv) != 3:
+    #     print("command format: python inference.py [model_path] [image_folder]")
+    #     return
+
+    if modelfile == None:
+        print("modelfile not specified!")
+        return
+    if imagefolder == None:
+        print("imagefolder not specified!")
         return
 
-    modelfile = sys.argv[1]
-    imagefolder = sys.argv[2]
+    # modelfile = sys.argv[1]
+    # imagefolder = sys.argv[2]
 
     n_classes = 80
     height = 320
