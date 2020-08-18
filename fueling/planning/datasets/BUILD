@@ -106,7 +106,7 @@ py_library(
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/planning/input_feature_preprocessor:chauffeur_net_feature_generator",
-        "//fueling/planning/math_utils:math_utils",
+        "//fueling/planning/math_utils",
         "@apollo//modules/planning/proto:learning_data_py_pb2",
         "@apollo//modules/planning/proto:planning_semantic_map_config_py_pb2",
     ],
