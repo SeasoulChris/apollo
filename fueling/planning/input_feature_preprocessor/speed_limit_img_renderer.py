@@ -5,6 +5,7 @@ import math
 
 from modules.planning.proto import planning_semantic_map_config_pb2
 
+import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
 
@@ -35,14 +36,12 @@ class SpeedLimitImgRenderer(object):
         if region == "san_mateo":
             map_base_point_x = 558982.162591356
             map_base_point_y = 4156781.763329632
-        elif region == "sunnyvale_with_two_offices":
-            map_base_point_x = 585875.3316302994
-            map_base_point_y = 4139916.6342316796
-        elif region == "sunnyvale":
+        elif region == "sunnyvale_with_two_offices" or \
+                region == "sunnyvale_big_loop" or region == "sunnyvale":
             map_base_point_x = 585875.3316302994
             map_base_point_y = 4139916.6342316796
         else:
-            print("Chosen base map not created")
+            logging.error("Chosen base map [" + region + "] not created")
             exit()
         map_base_point = np.array(
             [map_base_point_x, map_base_point_y])

@@ -38,29 +38,28 @@ class PytorchTraining(BasePipeline):
         train_set_dir = self.FLAGS.get('train_set_dir')
         validation_set_dir = self.FLAGS.get('validation_set_dir')
         gpu_idx = self.FLAGS.get('gpu_idx')
+        update_base_map = self.FLAGS.get('update_base_map')
         renderer_config_file = self.FLAGS.get('renderer_config_file')
         renderer_base_map_img_dir = self.FLAGS.get('renderer_base_map_img_dir')
+        regions_list = self.FLAGS.get('regions_list')
+        renderer_base_map_data_dir = self.FLAGS.get(
+            'renderer_base_map_data_dir')
         img_feature_rotation = self.FLAGS.get('img_feature_rotation')
         past_motion_dropout = self.FLAGS.get('past_motion_dropout')
         model_save_dir = self.FLAGS.get('model_save_dir')
-        region = "sunnyvale_with_two_offices"
-        renderer_base_map_data_dir = self.FLAGS.get(
-            'renderer_base_map_data_dir')
-        renderer_base_map_data_dir = "/apollo/modules/map/data/" + region + \
-            "/base_map.bin" if renderer_base_map_data_dir is None else \
-            renderer_base_map_data_dir
 
         training(model_type,
                  train_set_dir,
                  validation_set_dir,
                  gpu_idx,
+                 update_base_map,
+                 regions_list,
                  renderer_config_file,
                  renderer_base_map_img_dir,
                  renderer_base_map_data_dir,
                  img_feature_rotation,
                  past_motion_dropout,
-                 model_save_dir,
-                 region)
+                 model_save_dir)
 
 
 if __name__ == '__main__':
