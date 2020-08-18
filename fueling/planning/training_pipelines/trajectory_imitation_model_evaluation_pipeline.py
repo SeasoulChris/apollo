@@ -18,10 +18,13 @@ from fueling.learning.train_utils import cuda
 from fueling.planning.datasets.img_in_traj_out_dataset \
     import TrajectoryImitationCNNFCDataset, \
     TrajectoryImitationConvRNNDataset, \
-    TrajectoryImitationCNNLSTMDataset
-from fueling.planning.models.trajectory_imitation.cnn_fc_model import TrajectoryImitationCNNFC
-from fueling.planning.models.trajectory_imitation.cnn_lstm_model import TrajectoryImitationCNNLSTM
-from fueling.planning.models.trajectory_imitation.conv_rnn_model import TrajectoryImitationConvRNN
+    TrajectoryImitationSelfCNNLSTMDataset
+from fueling.planning.models.trajectory_imitation.cnn_fc_model import \
+    TrajectoryImitationCNNFC
+from fueling.planning.models.trajectory_imitation.cnn_lstm_model import \
+    TrajectoryImitationSelfCNNLSTM
+from fueling.planning.models.trajectory_imitation.conv_rnn_model import \
+    TrajectoryImitationConvRNN
 from fueling.planning.input_feature_preprocessor.agent_poses_future_img_renderer import \
     AgentPosesFutureImgRenderer
 import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
@@ -29,7 +32,7 @@ from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator
     import ChauffeurNetFeatureGenerator
 
 flags.DEFINE_string('model_type', None,
-                    'model type, cnn, rnn, cnn_lstm, cnn_lstm_aux')
+                    'model type, cnn, conv_rnn, self_cnn_lstm, self_cnn_lstm_aux')
 flags.DEFINE_string('model_file', None, 'trained model')
 flags.DEFINE_string('test_set_dir', None, 'test set data folder')
 flags.DEFINE_string('gpu_idx', None, 'which gpu to use')
@@ -328,7 +331,7 @@ def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map
                                                        renderer_base_map_img_dir,
                                                        renderer_base_map_data_dir,
                                                        evaluate_mode=True)
-    elif model_type == 'rnn':
+    elif model_type == 'conv_rnn':
         model = TrajectoryImitationConvRNN(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
         # model = TrajectoryImitationDeeperConvRNN(
@@ -343,17 +346,17 @@ def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map
                                                          renderer_base_map_img_dir,
                                                          renderer_base_map_data_dir,
                                                          evaluate_mode=True)
-    elif model_type == 'cnn_lstm' or model_type == 'cnn_lstm_aux':
-        model = TrajectoryImitationCNNLSTM(history_len=10, pred_horizon=10, embed_size=64,
-                                           hidden_size=128)
-        test_dataset = TrajectoryImitationCNNLSTMDataset(test_set_folder,
-                                                         regions_list,
-                                                         renderer_config_file,
-                                                         renderer_base_map_img_dir,
-                                                         renderer_base_map_data_dir,
-                                                         history_point_num=10,
-                                                         ouput_point_num=10,
-                                                         evaluate_mode=True)
+    elif model_type == 'self_cnn_lstm' or model_type == 'self_cnn_lstm_aux':
+        model = TrajectoryImitationSelfCNNLSTM(history_len=10, pred_horizon=10, embed_size=64,
+                                               hidden_size=128)
+        test_dataset = TrajectoryImitationSelfCNNLSTMDataset(test_set_folder,
+                                                             regions_list,
+                                                             renderer_config_file,
+                                                             renderer_base_map_img_dir,
+                                                             renderer_base_map_data_dir,
+                                                             history_point_num=10,
+                                                             ouput_point_num=10,
+                                                             evaluate_mode=True)
     else:
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
@@ -374,10 +377,10 @@ def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map
     else:
         print("Not using CUDA.")
 
-    if model_type == 'cnn' or model_type == 'cnn_lstm' or model_type == 'cnn_lstm_aux':
+    if model_type == 'cnn' or model_type == 'self_cnn_lstm' or model_type == 'self_cnn_lstm_aux':
         cnn_model_evaluator(test_loader, model,
                             renderer_config_file, renderer_base_map_img_dir)
-    elif model_type == 'rnn':
+    elif model_type == 'conv_rnn':
         rnn_model_evaluator(test_loader, model,
                             renderer_config_file, renderer_base_map_img_dir)
     else:

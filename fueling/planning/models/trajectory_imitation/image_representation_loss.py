@@ -147,7 +147,7 @@ class TrajectoryImitationConvRNNWithEnvLoss():
         return out
 
 
-class TrajectoryImitationCNNLSTMWithAuxiliaryEnvLoss():
+class TrajectoryImitationSelfCNNLSTMWithRasterizerEnvLoss():
     def __init__(self,
                  box_loss_weight=1,
                  pos_reg_loss_weight=1,

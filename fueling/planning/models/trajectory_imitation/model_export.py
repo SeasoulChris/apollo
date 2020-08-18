@@ -11,8 +11,8 @@ import fueling.common.logging as logging
 
 def export(torch_model_file, export_model_file, device, export_form):
     model = TrajectoryImitationCNNFC()
-    # model = TrajectoryImitationCNNLSTM(10, 10)
-    # model = TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet(10, 10, [200, 200])
+    # model = TrajectoryImitationSelfCNNLSTM(10, 10)
+    # model = TrajectoryImitationSelfCNNLSTMWithRasterizer(10, 10, [200, 200])
     # model = TrajectoryImitationConvRNN([200, 200])
     # model = TrajectoryImitationDeeperConvRNN([200, 200])
     # model = TrajectoryImitationConvRNNUnetResnet18v1([200, 200])

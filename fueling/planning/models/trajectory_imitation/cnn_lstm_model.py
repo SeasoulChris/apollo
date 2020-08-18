@@ -12,11 +12,11 @@ Model definition
 '''
 
 
-class TrajectoryImitationCNNLSTM(nn.Module):
+class TrajectoryImitationSelfCNNLSTM(nn.Module):
     def __init__(self, history_len, pred_horizon, embed_size=64,
                  hidden_size=128, cnn_net=models.mobilenet_v2,
                  pretrained=True):
-        super(TrajectoryImitationCNNLSTM, self).__init__()
+        super(TrajectoryImitationSelfCNNLSTM, self).__init__()
         self.compression_cnn_layer = nn.Conv2d(12, 3, 3, padding=1)
         self.cnn = cnn_net(pretrained=pretrained)
         self.cnn_out_size = 1000
@@ -68,6 +68,74 @@ class TrajectoryImitationCNNLSTM(nn.Module):
                 cur_pose_step.clone()).view(batch_size, 1, -1)
 
             _, (ht, ct) = self.lstm(disp_embedding, (ht, ct))
+
+        return pred_traj[:, 1:, :]
+
+
+class TrajectoryImitationUnconstrainedCNNLSTM(nn.Module):
+    def __init__(self, pred_horizon, embed_size=64,
+                 hidden_size=128, cnn_net=models.mobilenet_v2,
+                 pretrained=True):
+        super(TrajectoryImitationUnconstrainedCNNLSTM, self).__init__()
+        self.compression_cnn_layer = nn.Conv2d(12, 3, 3, padding=1)
+        self.cnn = cnn_net(pretrained=pretrained)
+        self.cnn_out_size = 1000
+        for param in self.cnn.parameters():
+            param.requires_grad = True
+
+        self.pred_horizon = pred_horizon
+
+        self.h0_fc_layer = torch.nn.Sequential(
+            nn.Linear(3 + self.cnn_out_size, 512),
+            nn.ReLU(),
+            nn.Linear(512, 128),
+            nn.ReLU(),
+        )
+
+        self.c0 = torch.zeros(1, 1, hidden_size)
+        self.c0 = nn.Parameter(self.c0, requires_grad=True)
+
+        self.lstm = nn.LSTM(embed_size, hidden_size,
+                            num_layers=1, batch_first=True)
+
+        self.embedding_fc_layer = torch.nn.Sequential(
+            nn.Linear(4, embed_size),
+            nn.ReLU()
+        )
+
+        self.output_fc_layer = torch.nn.Sequential(
+            nn.Linear(hidden_size + self.cnn_out_size + 3, 4),
+        )
+
+    def forward(self, X):
+        img_feature, current_v, current_a, current_curvature = X
+        batch_size = img_feature.size(0)
+        ct = self.c0.repeat(1, batch_size, 1)
+        img_embedding = self.cnn(
+            self.compression_cnn_layer(img_feature)).view(batch_size, -1)
+        concatenated_states = torch.cat(
+            (img_embedding, current_v, current_a, current_curvature), dim=1)
+        ht = self.h0_fc_layer(concatenated_states).unsqueeze(0)
+        path_point_input = torch.zeros(
+            (batch_size, 3), device=img_feature.device)
+        current_pose = torch.cat(
+            (path_point_input, current_v.clone()), dim=1)
+
+        pred_traj = torch.zeros(
+            (batch_size, 1, 4), device=img_feature.device)
+        for t in range(self.pred_horizon):
+            current_pose_step = self.output_fc_layer(
+                torch.cat((ht.view(batch_size, -1), concatenated_states), dim=1))
+
+            current_pose = current_pose + current_pose_step
+
+            pred_traj = torch.cat(
+                (pred_traj, current_pose.clone().unsqueeze(1)), dim=1)
+
+            states_input = self.embedding_fc_layer(
+                current_pose_step.clone()).view(batch_size, 1, -1)
+
+            _, (ht, ct) = self.lstm(states_input, (ht, ct))
 
         return pred_traj[:, 1:, :]
 
@@ -180,8 +248,8 @@ def rasterize_vehicle_three_circles_guassian(pred_traj_x,
     x_coords = idx_mesh[:, :, :, 1]
     y_coords = idx_mesh[:, :, :, 0]
     front_center_guassian = torch.exp(-(a * torch.pow((x_coords - front_center_x_idx), 2)
-                                        + 2 * b *
-                                        (x_coords - front_center_x_idx)
+                                        + 2 * b
+                                        * (x_coords - front_center_x_idx)
                                         * (y_coords - front_center_y_idx)
                                         + c * torch.pow((y_coords - front_center_y_idx), 2)))
 
@@ -198,13 +266,13 @@ def rasterize_vehicle_three_circles_guassian(pred_traj_x,
     return (front_center_guassian + mid_center_guassian + rear_center_guassian) / max_prob
 
 
-class TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet(nn.Module):
+class TrajectoryImitationSelfCNNLSTMWithRasterizer(nn.Module):
     def __init__(self, history_len, pred_horizon, input_img_size, img_resolution,
                  initial_box_x_idx, initial_box_y_idx,
                  vehicle_front_edge_to_center, vehicle_back_edge_to_center, vehicle_width,
                  embed_size=64, hidden_size=128, cnn_net=models.mobilenet_v2,
                  pretrained=True):
-        super(TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet, self).__init__()
+        super(TrajectoryImitationSelfCNNLSTMWithRasterizer, self).__init__()
         self.compression_cnn_layer = nn.Conv2d(12, 3, 3, padding=1)
         self.cnn = cnn_net(pretrained=pretrained)
         self.cnn_out_size = 1000
@@ -339,7 +407,7 @@ class TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet(nn.Module):
 
 if __name__ == "__main__":
     # code snippet for model prining
-    model = TrajectoryImitationCNNLSTM(10, 10)
+    model = TrajectoryImitationSelfCNNLSTM(10, 10)
 
     total_param = 0
     for name, param in model.named_parameters():

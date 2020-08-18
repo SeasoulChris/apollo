@@ -327,6 +327,134 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
                  renderer_base_map_img_dir,
                  renderer_base_map_data_dir,
                  img_feature_rotation=False, past_motion_dropout=False,
+                 ouput_point_num=10, evaluate_mode=False):
+        # TODO(Jinyun): refine transform function
+        self.img_transform = transforms.Compose([
+            transforms.ToTensor(),
+            # 12 channels is used
+            transforms.Normalize(mean=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                                 std=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                                      0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
+
+        logging.info('Processing directory: {}'.format(data_dir))
+        self.instances = file_utils.list_files(data_dir)
+
+        self.total_num_data_pt = len(self.instances)
+
+        logging.info('Total number of data points = {}'.format(
+            self.total_num_data_pt))
+
+        self.chauffeur_net_feature_generator = \
+            ChauffeurNetFeatureGenerator(regions_list,
+                                         renderer_config_file,
+                                         renderer_base_map_img_dir,
+                                         renderer_base_map_data_dir)
+        self.img_feature_rotation = img_feature_rotation
+        self.past_motion_dropout = past_motion_dropout
+        renderer_config = proto_utils.get_pb_from_text_file(
+            renderer_config_file,
+            planning_semantic_map_config_pb2.PlanningSemanticMapConfig())
+        self.max_rand_coordinate_heading = np.radians(
+            renderer_config.max_rand_delta_phi)
+        self.ouput_point_num = ouput_point_num
+        self.evaluate_mode = evaluate_mode
+
+    def __len__(self):
+        return self.total_num_data_pt
+
+    def __getitem__(self, idx):
+        frame_name = self.instances[idx]
+
+        frame = proto_utils.get_pb_from_bin_file(
+            frame_name, learning_data_pb2.LearningDataFrame())
+
+        region = frame.map_name
+
+        coordinate_heading = 0.
+        if self.img_feature_rotation:
+            coordinate_heading = np.random.uniform() * 2 * self.max_rand_coordinate_heading - \
+                self.max_rand_coordinate_heading
+
+        is_past_motion_dropout = False
+        if self.past_motion_dropout:
+            is_past_motion_dropout = torch.rand(1) > 0.5
+
+        # use adc_trajectory_point rather than localization
+        # because of the use of synthesizing sometimes
+        current_traj_point = frame.adc_trajectory_point[-1].trajectory_point
+        current_path_point = current_traj_point.path_point
+        current_x = current_path_point.x
+        current_y = current_path_point.y
+        current_theta = current_path_point.theta
+
+        img_feature = self.chauffeur_net_feature_generator.\
+            render_stacked_img_features(region,
+                                        frame.adc_trajectory_point[-1].timestamp_sec,
+                                        frame.adc_trajectory_point,
+                                        frame.obstacle,
+                                        current_x,
+                                        current_y,
+                                        current_theta,
+                                        frame.routing.local_routing_lane_id,
+                                        frame.traffic_light_detection.traffic_light,
+                                        coordinate_heading,
+                                        is_past_motion_dropout)
+        transformed_img_feature = self.img_transform(img_feature)
+
+        ref_coords = [current_x,
+                      current_y,
+                      current_theta]
+
+        pred_points = np.zeros((0, 4))
+        for i, pred_point in enumerate(frame.output.adc_future_trajectory_point):
+            if i + 1 > self.ouput_point_num:
+                break
+            pred_x = pred_point.trajectory_point.path_point.x
+            pred_y = pred_point.trajectory_point.path_point.y
+            pred_theta = pred_point.trajectory_point.path_point.theta
+            local_coords = CoordUtils.world_to_relative(
+                [pred_x, pred_y], ref_coords)
+            heading_diff = NormalizeAngle(pred_theta - ref_coords[2])
+            pred_v = pred_point.trajectory_point.v
+            pred_points = np.vstack((pred_points, np.asarray(
+                [local_coords[0], local_coords[1], heading_diff, pred_v])))
+
+        # TODO(Jinyun): it's a tmp fix, will add data clean to make sure output point size is right
+        if pred_points.shape[0] < self.ouput_point_num:
+            return self.__getitem__(idx - 1)
+
+        current_v = torch.tensor([current_traj_point.v]).float()
+        current_a = torch.tensor([current_traj_point.a]).float()
+        # TODO(Jinyun): add kappa to CommonPathPointFeature,
+        # use localization angular velocity for now
+        current_curvature = torch.tensor(
+            [frame.localization.angular_velocity.z]).float()
+
+        if self.evaluate_mode:
+            merged_img_feature = self.chauffeur_net_feature_generator.render_merged_img_feature(
+                img_feature)
+            return ((transformed_img_feature,
+                     current_v,
+                     current_a,
+                     current_curvature),
+                    torch.from_numpy(pred_points).float(),
+                    merged_img_feature,
+                    coordinate_heading,
+                    frame.message_timestamp_sec)
+
+        return ((transformed_img_feature,
+                 current_v,
+                 current_a,
+                 current_curvature),
+                torch.from_numpy(pred_points).float())
+
+
+class TrajectoryImitationSelfCNNLSTMDataset(Dataset):
+    def __init__(self, data_dir, regions_list, renderer_config_file,
+                 renderer_base_map_img_dir,
+                 renderer_base_map_data_dir,
+                 img_feature_rotation=False, past_motion_dropout=False,
                  history_point_num=10, ouput_point_num=10, evaluate_mode=False):
         # TODO(Jinyun): refine transform function
         self.img_transform = transforms.Compose([
@@ -462,7 +590,7 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
                 torch.from_numpy(pred_points).float())
 
 
-class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
+class TrajectoryImitationSelfCNNLSTMWithEnvLossDataset(Dataset):
     def __init__(self, data_dir, regions_list, renderer_config_file,
                  renderer_base_map_img_dir,
                  renderer_base_map_data_dir, on,
