@@ -19,11 +19,10 @@ fi
 
 if [ "$USE_CACHE" = "YES" ]; then
   # For bazel commands, WORKSPACE.bazel has higher priority than WORKSPACE.
-  sed 's|# EXTRA_PIP_ARGS|"--find-links=file:///home/libs/pip-cache/",|g' \
+  sed 's|# EXTRA_PIP_ARGS|"--find-links=file:///home/libs/pip-cache/ -i https://mirrors.aliyun.com/pypi/simple/ ",|g' \
       WORKSPACE > WORKSPACE.bazel
 else
   rm -f WORKSPACE.bazel
 fi
 
 env USE_CACHE="${USE_CACHE}" bash tools/build.sh $@
-rm -f WORKSPACE.bazel

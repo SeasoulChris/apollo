@@ -76,7 +76,7 @@ class OpenServiceSubmitJob(SparkSubmitJob):
         """Accept user request, verify and process."""
         try:
             arg = json_format.Parse(flask.request.get_json(), SaasJobArg())
-            logging.info(F'openservice submitted')
+            logging.info('openservice submitted')
             logging.info(F'parameters: {flask.request.get_json()}')
             http_code, msg = JobProcessor(arg).process()
             logging.info(F'msg: {msg}')
