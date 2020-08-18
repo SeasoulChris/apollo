@@ -57,6 +57,7 @@ pip3_import(
     timeout = 1000,
     extra_pip_args = [
         # EXTRA_PIP_ARGS
+        # "-i https://pypi.tuna.tsinghua.edu.cn/simple",
     ],
     requirements = "//deps:default.txt",
 )
