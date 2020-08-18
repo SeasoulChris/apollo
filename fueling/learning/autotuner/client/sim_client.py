@@ -7,7 +7,6 @@ import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
 import fueling.learning.autotuner.proto.sim_service_pb2_grpc as sim_service_pb2_grpc
 import fueling.common.logging as logging
 
-REQUEST_TIMEOUT_IN_SEC = 15 * 60
 
 # channel options: https://github.com/grpc/grpc/blob/master/include/grpc/impl/codegen/grpc_types.h
 CHANNEL_OPTIONS = [
@@ -16,6 +15,13 @@ CHANNEL_OPTIONS = [
     ('grpc.keepalive_permit_without_calls', 1),
     ('grpc.http2.max_pings_without_data', 12),
 ]
+
+OPERATION_TIMEOUT_IN_SEC = {
+    'Initialize': 60 * 60,
+    'RunScenario': 15 * 60,
+    'TearDown': 5 * 60,
+    'Default': 15 * 60,
+}
 
 
 class SimClient(object):
@@ -27,6 +33,8 @@ class SimClient(object):
 
     @classmethod
     def send_request(cls, request_name, request_payload):
+        timeout = OPERATION_TIMEOUT_IN_SEC.get(request_name, OPERATION_TIMEOUT_IN_SEC['Default'])
+        logging.info(f"Running {request_name} with {timeout} sec timeout.")
         with grpc.insecure_channel(
                 target=cls.CHANNEL_URL,
                 compression=grpc.Compression.Gzip,
@@ -34,7 +42,7 @@ class SimClient(object):
 
             stub = sim_service_pb2_grpc.SimServiceStub(channel)
             request_function = getattr(stub, request_name)
-            status = request_function(request_payload, timeout=REQUEST_TIMEOUT_IN_SEC)
+            status = request_function(request_payload, timeout=timeout)
 
         return status
 

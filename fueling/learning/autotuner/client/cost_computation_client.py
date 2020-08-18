@@ -14,7 +14,7 @@ MAX_RETRIES = 3
 
 KEEP_ALIVE_TIME_IN_SEC = 5 * 60
 OPERATION_TIMEOUT_IN_SEC = {
-    'Initialize': 30 * 60,
+    'Initialize': 60 * 60,
     # first time usually needs longer time to pull code, map, binary, etc
     'FirstComputeCost': 45 * 60,
     'ComputeCost': 10 * 60,

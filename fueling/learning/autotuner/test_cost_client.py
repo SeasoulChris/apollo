@@ -18,7 +18,7 @@ CHANNEL_URL = "localhost:50052"
 CHANNEL_URL = "180.76.111.129:50052"
 
 # settings
-commit_id = "8076ef3bf8b32bfd9a2a74e187e62e4b7168b1a4"
+commit_id = "09ba18ada1aad062e0ffc3ea6f02de177895ed34"
 scenario_ids = [11014, 11015, 11016, 11017, 11018, 11019, 11020, 30019,
                 30020, 30021, 30022, 30023, 30024, 30025]
 dynamic_model = DynamicModel.ECHO_LINCOLN
