@@ -45,7 +45,12 @@ class SparkSubmitJob(flask_restful.Resource):
         try:
             arg = json_format.Parse(flask.request.get_json(), SparkSubmitArg())
             job_id = datetime.now().strftime('%Y%m%d%H%M%S%f')
-
+            # print logs
+            logs_data = json.loads(flask.request.get_json())
+            if 'fueling_zip_base64' in logs_data['job']:
+                logs_data['job'].pop('fueling_zip_base64')
+            logging.info(F'{job_id} submitted')
+            logging.info(F'parameters: {json.dumps(logs_data)}')
             # Validate args
             if (arg.worker.count * arg.worker.memory * flags.FLAGS.min_shared_jobs
                     >= flags.FLAGS.total_memory):
@@ -71,7 +76,10 @@ class OpenServiceSubmitJob(SparkSubmitJob):
         """Accept user request, verify and process."""
         try:
             arg = json_format.Parse(flask.request.get_json(), SaasJobArg())
+            logging.info(F'openservice submitted')
+            logging.info(F'parameters: {flask.request.get_json()}')
             http_code, msg = JobProcessor(arg).process()
+            logging.info(F'msg: {msg}')
         except Exception as err:
             logging.error(err)
             logging.error(traceback.format_exc())
