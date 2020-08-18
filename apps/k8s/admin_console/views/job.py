@@ -62,6 +62,7 @@ def submit_job():
     return json.dumps(res)
 
 
+@blue_job.route("/", methods=["GET", "POST"])
 @blue_job.route("/jobs", methods=["GET", "POST"])
 def jobs():
     """
