@@ -24,6 +24,7 @@ from fueling.planning.models.trajectory_imitation.cnn_fc_model import \
     TrajectoryImitationCNNFC
 from fueling.planning.models.trajectory_imitation.cnn_lstm_model import \
     TrajectoryImitationUnconstrainedCNNLSTM,\
+    TrajectoryImitationKinematicConstrainedCNNLSTM,\
     TrajectoryImitationSelfCNNLSTM,\
     TrajectoryImitationSelfCNNLSTMWithRasterizer
 from fueling.planning.models.trajectory_imitation.conv_rnn_model import TrajectoryImitationConvRNN
@@ -36,7 +37,7 @@ from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator
     import ChauffeurNetFeatureGenerator
 
 flags.DEFINE_string('model_type', None,
-                    'model type, cnn, rnn, self_cnn_lstm, self_cnn_lstm_aux')
+                    'model type, cnn, rnn, self_cnn_lstm, self_cnn_lstm_aux...')
 flags.DEFINE_string('train_set_dir', None, 'training set data folder')
 flags.DEFINE_string('validation_set_dir', None, 'validation set data folder')
 flags.DEFINE_string('gpu_idx', None, 'which gpu to use')
@@ -241,6 +242,31 @@ def training(model_type,
                                                           past_motion_dropout,
                                                           ouput_point_num=10)
         model = TrajectoryImitationUnconstrainedCNNLSTM(pred_horizon=10)
+        loss = TrajectoryPointDisplacementMSELoss(4)
+
+    elif model_type == 'kinematic_cnn_lstm':
+        train_dataset = TrajectoryImitationCNNLSTMDataset(train_set_dir,
+                                                          regions_list,
+                                                          renderer_config_file,
+                                                          renderer_base_map_img_dir,
+                                                          renderer_base_map_data_dir,
+                                                          img_feature_rotation,
+                                                          past_motion_dropout,
+                                                          ouput_point_num=10)
+        valid_dataset = TrajectoryImitationCNNLSTMDataset(validation_set_dir,
+                                                          regions_list,
+                                                          renderer_config_file,
+                                                          renderer_base_map_img_dir,
+                                                          renderer_base_map_data_dir,
+                                                          img_feature_rotation,
+                                                          past_motion_dropout,
+                                                          ouput_point_num=10)
+        model = TrajectoryImitationKinematicConstrainedCNNLSTM(pred_horizon=10,
+                                                               max_abs_steering_angle=0.52,
+                                                               max_acceleration=2,
+                                                               max_deceleration=-4,
+                                                               delta_t=0.2,
+                                                               wheel_base=2.8448)
         loss = TrajectoryPointDisplacementMSELoss(4)
 
     else:

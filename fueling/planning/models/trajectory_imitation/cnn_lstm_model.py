@@ -140,6 +140,168 @@ class TrajectoryImitationUnconstrainedCNNLSTM(nn.Module):
         return pred_traj[:, 1:, :]
 
 
+class TrajectoryImitationKinematicConstrainedCNNLSTM(nn.Module):
+    def __init__(self, pred_horizon, max_abs_steering_angle, max_acceleration,
+                 max_deceleration, delta_t, wheel_base, embed_size=64,
+                 hidden_size=128, cnn_net=models.mobilenet_v2,
+                 pretrained=True):
+        super(TrajectoryImitationKinematicConstrainedCNNLSTM, self).__init__()
+        self.compression_cnn_layer = nn.Conv2d(12, 3, 3, padding=1)
+        self.cnn = cnn_net(pretrained=pretrained)
+        self.cnn_out_size = 1000
+        for param in self.cnn.parameters():
+            param.requires_grad = True
+
+        self.pred_horizon = pred_horizon
+
+        self.h0_fc_layer = torch.nn.Sequential(
+            nn.Linear(3 + self.cnn_out_size, 512),
+            nn.ReLU(),
+            nn.Linear(512, 128),
+            nn.ReLU(),
+        )
+
+        self.c0 = torch.zeros(1, 1, hidden_size)
+        self.c0 = nn.Parameter(self.c0, requires_grad=True)
+
+        self.lstm = nn.LSTM(embed_size, hidden_size,
+                            num_layers=1, batch_first=True)
+
+        self.embedding_fc_layer = torch.nn.Sequential(
+            nn.Linear(2, embed_size),
+            nn.ReLU()
+        )
+
+        self.output_fc_layer = torch.nn.Sequential(
+            nn.Linear(hidden_size + self.cnn_out_size + 3, 2),
+        )
+
+        self.max_abs_steering_angle = max_abs_steering_angle
+        self.acceleration_range = max_acceleration - max_deceleration
+        self.max_acceleration = max_acceleration
+        self.max_deceleration = max_deceleration
+        self.delta_t = delta_t
+        self.wheel_base = wheel_base
+        # TODO(Jinyun): it's not accurate as xy pose is given as rear center points
+        self.lf = wheel_base / 2
+        self.lr = wheel_base / 2
+
+    def kinematic_constraints_layer(self, current_action):
+        steering = current_action[:, 0]
+        a = current_action[:, 1]
+        constrained_steering = torch.tanh(
+            steering) * self.max_abs_steering_angle
+        constrained_a = torch.tanh(a) * 0.5 * self.acceleration_range
+        + (self.max_acceleration - 0.5 * self.acceleration_range)
+        return torch.cat((constrained_steering.clone().unsqueeze(1),
+                          constrained_a.clone().unsqueeze(1)), dim=1)
+
+    def rear_kinematic_model_layer(self, current_states, current_action):
+        '''
+        current_states: x_0, y_0, phi_0, v_0
+        current_action: steering_0, a_0
+        return predicted_states
+        '''
+        x_0 = current_states[:, 0]
+        y_0 = current_states[:, 1]
+        phi_0 = current_states[:, 2]
+        v_0 = current_states[:, 3]
+        steering_0 = current_action[:, 0]
+        a_0 = current_action[:, 1]
+
+        delta_v = a_0
+        delta_phi = (v_0 + 0.5 * delta_v) / \
+            self.wheel_base * torch.tan(steering_0)
+        delta_x = (v_0 + 0.5 * delta_v) * torch.cos(phi_0 + 0.5 * delta_phi)
+        delta_y = (v_0 + 0.5 * delta_v) * torch.sin(phi_0 + 0.5 * delta_phi)
+
+        # delta_v = a_0
+        # delta_phi = v_0 / self.wheel_base * torch.tan(steering_0)
+        # delta_x = v_0 * torch.cos(phi_0)
+        # delta_y = v_0 * torch.sin(phi_0)
+
+        x_1 = delta_x * self.delta_t + x_0
+        y_1 = delta_y * self.delta_t + y_0
+        phi_1 = delta_phi * self.delta_t + phi_0
+        v_1 = delta_v * self.delta_t + v_0
+
+        return torch.cat((x_1.unsqueeze(1),
+                          y_1.unsqueeze(1),
+                          phi_1.unsqueeze(1),
+                          v_1.unsqueeze(1)), dim=1)
+
+    def center_kinematic_model_layer(self, current_states, current_action):
+        '''
+        current_states: x_0, y_0, phi_0, v_0
+        current_action: steering_0, a_0
+        return predicted_states
+        '''
+        x_0 = current_states[:, 0]
+        y_0 = current_states[:, 1]
+        phi_0 = current_states[:, 2]
+        v_0 = current_states[:, 3]
+        steering_0 = current_action[:, 0]
+        a_0 = current_action[:, 1]
+
+        beta = torch.atan(self.lr / (self.lr + self.lf)
+                          * torch.tan(steering_0))
+        delta_x = v_0 * torch.cos(phi_0 + beta)
+        delta_y = v_0 * torch.sin(phi_0 + beta)
+        delta_phi = v_0 / self.lr * torch.sin(beta)
+        delta_v = a_0
+
+        x_1 = delta_x * self.delta_t + x_0
+        y_1 = delta_y * self.delta_t + y_0
+        phi_1 = delta_phi * self.delta_t + phi_0
+        v_1 = delta_v * self.delta_t + v_0
+
+        return torch.cat((x_1.unsqueeze(1),
+                          y_1.unsqueeze(1),
+                          phi_1.unsqueeze(1),
+                          v_1.unsqueeze(1)), dim=1)
+
+    def forward(self, X):
+        img_feature, current_v, current_a, current_curvature = X
+        batch_size = img_feature.size(0)
+        ct = self.c0.repeat(1, batch_size, 1)
+        img_embedding = self.cnn(
+            self.compression_cnn_layer(img_feature)).view(batch_size, -1)
+        concatenated_states = torch.cat(
+            (img_embedding, current_v, current_a, current_curvature), dim=1)
+        ht = self.h0_fc_layer(concatenated_states).unsqueeze(0)
+        path_point_input = torch.zeros(
+            (batch_size, 3), device=img_feature.device)
+        current_states = torch.cat(
+            (path_point_input, current_v.clone()), dim=1)
+
+        # model output as [steering, a]
+        pred_traj = torch.zeros(
+            (batch_size, 1, 4), device=img_feature.device)
+        pred_traj = torch.cat(
+            (pred_traj, current_states.clone().unsqueeze(1)), dim=1)
+        for t in range(self.pred_horizon):
+            current_action = self.output_fc_layer(
+                torch.cat((ht.view(batch_size, -1), concatenated_states), dim=1))
+
+            current_action = self.kinematic_constraints_layer(
+                current_action)
+
+            previous_states = pred_traj[:, -1, :].clone()
+
+            current_states = self.rear_kinematic_model_layer(
+                previous_states, current_action)
+
+            pred_traj = torch.cat(
+                (pred_traj, current_states.clone().unsqueeze(1)), dim=1)
+
+            states_input = self.embedding_fc_layer(
+                current_action.clone()).view(batch_size, 1, -1)
+
+            _, (ht, ct) = self.lstm(states_input, (ht, ct))
+
+        return pred_traj[:, 2:, :]
+
+
 def rasterize_vehicle_box(pred_traj_x, pred_traj_y, box_heading,
                           heading_offset,
                           initial_box_x_idx,

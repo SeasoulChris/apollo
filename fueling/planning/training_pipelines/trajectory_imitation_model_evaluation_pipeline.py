@@ -18,11 +18,14 @@ from fueling.learning.train_utils import cuda
 from fueling.planning.datasets.img_in_traj_out_dataset \
     import TrajectoryImitationCNNFCDataset, \
     TrajectoryImitationConvRNNDataset, \
-    TrajectoryImitationSelfCNNLSTMDataset
+    TrajectoryImitationSelfCNNLSTMDataset, \
+    TrajectoryImitationCNNLSTMDataset
 from fueling.planning.models.trajectory_imitation.cnn_fc_model import \
     TrajectoryImitationCNNFC
 from fueling.planning.models.trajectory_imitation.cnn_lstm_model import \
-    TrajectoryImitationSelfCNNLSTM
+    TrajectoryImitationSelfCNNLSTM, \
+    TrajectoryImitationKinematicConstrainedCNNLSTM, \
+    TrajectoryImitationUnconstrainedCNNLSTM
 from fueling.planning.models.trajectory_imitation.conv_rnn_model import \
     TrajectoryImitationConvRNN
 from fueling.planning.input_feature_preprocessor.agent_poses_future_img_renderer import \
@@ -357,6 +360,30 @@ def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map
                                                              history_point_num=10,
                                                              ouput_point_num=10,
                                                              evaluate_mode=True)
+    elif model_type == "unconstrained_cnn_lstm":
+        model = TrajectoryImitationUnconstrainedCNNLSTM(pred_horizon=10)
+        test_dataset = TrajectoryImitationCNNLSTMDataset(test_set_folder,
+                                                         regions_list,
+                                                         renderer_config_file,
+                                                         renderer_base_map_img_dir,
+                                                         renderer_base_map_data_dir,
+                                                         ouput_point_num=10,
+                                                         evaluate_mode=True)
+
+    elif model_type == "kinematic_cnn_lstm":
+        model = TrajectoryImitationKinematicConstrainedCNNLSTM(pred_horizon=10,
+                                                               max_abs_steering_angle=0.52,
+                                                               max_acceleration=2,
+                                                               max_deceleration=-4,
+                                                               wheel_base=2.8448,
+                                                               delta_t=0.2)
+        test_dataset = TrajectoryImitationCNNLSTMDataset(test_set_folder,
+                                                         regions_list,
+                                                         renderer_config_file,
+                                                         renderer_base_map_img_dir,
+                                                         renderer_base_map_data_dir,
+                                                         ouput_point_num=10,
+                                                         evaluate_mode=True)
     else:
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
@@ -377,7 +404,8 @@ def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map
     else:
         print("Not using CUDA.")
 
-    if model_type == 'cnn' or model_type == 'self_cnn_lstm' or model_type == 'self_cnn_lstm_aux':
+    if model_type == 'cnn' or model_type == 'self_cnn_lstm' or model_type == 'self_cnn_lstm_aux'\
+            or model_type == "unconstrained_cnn_lstm" or model_type == "kinematic_cnn_lstm":
         cnn_model_evaluator(test_loader, model,
                             renderer_config_file, renderer_base_map_img_dir)
     elif model_type == 'conv_rnn':
