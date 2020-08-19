@@ -61,7 +61,7 @@ class EmergencyVehicleDataCrawler(BasePipeline):
         file_utils.makedirs('{}/{}'.format(curr_abs_path, video_storage_location))
         # get search results of seach_keywords on youtube
         try:
-            result = yt.search(keyword, type="video", video_duration="short", max_results=number_of_results)
+            result = yt.search(keyword, type="video", max_results=number_of_results)
         except Exception as e:
             logging.error(e)
         # video id set for checking replication and downloading
