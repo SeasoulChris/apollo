@@ -25,6 +25,7 @@ function LintDir() {
   find "$1" -type f -name '*.py' | \
       grep -v 'fueling/common/record/kinglong/cybertron' | \
       grep -v 'prediction/learning/datasets/apollo_pedestrian_dataset/data_for_learning_pb2.py' | \
+      grep -v 'fueling/learning/autotuner/proto' | \
       xargs ${LINT}
 
   find "$1" -type f -name '*.py' | \
