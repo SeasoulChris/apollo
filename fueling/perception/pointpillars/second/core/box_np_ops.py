@@ -4,7 +4,7 @@ import numpy as np
 from fueling.perception.pointpillars.second.core.geometry import (
     points_in_convex_polygon_3d_jit, points_count_convex_polygon_3d_jit)
 
-from perception_pointpillars.box_iou import rbbox_iou, rbbox_intersection
+from box_iou import rbbox_iou, rbbox_intersection
 '''
 try:
     from fueling.perception.pointpillars.second.core.box_iou import rbbox_iou, rbbox_intersection

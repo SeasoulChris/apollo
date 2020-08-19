@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from perception_pointpillars.point2voxel import (
+from point2voxel import (
     points_to_voxel_3d_np,
     points_to_voxel_3d_np_mean,
     points_to_voxel_3d_with_filtering)

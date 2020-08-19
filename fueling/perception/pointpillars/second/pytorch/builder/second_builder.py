@@ -19,6 +19,7 @@ from fueling.perception.pointpillars.second.protos import second_pb2
 from fueling.perception.pointpillars.second.pytorch.builder import losses_builder
 from fueling.perception.pointpillars.second.pytorch.models.voxelnet import (
     LossNormType, get_voxelnet_class)
+import fueling.perception.pointpillars.second.pytorch.models.net_multi_head
 
 
 def build(model_cfg: second_pb2.VoxelNet, voxel_generator,

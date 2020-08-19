@@ -1,7 +1,7 @@
 import numba
 import numpy as np
 from fueling.perception.pointpillars.second.core import box_np_ops
-from perception_pointpillars.nms import (
+from nms import (
     non_max_suppression_cpu, rotate_non_max_suppression_cpu)
 '''
 try:

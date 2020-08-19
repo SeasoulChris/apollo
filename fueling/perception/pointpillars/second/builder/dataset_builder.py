@@ -30,6 +30,8 @@ import numpy as np
 from fueling.perception.pointpillars.second.builder import dbsampler_builder
 from functools import partial
 from fueling.perception.pointpillars.second.utils.config_tool import get_downsample_factor
+import fueling.perception.pointpillars.second.data.kitti_dataset
+import fueling.perception.pointpillars.second.data.nuscenes_dataset
 
 
 def build(input_reader_config,

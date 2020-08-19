@@ -151,8 +151,11 @@ def train(config_path,
 
     model_dir = Path(model_dir)
     if not resume and model_dir.exists():
-        raise ValueError("model dir exists and you don't specify resume.")
+        print("model dir exists,net will resume from the dir")
+        resume = True
+
     model_dir.mkdir(parents=True, exist_ok=True)
+
     if result_path is None:
         result_path = model_dir / 'results'
     config_file_bkp = "pipeline.config"

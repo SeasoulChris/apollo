@@ -1,5 +1,5 @@
 import numpy as np
-from perception_pointpillars.nms import non_max_suppression
+from nms import non_max_suppression
 
 '''
 try:

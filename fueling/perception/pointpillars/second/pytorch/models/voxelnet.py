@@ -12,7 +12,7 @@ from fueling.perception.pointpillars.second.pytorch.core.losses import (
     WeightedSmoothL1LocalizationLoss,
     WeightedSoftmaxClassificationLoss)
 from fueling.perception.pointpillars.second.pytorch.models import (
-    middle, rpn, voxel_encoder)
+    middle, pointpillars, rpn, voxel_encoder)
 from fueling.perception.pointpillars.torchplus import metrics
 
 
