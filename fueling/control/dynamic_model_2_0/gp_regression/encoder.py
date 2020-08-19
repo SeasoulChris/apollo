@@ -423,7 +423,7 @@ class LSTMEncoder(nn.Module):
         # Run through RNN.
         # h0 and c0: (num_layers * num_directions, batch, hidden_size)
         h0, c0 = self.h0.repeat(1, N, 1), self.c0.repeat(1, N, 1)
-        logging.info(f'h0 shape is {h0.shape}')
+        logging.debug(f'h0 shape is {h0.shape}')
 
         # Forward propagate LSTM
         # (100 x N x hidden_size)

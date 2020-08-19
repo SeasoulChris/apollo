@@ -75,32 +75,35 @@ def extract_data_from_file(h5_file):
 
 
 class BosSetDataset(Dataset):
-    def __init__(self, storage, input_data_dir, validation_set, is_train=True, param_file=None):
+    def __init__(self, storage, input_data_dir, exclude_set, is_train=True, param_file=None):
         super().__init__()
         self.dst_dir = input_data_dir
         self.is_train = is_train
         self.files = storage.list_files(input_data_dir, suffix='.h5')
-        self.dataset_file_list = []
-        self.get_datasets(validation_set)
+        # list file only will slow down the training process
+        # self.dataset_file_list = []
+        self.datasets = []
+        self.get_datasets(exclude_set)
         # load standardization factors
         params = proto_utils.get_pb_from_bin_file(param_file, GPModelParam())
         self.input_mean = params.standardization_factor.input_mean.columns
         self.input_std = params.standardization_factor.input_std.columns
         logging.info(f'param factors are {self.input_mean} and {self.input_std}')
 
-    def get_datasets(self, validation_set):
+    def get_datasets(self, exclude_set):
         # loop over list files
         for cur_file in self.files:
-            if self.is_train == (cur_file not in validation_set):
-                # logging.info(cur_file)
-                self.dataset_file_list.append(cur_file)
+            if cur_file not in exclude_set:
+                logging.debug(cur_file)
+                self.datasets.append(extract_data_from_file(cur_file))
 
     def __len__(self):
         return len(self.dataset_file_list)
 
     def __getitem__(self, idx):
         # extract data set
-        cur_dataset = extract_data_from_file(self.dataset_file_list[idx])
+        # cur_dataset = extract_data_from_file(self.dataset_file_list[idx])
+        cur_dataset = self.datasets[idx]
         # standardization
         standardized_input = (cur_dataset[0] - self.input_mean) / self.input_std
         return (torch.from_numpy(standardized_input).float(),

@@ -23,7 +23,8 @@ import fueling.common.logging as logging
 class ValidationVisualization():
     """ visualize validation results """
 
-    def __init__(self, gp_model_path, validation_data_path, validation_result_path):
+    def __init__(self, gp_model_path, validation_data_path, validation_result_path,
+                 encoder=Encoder):
         super().__init__()
         self.model = None
         self.likelihood = None
@@ -40,6 +41,10 @@ class ValidationVisualization():
         self.output_dim = feature_config["output_dim"]
         self.timestr = time.strftime('%Y%m%d-%H%M%S')
 
+        # encoder model
+        #  u_dim=self.input_dim, hidden_dim=128, kernel_dim=self.kernel_dim for LSTM encoder
+        self.encoder_net_model = encoder(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
+
     def load_model(self):
         """
         load state dict for model and likelihood
@@ -48,12 +53,8 @@ class ValidationVisualization():
         file_path = os.path.join(self.model_path, 'gp_model.pth')
         logging.info(f"Loading GP model from {file_path}")
         model_state_dict, likelihood_state_dict = torch.load(file_path)
-        # encoder model
-        encoder_net_model = Encoder(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
-        # encoder_net_model = DilatedEncoder(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
-        # encoder_net_model =
-        # TransformerEncoderCNN(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
-        self.model = GPModel(self.inducing_points, encoder_net_model,
+
+        self.model = GPModel(self.inducing_points, self.encoder_net_model,
                              self.kernel_dim, self.output_dim)
         self.model.load_state_dict(model_state_dict)
 

@@ -422,7 +422,7 @@ if __name__ == '__main__':
     # DM2.0 model path
     platform_dir = '/fuel/fueling/control/dynamic_model_2_0/testdata'
     # model id
-    model_id = '20200714-2009'
+    model_id = 'LSTM_20200814-1550'
     # data id
     data_dir = '0708_2'
     # model training data normalization factors
@@ -432,9 +432,10 @@ if __name__ == '__main__':
     validation_data_path = os.path.join(platform_dir, data_dir, 'test')
     logging.info(f'validation data path is {validation_data_path}')
     # DM2.0 model
-    gp_model_path = os.path.join(validation_data_path, model_id)
+    gp_model_path = os.path.join(platform_dir, 'DM20_models', model_id)
     # golden set scenarios
     golden_set = '//fuel/fueling/control/dynamic_model_2_0/testdata/0602_golden_set'
+    is_first_run = False
     for scenario in os.listdir(golden_set):
         golden_set_data_dir = os.path.join(golden_set, scenario)
         print(golden_set_data_dir)
@@ -444,9 +445,10 @@ if __name__ == '__main__':
                                         DM10_model_path)
         evaluator.load_data()
         evaluator.get_imu_result()
-        evaluator.plot_IMU()
-        evaluator.get_DM10_result()
-        evaluator.get_echo_lincoln_result()
+        if is_first_run:
+            evaluator.plot_IMU()
+            evaluator.get_DM10_result()
+            evaluator.get_echo_lincoln_result()
         evaluator.get_DM20_result_from_features()
         evaluator.correct_non_overlap_data()
         evaluator.get_error_analyses()
