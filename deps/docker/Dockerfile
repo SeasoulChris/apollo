@@ -9,7 +9,8 @@ RUN apt update -y && \
         iputils-ping \
         libpcap-dev \
         libunwind-dev \
-        openjdk-8-jre && \
+        openjdk-8-jre \
+        libvtk6.3 && \
     apt clean -y
 
 # Install conda and create env.
