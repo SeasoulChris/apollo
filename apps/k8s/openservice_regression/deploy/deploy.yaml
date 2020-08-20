@@ -10,7 +10,7 @@ spec:
         spec:
           containers:
           - name: openservice-regression
-            image: hub.baidubce.com/apollofuel/openservice_regression:20200814_1234
+            image: hub.baidubce.com/apollofuel/openservice_regression:20200820_1511
             env:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
@@ -22,6 +22,16 @@ spec:
                 secretKeyRef:
                   name: bos-secret
                   key: sk
+            - name: OUTLOOK_USER
+              valueFrom:
+                secretKeyRef:
+                  name: outlook-secret
+                  key: user
+            - name: OUTLOOK_PASSWD
+              valueFrom:
+                secretKeyRef:
+                  name: outlook-secret
+                  key: passwd
           restartPolicy: OnFailure
           imagePullSecrets: 
           - name: baidubce

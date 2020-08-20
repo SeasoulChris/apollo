@@ -97,6 +97,7 @@ py_binary(
 
 py_test(
     name = "multi_job_control_profiling_metrics_test",
+    size = "large",
     srcs = ["multi_job_control_profiling_metrics_test.py"],
     data = [
         "//fueling/profiling/control/testdata:control_conf",

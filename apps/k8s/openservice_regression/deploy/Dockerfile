@@ -4,7 +4,7 @@ RUN apt update && \
     apt install -y python3-pip && \
     apt clean
 
-RUN pip3 install --no-cache-dir \
+RUN pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir \
         requests \
         absl-py
 

@@ -10,7 +10,6 @@ import email.encoders
 import mimetypes
 import os
 import smtplib
-import sys
 import time
 import traceback
 
@@ -39,7 +38,6 @@ SIMPlEHDMAP_TEAM = [
     'v_panxuechao@baidu.com',
 ]
 PERCEPTION_TEAM = [
-    'chenguang09@baidu.com',
     'zhangweide@baidu.com',
 ]
 QA_TEAM = [
@@ -176,13 +174,9 @@ class EmailService(object):
                         receivers, attachments={}):
         """Send email via SMTP server."""
         smtp = smtplib.SMTP()
-        try:
-            smtp.connect(host, port)
-            smtp.starttls()
-            smtp.login(from_addr, password)
-        except Exception as e:
-            sys.stderr.write('Accessing email server failed with error: {}\n'.format(e))
-            return
+        smtp.connect(host, port)
+        smtp.starttls()
+        smtp.login(from_addr, password)
         message = MIMEMultipart('alternative')
         message.attach(MIMEText(content, 'html'))
         message['Subject'] = subject
