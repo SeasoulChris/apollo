@@ -128,9 +128,9 @@ class TrajectoryImitationConvRNN(nn.Module):
         # only return predicted points when exporting onnx or jit tracing
         # return pred_points[:, 1:, :]
 
-        return (pred_pos_dists[:, 1:, :, :, :],
+        return (pred_points[:, 1:, :],
                 pred_boxs[:, 1:, :, :, :],
-                pred_points[:, 1:, :],
+                pred_pos_dists[:, 1:, :, :, :],
                 M_B_k)
 
 
@@ -271,9 +271,9 @@ class TrajectoryImitationDeeperConvRNN(nn.Module):
         # only return predicted points when exporting onnx or jit tracing
         # return pred_points[:, 1:, :]
 
-        return (pred_pos_dists[:, 1:, :, :, :],
+        return (pred_points[:, 1:, :],
                 pred_boxs[:, 1:, :, :, :],
-                pred_points[:, 1:, :],
+                pred_pos_dists[:, 1:, :, :, :],
                 M_B_k)
 
 
@@ -402,9 +402,9 @@ class TrajectoryImitationConvRNNUnetResnet18v1(nn.Module):
         # only return predicted points when exporting onnx or jit tracing
         # return pred_points[:, 1:, :]
 
-        return (pred_pos_dists[:, 1:, :, :, :],
+        return (pred_points[:, 1:, :],
                 pred_boxs[:, 1:, :, :, :],
-                pred_points[:, 1:, :],
+                pred_pos_dists[:, 1:, :, :, :],
                 M_B_k)
 
 
@@ -511,9 +511,9 @@ class TrajectoryImitationConvRNNUnetResnet18v2(nn.Module):
         # only return predicted points when exporting onnx or jit tracing
         # return pred_points[:, 1:, :]
 
-        return (pred_pos_dists[:, 1:, :, :, :],
+        return (pred_points[:, 1:, :],
                 pred_boxs[:, 1:, :, :, :],
-                pred_points[:, 1:, :],
+                pred_pos_dists[:, 1:, :, :, :],
                 M_B_k)
 
 

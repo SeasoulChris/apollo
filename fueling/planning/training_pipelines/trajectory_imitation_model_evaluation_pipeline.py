@@ -152,8 +152,8 @@ def cnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_i
 
 
 def calculate_rnn_displacement_error(pred, y):
-    pred_points = pred[2]
-    true_points = y[2]
+    pred_points = pred[0]
+    true_points = y[0]
     points_diff = pred_points - true_points
     pose_diff = points_diff[:, :, 0:2]
     heading_diff = points_diff[:, :, 2]
@@ -170,7 +170,7 @@ def visualize_rnn_result(renderer, img_feature, coordinate_heading,
                          message_timestamp_sec, pred_points_dir, explicit_memory_dir,
                          pos_dists_dir, pos_boxs_dir, pred, y):
 
-    batched_pred_points = pred[2]
+    batched_pred_points = pred[0]
     for i, pred_point in enumerate(batched_pred_points):
         # Draw pred_box in blue
         pred_box_img = renderer.draw_agent_box_future_trajectory(
@@ -187,7 +187,7 @@ def visualize_rnn_result(renderer, img_feature, coordinate_heading,
             pred_pose_img, (255, 0, 255))
 
         # Draw true_pose in yellow
-        true_point = y[2][i]
+        true_point = y[0][i]
         true_pose_img = renderer.draw_agent_pose_future_trajectory(
             true_point.cpu().numpy(), coordinate_heading[i])
         true_pose_img = np.repeat(true_pose_img, 3, axis=2)
@@ -215,7 +215,7 @@ def visualize_rnn_result(renderer, img_feature, coordinate_heading,
                                 format(message_timestamp_sec[i])),
                    visual_mat)
 
-    batched_pred_pos_dists = pred[0]
+    batched_pred_pos_dists = pred[2]
     for i, pred_pos_dist in enumerate(batched_pred_pos_dists):
         origianl_shape = pred_pos_dist[0].shape
         last_mat = np.zeros((origianl_shape[1],

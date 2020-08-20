@@ -564,7 +564,10 @@ class TrajectoryImitationSelfCNNLSTMWithRasterizer(nn.Module):
             #     self.half_box_width,
             #     idx_mesh)
 
-        return pred_boxs, pred_traj[:, 1:, :]
+        # for model export usage
+        # return pred_traj[:, 1:, :]
+
+        return pred_traj[:, 1:, :], pred_boxs
 
 
 if __name__ == "__main__":

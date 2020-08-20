@@ -29,8 +29,7 @@ from fueling.planning.models.trajectory_imitation.cnn_lstm_model import \
     TrajectoryImitationSelfCNNLSTMWithRasterizer
 from fueling.planning.models.trajectory_imitation.conv_rnn_model import TrajectoryImitationConvRNN
 from fueling.planning.models.trajectory_imitation.image_representation_loss import \
-    TrajectoryImitationConvRNNLoss, \
-    TrajectoryImitationSelfCNNLSTMWithRasterizerEnvLoss
+    ImageRepresentationLoss
 from fueling.planning.models.trajectory_imitation.trajectory_point_displacement_loss import \
     TrajectoryPointDisplacementMSELoss
 from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator \
@@ -152,16 +151,13 @@ def training(model_type,
         #     input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
         # model = TrajectoryImitationConvRNNUnetResnet18v2(
         #     input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
-        loss = TrajectoryImitationConvRNNLoss(pos_dist_loss_weight=1,
-                                              box_loss_weight=1,
-                                              pos_reg_loss_weight=1)
-        # loss = TrajectoryImitationConvRNNWithEnvLoss(pos_dist_loss_weight=1,
-        #                                              box_loss_weight=1,
-        #                                              pos_reg_loss_weight=1,
-        #                                              collision_loss_weight=1,
-        #                                              offroad_loss_weight=1,
-        #                                              onrouting_loss_weight=1,
-        #                                              imitation_dropout=False)
+        loss = ImageRepresentationLoss(pos_reg_loss_weight=1,
+                                       pos_dist_loss_weight=1,
+                                       box_loss_weight=1,
+                                       collision_loss_weight=1,
+                                       offroad_loss_weight=1,
+                                       onrouting_loss_weight=0,
+                                       imitation_dropout=False)
 
     elif model_type == 'self_cnn_lstm':
         train_dataset = TrajectoryImitationSelfCNNLSTMDataset(train_set_dir,
@@ -218,12 +214,16 @@ def training(model_type,
             vehicle_width=1.055,
             embed_size=64,
             hidden_size=128)
-        loss = TrajectoryImitationSelfCNNLSTMWithRasterizerEnvLoss(box_loss_weight=1,
-                                                                   pos_reg_loss_weight=1,
-                                                                   collision_loss_weight=1,
-                                                                   offroad_loss_weight=1,
-                                                                   onrouting_loss_weight=1,
-                                                                   imitation_dropout=False)
+        loss = ImageRepresentationLoss(pos_reg_loss_weight=1,
+                                       pos_dist_loss_weight=0,
+                                       box_loss_weight=1,
+                                       collision_loss_weight=1,
+                                       offroad_loss_weight=1,
+                                       onrouting_loss_weight=1,
+                                       imitation_dropout=False,
+                                       batchwise_focal_loss=False,
+                                       losswise_focal_loss=False,
+                                       focal_loss_gamma=1)
     elif model_type == 'unconstrained_cnn_lstm':
         train_dataset = TrajectoryImitationCNNLSTMDataset(train_set_dir,
                                                           regions_list,
