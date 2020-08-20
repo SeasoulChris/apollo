@@ -16,7 +16,7 @@ import fueling.common.logging as logging
 
 
 class Urbansound8K(object):
-    def __init__(self, data_dir, sample_rate=22050, length=1.5, stride=0.5):
+    def __init__(self, data_dir, sample_rate=48000, length=1.5, stride=0.5):
         self.data_dir = data_dir
         self.sample_rate = sample_rate
         self.length = length
@@ -179,6 +179,7 @@ class MLNet(nn.Module):
 class SirenNet(nn.Module):
     def __init__(self):
         super(SirenNet, self).__init__()
+        self.downsample = torchaudio.transforms.Resample(48000, 22050)
         self.wavenet = WaveNet()
         self.mlnet = MLNet()
         self.mfcc = torchaudio.transforms.MFCC(sample_rate=22050,
@@ -188,6 +189,7 @@ class SirenNet(nn.Module):
 
     def forward(self, X):
         eps = 1e-20
+        X = self.downsample(X)
         wavenet_out = self.wavenet(X)
         mfcc_out = self.mfcc(X)
         log_mel_out = torch.log(self.mel_spec(X) + eps)

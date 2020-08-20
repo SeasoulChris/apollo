@@ -12,7 +12,7 @@ def jit_trace_audio_model(torch_model_file, jit_model_file, device):
     model = SirenNet()
     model.load_state_dict(torch.load(torch_model_file))
     model.eval()
-    X = torch.ones([1, 1, 33075])
+    X = torch.ones([6, 1, 72000])
     _ = model.forward(X)
     if device == 'cpu':
         traced_model = torch.jit.trace(model.cpu(), (X,))
