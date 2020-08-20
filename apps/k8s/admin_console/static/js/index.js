@@ -385,6 +385,7 @@ $(document).ready(function () {
         };
         // Get the job-id and action from dialog
         job_data["job_id"] = button.data("job-id");
+        var _id = button.data("id")
         job_data["action"] = button.data("job-action");
 
         // Apply the chinese action
@@ -417,17 +418,17 @@ $(document).ready(function () {
                      $('#myModal').modal("hide");
 
                      // Set the data-job-action attr
-                     $("#button-"+job_data["job_id"]).attr("data-job-action", not_action);
+                     $("#button-"+ _id ).attr("data-job-action", not_action);
                      // Set the job-action of button data
                      button.data("job-action", not_action);
 
                      // update the table
                      // Update the is_valid
-                     $("#is-valid-" + job_data["job_id"]).text(is_valid);
+                     $("#is-valid-" + _id ).text(is_valid);
                      // Update the action
-                     $("#button-" + job_data["job_id"]).text("设置"+action_label[not_action]);
+                     $("#button-" + _id ).text("设置"+action_label[not_action]);
                      // Update the action history
-                     $("#flag-" + job_data["job_id"]).before('<tr style="display: none" class="operation_span">' +
+                     $("#flag-" + _id).before('<tr style="display: none" class="operation_span">' +
                         '<td colspan="11" style="border-top: none">' +
                         "任务被" + result["operation"]["email"] + "在" + result["operation"]["time"] +
                         "设置为" + action_label[job_data["action"]] + "。备注是：" + result["operation"]["comments"] + "。</td></tr>");
@@ -436,9 +437,9 @@ $(document).ready(function () {
                      $(document).trigger("widget.mb.show", {type:"ok",message:"任务（序号："+job_data["job_id"]+"）被设置为"+action_label[job_data["action"]]});
 
                      // Expand the history action
-                     $("#expand-" + job_data["job_id"]).css("display", "none");
-                     $("#collapse-" + job_data["job_id"]).css("display", "inline");
-                     $("#button-" + job_data["job_id"]).parent().parent().nextUntil(".flag").css("display", "table-row");
+                     $("#expand-" + _id).css("display", "none");
+                     $("#collapse-" + _id).css("display", "inline");
+                     $("#button-" + _id).parent().parent().nextUntil(".flag").css("display", "table-row");
                 }
             });
             return false;

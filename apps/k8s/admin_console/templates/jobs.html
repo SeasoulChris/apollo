@@ -130,18 +130,18 @@
             job.failure_code }}
         </td>
         <td>{{ job.progress }}</td>
-        <td id="is-valid-{{ job.job_id }}">{{ job.is_valid }}</td>
+        <td id="is-valid-{{ job._id }}">{{ job.is_valid }}</td>
         <td>{{ job.input_data_size }}</td>
         <td>
-            <a style="width: 100%" id="button-{{ job.job_id }}" class="job-modal" data-toggle="modal"
-               data-target="#myModal" data-job-id="{{ job.job_id }}"
+            <a style="width: 100%" id="button-{{ job._id }}" class="job-modal" data-toggle="modal"
+               data-target="#myModal" data-job-id="{{ job.job_id }}" data-id="{{ job._id }}"
                data-job-action="{{ job.is_valid | show_en_action }}">
                 {{ job.is_valid | show_action }}
             </a>
         </td>
         <td>
-            <a id="expand-{{ job.job_id }}" class="job_expand" style="display: inline">展开</a>
-            <a id="collapse-{{ job.job_id }}" class="job_collapse" style="display: none">收起</a>
+            <a id="expand-{{ job._id }}" class="job_expand" style="display: inline">展开</a>
+            <a id="collapse-{{ job._id }}" class="job_collapse" style="display: none">收起</a>
         </td>
     </tr>
 
@@ -157,7 +157,7 @@
         </td>
     </tr>
     {% endfor %}
-    <tr class="flag" id="flag-{{ job.job_id }}"></tr>
+    <tr class="flag" id="flag-{{ job._id }}"></tr>
     {% endfor %}
 </table>
 
