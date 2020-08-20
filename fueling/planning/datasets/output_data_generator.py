@@ -9,9 +9,8 @@ import fueling.common.logging as logging
 import fueling.common.spark_op as spark_op
 
 
-SKIP_EXISTING_DST_FILE = False
-SRC_DIR_PREFIX = 'modules/planning/learning_data'
-DST_DIR_PREFIX = 'modules/planning/output_data'
+SRC_DIR_PREFIX = 'modules/planning/learning_data/batch_20200814_161219'
+DST_DIR_PREFIX = 'modules/planning/output_data_test_0820'
 # for local test
 # SRC_DIR_PREFIX = 'apollo/data/titan_test'
 # DST_DIR_PREFIX = 'apollo/data/output_data_titan'
@@ -23,52 +22,29 @@ DST_DIR_PREFIX = 'modules/planning/output_data'
 class OutputDataGenerator(BasePipeline):
     """output data for offline training"""
 
-    # def __init__(self):
-    #     self.src_dir_prefix = 'modules/planning/learning_data'
-
     def run(self):
         # RDD(bin_files)
         bin_files = (
-            self.to_rdd(self.our_storage().list_files(SRC_DIR_PREFIX))
-            .filter(spark_op.filter_path(['*.bin'])))
-        # labeled_bin_files = (
-        #     # RDD(label_files)
-        #     self.to_rdd(self.our_storage().list_files(SRC_DIR_PREFIX))
-        #     # RDD(bin_files)
-        #     .map(lambda label_file: label_file.replace('.bin.future_status.npy', '.bin')))
-        # RDD(todo_bin_files)
-        todo_bin_files = bin_files
-        logging.debug(bin_files.collect())
-
-        # if SKIP_EXISTING_DST_FILE:
-        #     # RDD(todo_bin_files)
-        #     todo_bin_files = todo_bin_files.subtract(labeled_bin_files).distinct()
-        logging.info(todo_bin_files.count())
-        self.run_internal(todo_bin_files)
+            self.to_rdd(self.our_storage().list_files(SRC_DIR_PREFIX, '.bin')))
+        bin_files = bin_files.repartition(1000)
+        self.run_internal(bin_files)
 
     def run_internal(self, bin_files_rdd):
         """Run the pipeline with given arguments."""
         # RDD(0/1), 1 for success
-        logging.info(bin_files_rdd.count())
-        # bin_files_rdd = bin_files_rdd.keyBy(lambda src_file: os.path.dirname(src_file))
-        # logging.info(f'(file_dir, src_file): {bin_files_rdd.collect()}')
         # combine every 2 rdd files
         # Paired RDD(dir, (file_id,file_dir))
         bin_files_rdd_origin = bin_files_rdd.map(self.get_file_id).cache()
-        # logging.info(bin_files_rdd_origin.collect())
         # get the id of the first file (when the file ID starts from non-zero)
         # combine file ids in a folder
         # find the minimum id in each folder
         min_fileID_rdd = (bin_files_rdd_origin.keys().reduceByKey(min))
-        # reduceByKey(
-        #     lambda dir_FileID: dir_FileID[1] >= 0))  # .reduceByKey(min)
-        logging.debug(min_fileID_rdd.collect())
-        # logging.info(f'first file id in origin bin files: {grouped}')
 
         # Paired RDD(file_id-1, (dir, file_dir))
         bin_files_rdd_shifted = (
             bin_files_rdd
             .map(lambda elem: self.get_file_id(elem, True)))
+        logging.info(bin_files_rdd_shifted.first())
         # remove the first file (with min_fileID) in shifted bin files rdd
         # for example:
         # origin RDD fileIDs are (37, 38, 39)
