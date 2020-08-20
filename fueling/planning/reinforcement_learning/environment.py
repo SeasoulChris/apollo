@@ -59,6 +59,7 @@ class ADSEnv(object):
         self.violation_rule = False
         self.arrival = False
         self.collision = False
+        self.out_lane = False
         self.speed = 0
         self.is_grading_done = False
         self.is_input_ready = False
@@ -66,7 +67,7 @@ class ADSEnv(object):
         cyber.init()
         self.rl_node = cyber.Node("rl_node_learning")
         self.gradingsub = self.rl_node.create_reader("/apollo/grading/1",
-                                                     grading_result_pb2.FrameResult,
+                                                     grading_result_pb2.GradingResult,
                                                      self.callback_grading)
         self.chassissub = self.rl_node.create_reader("/apollo/canbus/chassis/1",
                                                      chassis_pb2.Chassis,
@@ -166,6 +167,7 @@ class ADSEnv(object):
         self.violation_rule = False
         self.arrival = False
         self.collision = False
+        self.out_lane = False
         self.speed = 0
         self.is_grading_done = False
         self.is_input_ready = False
@@ -205,8 +207,11 @@ class ADSEnv(object):
             if result.name == "Collision" and result.is_pass is False:
                 self.reward -= 500
                 self.collision = True
-            if result.name == "DistanceToLaneCenter":
-                dist_lane_center = result.score
+            if result.name == "DistanceToLaneCenter" and result.is_pass is True:
+                dist_lane_center = abs(result.score)
+            if result.name == "DistanceToLaneCenter" and result.is_pass is False:
+                self.reward -= 250
+                self.out_lane = True
 
             # test whether the vehicle violates the traffic rule
             if result.name == "AccelerationLimit" and result.is_pass is False:
