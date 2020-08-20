@@ -11,6 +11,7 @@ import time
 from absl import flags
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.job_utils import JobUtils
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -100,11 +101,13 @@ class MultiJobControlProfilingVisualization(BasePipeline):
             target_dir = object_storage.abs_path(target_prefix)
             origin_dir = target_dir
             logging.info(F'target_dir: {target_dir}')
+            JobUtils(job_id).save_job_progress(60)
 
             if not os.path.isdir(origin_dir):
                 error_msg = 'No visualization results: the source data path does not exist.'
                 summarize_tasks([], origin_dir, target_dir, job_owner, job_email, error_msg)
                 logging.info('Control Profiling Visualization: No Results, PROD')
+                JobUtils(job_id).save_job_progress(60)
                 return
 
             """Step 2: Traverse files under input paths and generate todo_task paths:"""
@@ -150,11 +153,13 @@ class MultiJobControlProfilingVisualization(BasePipeline):
             )
             # if dirs have been graded before, then list them as follows
             logging.info(F'todo_tasks before filtering: {todo_tasks.collect()}')
+            JobUtils(job_id).save_job_progress(70)
 
             if not todo_tasks.collect():
                 error_msg = 'No visualization results: no new qualified data uploaded.'
                 summarize_tasks([], origin_dir, target_dir, job_owner, job_email, error_msg)
                 logging.info('Control Profiling Visualization: No Results, PROD')
+                JobUtils(job_id).save_job_progress(70)
                 return
 
             # todo_tasks = graded tasks - visualized tasks
@@ -164,15 +169,18 @@ class MultiJobControlProfilingVisualization(BasePipeline):
             # /mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19
             # /Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414'
             logging.info(F'todo_tasks to run: {todo_tasks.collect()}')
+            JobUtils(job_id).save_job_progress(80)
 
             if not todo_tasks.collect():
                 error_msg = 'No visualization results: all the data have been processed before.'
                 summarize_tasks([], origin_dir, target_dir, job_owner, job_email, error_msg)
                 logging.info('Control Profiling Visualization: No Results, PROD')
+                JobUtils(job_id).save_job_progress(80)
                 return
 
             """Step 3: Process data with profiling algorithm"""
             self.process(todo_tasks.values())
+            JobUtils(job_id).save_job_progress(90)
 
             """Step 4: Summarize by scanning the target directory and send out emails"""
             summarize_tasks(todo_tasks.values().collect(), origin_dir, target_dir,
@@ -180,6 +188,7 @@ class MultiJobControlProfilingVisualization(BasePipeline):
 
         logging.info(f"Timer: total run() - {time.perf_counter() - tic_start: 0.04f} sec")
         logging.info('Control Profiling Visualization: All Done, PROD')
+        JobUtils(job_id).save_job_progress(100)
 
     def process(self, todo_tasks):
         """Run the pipeline with given parameters"""

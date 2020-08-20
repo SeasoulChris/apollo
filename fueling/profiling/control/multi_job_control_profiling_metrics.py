@@ -12,6 +12,7 @@ import time
 from absl import flags
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.job_utils import JobUtils
 from fueling.profiling.common.sanity_check import sanity_check
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
@@ -42,6 +43,9 @@ flags.DEFINE_string('ctl_metrics_weighted_score', 'MRAC_SCORE',
 
 flags.DEFINE_boolean('ctl_metrics_save_report', True,
                      'whether to save h5 files')
+
+flags.DEFINE_boolean('ctl_metrics_test_in_local', False,
+                     'if test_in_local, skip call JobUtils and pass the test')
 
 
 class MultiJobControlProfilingMetrics(BasePipeline):
@@ -135,12 +139,16 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                                          feature_utils.CONF_FILE, feature_utils.CHANNELS)
             if sanity_status == 'OK':
                 logging.info('Sanity_Check: Passed.')
+                if not flags.FLAGS.ctl_metrics_test_in_local:
+                    JobUtils(job_id).save_job_progress(10)
             else:
                 logging.error(sanity_status)
                 summarize_tasks([], origin_dir, target_dir,
                                 job_owner, job_email, sanity_status)
                 logging.info('Control Profiling Metrics: No Results')
-                return
+                if not flags.FLAGS.ctl_metrics_test_in_local:
+                    JobUtils(job_id).save_job_progress(10)
+                raise Exception("Sanity_check failed!")
 
             """Step 3: Parse multiple vehicle types to extend the input/output paths: """
             #   (1) origin_vehicle_dir: key: vehicle_type,
@@ -177,6 +185,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             # '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),...]
             logging.info(
                 F'target_vehicle_abs_dir: {target_vehicle_abs_dir.collect()}')
+            if not flags.FLAGS.ctl_metrics_test_in_local:
+                JobUtils(job_id).save_job_progress(20)
 
             """Step 4: Copy the vehicle_param conf to vehicle_type folder"""
             #   source_path: vehicle_type dir of the input path
@@ -216,6 +226,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             # todo_task_dirs:[('Mkz7', '/mnt/bos/modules/control/profiling/multi_job
             #   /Mkz7/2019-05-01/20190501110414'), ...]
             logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
+            if not flags.FLAGS.ctl_metrics_test_in_local:
+                JobUtils(job_id).save_job_progress(30)
 
             # Addtional process only for apollo internal daily-job: skip the processed data
             if not self.is_partner_job():
@@ -326,6 +338,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             #   '/mnt/bos/modules/control/profiling/multi_job/Mkz7/2019-05-01/20190501110414'),...]
             logging.info(F'complete_target_task after _reorg_target_dir:'
                          F'{complete_target_task.collect()}')
+            if not flags.FLAGS.ctl_metrics_test_in_local:
+                JobUtils(job_id).save_job_progress(40)
 
             """Step 7: Process data with profiling algorithm"""
             self.process(complete_target_task)
@@ -337,6 +351,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         logging.info(
             f"Timer: total run() - {time.perf_counter() - tic_start: 0.04f} sec")
         logging.info('Control Profiling Metrics: All Done')
+        if not flags.FLAGS.ctl_metrics_test_in_local:
+            JobUtils(job_id).save_job_progress(50)
 
     def process(self, target_task):
         """Process data with profiling algorithm: feature extraction and grading evaluation"""
