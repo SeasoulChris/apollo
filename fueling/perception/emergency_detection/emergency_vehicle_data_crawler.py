@@ -43,13 +43,15 @@ class EmergencyVehicleDataCrawler(BasePipeline):
 
     def run(self):
         time_start = time.time()
+        # change here to configure the crawler
         keyword = "fire truck responding"
-        audio_location = "data/FireVid"
+        location = "data/FireVid"
         num_of_results = 1
         self.to_rdd(range(1)).foreach(
+            # change to self.downloadAudio if audio is needed
             lambda instance: self.downloadVideo(
                 keyword,
-                audio_location,
+                location,
                 num_of_results
             )
         )

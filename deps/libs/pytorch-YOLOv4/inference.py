@@ -177,21 +177,14 @@ def inference_yolov4(is_local=False):
 
 
 
-def autolabel(modelfile=None, imagefolder=None):
-
-    # if len(sys.argv) != 3:
-    #     print("command format: python inference.py [model_path] [image_folder]")
-    #     return
+def autolabel(modelfile=None, imagelist=None):
 
     if modelfile == None:
         print("modelfile not specified!")
         return
-    if imagefolder == None:
+    if imagelist == None:
         print("imagefolder not specified!")
         return
-
-    # modelfile = sys.argv[1]
-    # imagefolder = sys.argv[2]
 
     n_classes = 80
     height = 320
@@ -204,13 +197,7 @@ def autolabel(modelfile=None, imagefolder=None):
 
     use_cuda = False
 
-    img_files_1 = glob.glob(imagefolder+"/*.png")
-    img_files_2 = glob.glob(imagefolder+"/*.jpg")
-    img_files_3 = glob.glob(imagefolder+"/*.jpeg")
-    img_files_4 = glob.glob(imagefolder+"/*.bmp")
-    img_files = img_files_1 + img_files_2 + img_files_3 + img_files_4
-
-    for img_file in img_files:
+    for img_file in imagelist:
         print('processing ', img_file, '...')
         img = cv2.imread(img_file)
 
