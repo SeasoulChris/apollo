@@ -347,12 +347,12 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             """Step 8: Summarize by scanning the target directory and send out emails"""
             summarize_tasks(complete_target_task.keys().collect(),
                             origin_dir, target_dir, job_owner, job_email)
+            if not flags.FLAGS.ctl_metrics_test_in_local:
+                JobUtils(job_id).save_job_progress(50)
 
         logging.info(
             f"Timer: total run() - {time.perf_counter() - tic_start: 0.04f} sec")
         logging.info('Control Profiling Metrics: All Done')
-        if not flags.FLAGS.ctl_metrics_test_in_local:
-            JobUtils(job_id).save_job_progress(50)
 
     def process(self, target_task):
         """Process data with profiling algorithm: feature extraction and grading evaluation"""
