@@ -91,7 +91,9 @@ class MapGenSingleLine(BasePipeline):
 
         JobUtils(job_id).save_job_input_data_size(source_dir)
         JobUtils(job_id).save_job_sub_type('')
-        receivers = email_utils.SIMPlEHDMAP_TEAM + email_utils.D_KIT_TEAM
+        receivers = email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
+        if os.environ.get('PARTNER_EMAIL'):
+            receivers.append(os.environ.get('PARTNER_EMAIL'))
         if not sanity_check(source_dir, object_storage.abs_path(dst_prefix),
                             job_owner, job_id, receivers):
             raise Exception("Sanity_check failed!")

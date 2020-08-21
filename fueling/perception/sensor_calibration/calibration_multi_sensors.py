@@ -46,10 +46,19 @@ class SensorCalibrationPipeline(BasePipeline):
         redis_utils.redis_extend_dict(redis_key, redis_value)
         JobUtils(job_id).save_job_input_data_size(source_dir)
         JobUtils(job_id).save_job_sub_type('')
+
+        # Send result to job owner.
+        receivers = email_utils.PERCEPTION_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
+        if os.environ.get('PARTNER_EMAIL'):
+            receivers.append(os.environ.get('PARTNER_EMAIL'))
         self.error_text = 'Calibration error, please contact after-sales technical support'
+
         if file_utils.getInputDirDataSize(source_dir) >= 1 * 1024 * 1024 * 1024:
             JobUtils(job_id).save_job_failure_code('E200')
-            return
+            title = 'Your sensor calibration job failed!'
+            content = 'Your input data is over size(1GB)!'
+            email_utils.send_email_error(title, content, receivers)
+            raise Exception("Input data is over size!")
         try:
             result_files, sub_type = self.run_internal(self.FLAGS.get('input_data_path'))
         except BaseException as e:
@@ -58,10 +67,6 @@ class SensorCalibrationPipeline(BasePipeline):
                                                  self.error_text, False)
             logging.error(e)
 
-        # Send result to job owner.
-        receivers = email_utils.PERCEPTION_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
-        if os.environ.get('PARTNER_EMAIL'):
-            receivers.append(os.environ.get('PARTNER_EMAIL'))
         logging.info(f"Generated sub_type {len(sub_type)} results: {sub_type}")
         sub_job_type = 'All'
         if len(sub_type) == 1:
@@ -83,6 +88,7 @@ class SensorCalibrationPipeline(BasePipeline):
                            'job_status': 'failed', 'sub_type': sub_job_type}
             redis_utils.redis_extend_dict(redis_key, redis_value)
             logging.error('Failed to process sensor calibration job')
+            raise Exception("Failed to process sensor calibration job!")
         result = JobUtils(job_id).get_job_info()
         for job_info in result:
             if (int(time.mktime(datetime.now().timetuple())
@@ -90,6 +96,7 @@ class SensorCalibrationPipeline(BasePipeline):
                 JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
                                                      self.error_text, False)
                 JobUtils(job_id).save_job_failure_code('E204')
+                raise Exception("The running time of sensor calibration is more than three days!")
         JobUtils(job_id).save_job_sub_type(sub_job_type)
         JobUtils(job_id).save_job_progress(100)
 
@@ -97,8 +104,10 @@ class SensorCalibrationPipeline(BasePipeline):
         # If it's a partner job, move origin data to our storage before processing.
         if self.is_partner_job():
             job_dir = self.partner_storage().abs_path(job_dir)
-
-            job_output_dir = self.partner_storage().abs_path(self.FLAGS.get('output_data_path'))
+            job_id = self.FLAGS.get('job_id')
+            dst_prefix = self.FLAGS.get('output_data_path')
+            origin_prefix = os.path.join(dst_prefix, job_id)
+            job_output_dir = self.partner_storage().abs_path(origin_prefix)
             if not job_output_dir.startswith(bos_client.PARTNER_BOS_MOUNT_PATH):
                 logging.error(F'Wrong job_output_dir {job_output_dir}')
 
@@ -129,6 +138,9 @@ class SensorCalibrationPipeline(BasePipeline):
 
         task_types = set()
         result_files = []
+        if not result_dirs:
+            logging.error(f"No result_dirs {result_dirs}:")
+            return None
         for result_dir, task_name in result_dirs:
             if result_dir:
                 task_types.add(task_name)
@@ -153,6 +165,8 @@ class SensorCalibrationPipeline(BasePipeline):
         in_config_file = os.path.join(source_dir, 'sample_config.yaml')
         if not os.path.exists(in_config_file):
             JobUtils(job_id).save_job_failure_code('E202')
+            logging.error('{} is not exists!'.format(in_config_file))
+            return None
         calib_config = CalibrationConfig()
 
         config_file = calib_config.generate_task_config_yaml(root_path=source_dir,
@@ -175,13 +189,14 @@ class SensorCalibrationPipeline(BasePipeline):
         else:
             JobUtils(job_id).save_job_failure_code('E203')
             logging.error('not support {} yet'.format(task_name))
-            time.sleep(60 * 3)
             return None
 
         if not os.path.exists(executable_bin):
             JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
                                                  self.error_text, False)
             JobUtils(job_id).save_job_failure_code('E204')
+            logging.error('{} is not exists!'.format(executable_bin))
+            return None
         # set command
         command = f'{executable_bin} --config {config_file}'
         logging.info('sensor calibration executable command is {}'.format(command))
@@ -196,6 +211,7 @@ class SensorCalibrationPipeline(BasePipeline):
             logging.error('Failed to run sensor caliration for {}: {}'.format(task_name,
                                                                               return_code))
             time.sleep(60 * 3)
+            return None
 
         JobUtils(job_id).save_job_progress(10 + (80 // self.num) * self.index)
         return os.path.join(output_dir, 'results'), task_name

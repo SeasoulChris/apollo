@@ -68,7 +68,7 @@ class LocalMapPipeline(BasePipeline):
         if not os.path.exists(path):
             logging.warning('compare_poses: {} not exists'.format(path))
 
-        receivers = email_utils.SIMPlEHDMAP_TEAM + email_utils.D_KIT_TEAM
+        receivers = email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
         if os.environ.get('PARTNER_EMAIL'):
             receivers.append(os.environ.get('PARTNER_EMAIL'))
         title = 'Your virtual lane is generated!'

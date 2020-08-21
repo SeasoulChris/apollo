@@ -33,10 +33,7 @@ PREDICTION_TEAM = [
     'jiachengpan@baidu.com',
     'xukecheng@baidu.com',
 ]
-SIMPlEHDMAP_TEAM = [
-    'hukuang@baidu.com',
-    'v_panxuechao@baidu.com',
-]
+
 PERCEPTION_TEAM = [
     'zhangweide@baidu.com',
 ]
