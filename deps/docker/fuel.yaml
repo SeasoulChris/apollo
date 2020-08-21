@@ -66,3 +66,4 @@ dependencies:
     - eyeD3
     - nuscenes-devkit
     - youtube-data-api
+    - grpcio-health-checking

@@ -44,6 +44,9 @@ function start_service() {
   # uncomment me to debug grpc connection issues
   # export GRPC_TRACE=call_error,client_channel_call,connectivity_state,server_channel
 
+  # A temp workaround until a new fuel-client image has this package.
+  pip install --no-cache-dir grpcio-health-checking
+
   LOG_DIR=/tmp/log
   mkdir -p $LOG_DIR
 

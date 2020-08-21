@@ -13,6 +13,8 @@ import uuid
 from absl import app
 from absl import flags
 import grpc
+from grpc_health.v1 import health
+from grpc_health.v1 import health_pb2_grpc
 
 from fueling.learning.autotuner.client.sim_client import SimClient
 from fueling.learning.autotuner.cost_computation.job.local_cost_job import LocalCostJob
@@ -223,9 +225,19 @@ def __main__(argv):
     server = grpc.server(
         futures.ThreadPoolExecutor(max_workers=70),
         compression=grpc.Compression.Gzip)
+
+    # Create a cost computation servicer.
     cost_service_pb2_grpc.add_CostComputationServicer_to_server(
         CostComputation(), server
     )
+
+    # Create a health check servicer.
+    health_servicer = health.HealthServicer(
+        # use the non-blocking implementation to avoid thread starvation.
+        experimental_non_blocking=True,
+        experimental_thread_pool=futures.ThreadPoolExecutor(max_workers=1))
+    health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
+
     server.add_insecure_port(SERVER_PORT)
     server.start()
 
