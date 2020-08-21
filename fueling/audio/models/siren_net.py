@@ -186,6 +186,7 @@ class SirenNet(nn.Module):
                                                melkwargs={"hop_length": 512})
         self.mel_spec = torchaudio.transforms.MelSpectrogram(sample_rate=22050,
                                                              hop_length=512, n_mels=64)
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, X):
         eps = 1e-20
@@ -196,6 +197,7 @@ class SirenNet(nn.Module):
         spec_features = torch.cat([mfcc_out, log_mel_out], -2)
         mlnet_out = self.mlnet(spec_features)
         out = wavenet_out + mlnet_out
+        # out = self.softmax(out)
         return out
 
 
