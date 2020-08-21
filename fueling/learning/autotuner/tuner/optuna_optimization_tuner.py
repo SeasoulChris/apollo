@@ -7,9 +7,22 @@ from optuna.samplers import TPESampler
 
 # Configurations from the Control Module
 from modules.control.proto.control_conf_pb2 import ControlConf
+from modules.control.proto.lat_controller_conf_pb2 import LatControllerConf
+from modules.control.proto.lon_controller_conf_pb2 import LonControllerConf
+from modules.control.proto.mpc_controller_conf_pb2 import MPCControllerConf
+from modules.control.proto.gain_scheduler_conf_pb2 import GainScheduler
+from modules.control.proto.leadlag_conf_pb2 import LeadlagConf
+from modules.control.proto.mrac_conf_pb2 import MracConf
+from modules.control.proto.pid_conf_pb2 import PidConf
 
 # Configurations from the Open-Space Planning Module
-from modules.planning.proto.planner_open_space_config_pb2 import PlannerOpenSpaceConfig
+from modules.planning.proto.planner_open_space_config_pb2 import \
+    PlannerOpenSpaceConfig, WarmStartConfig, DualVariableWarmStartConfig, \
+    DistanceApproachConfig, IterativeAnchoringConfig, TrajectoryPartitionConfig, \
+    ROIConfig, OSQPConfig, IpoptConfig
+from modules.planning.proto.math.fem_pos_deviation_smoother_config_pb2 import \
+    FemPosDeviationSmootherConfig
+from modules.planning.proto.task_config_pb2 import PiecewiseJerkSpeedOptimizerConfig
 
 # Configurations from the Autotune Tool
 from fueling.learning.autotuner.tuner.base_tuner import BaseTuner
@@ -38,6 +51,28 @@ class OptunaOptimizationTuner(BaseTuner):
         self.n_iter = n_iter if n_iter > 0 else self.n_iter
         self.init_points = 0
         self.iter = -1
+
+        self.conf_dict = {
+            # Configurations from the Control module
+            'LonControllerConf': LonControllerConf,
+            'LatControllerConf': LatControllerConf,
+            'MPCControllerConf': MPCControllerConf,
+            'GainScheduler': GainScheduler,
+            'LeadlagConf': LeadlagConf,
+            'MracConf': MracConf,
+            'PidConf': PidConf,
+            # Configurations from the Open-Space Planning module
+            'WarmStartConfig': WarmStartConfig,
+            'DualVariableWarmStartConfig': DualVariableWarmStartConfig,
+            'DistanceApproachConfig': DistanceApproachConfig,
+            'IterativeAnchoringConfig': IterativeAnchoringConfig,
+            'TrajectoryPartitionConfig': TrajectoryPartitionConfig,
+            'ROIConfig': ROIConfig,
+            'OSQPConfig': OSQPConfig,
+            'IpoptConfig': IpoptConfig,
+            'FemPosDeviationSmootherConfig': FemPosDeviationSmootherConfig,
+            'PiecewiseJerkSpeedOptimizerConfig': PiecewiseJerkSpeedOptimizerConfig
+        }
 
         self.optimizer.optimize(self.objective, n_trials=self.n_iter)
         self.best_cost = self.optimizer.best_value
@@ -76,20 +111,26 @@ class OptunaOptimizationTuner(BaseTuner):
 
         for proto in next_point_pb:
             message, config_name, field_name, _ = self.parse_param_to_proto(proto)
-            config = eval(config_name + '()')
-            message.ClearField(field_name)
-            message.MergeFrom(proto_utils.dict_to_pb(
-                {field_name: next_point_pb[proto]}, config))
-            logging.info(f"\n  {proto}: {getattr(message, field_name)}")
+            if config_name in self.conf_dict.keys():
+                config = self.conf_dict[config_name]()
+                message.ClearField(field_name)
+                message.MergeFrom(proto_utils.dict_to_pb(
+                    {field_name: next_point_pb[proto]}, config))
+                logging.info(f"\n  {proto}: {getattr(message, field_name)}")
+            else:
+                logging.info(f"\n  {proto}: proto config module not imported")
 
         for flag in self.tuner_param_config_pb.tuner_parameters.flag:
             flag_full_name = \
                 flag.flag_dir + '.' + flag.flag_name if flag.flag_dir else flag.flag_name
             message, config_name, flag_name, _ = self.parse_param_to_proto(flag_full_name)
-            config = eval(config_name + '()')
-            message.ClearField(flag_name)
-            message.MergeFrom(proto_utils.dict_to_pb({flag_name: flag.enable}, config))
-            logging.info(f"\n  {flag_full_name}: {getattr(message, flag_name)}")
+            if config_name in self.conf_dict.keys():
+                config = self.conf_dict[config_name]()
+                message.ClearField(flag_name)
+                message.MergeFrom(proto_utils.dict_to_pb({flag_name: flag.enable}, config))
+                logging.info(f"\n  {flag_full_name}: {getattr(message, flag_name)}")
+            else:
+                logging.info(f"\n  {flag_full_name}: flag config module not imported")
 
         iteration_id, score = self.black_box_function(
             self.tuner_param_config_pb, self.algorithm_conf_pb)
