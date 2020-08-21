@@ -113,7 +113,7 @@ class PostProcessor(BasePipeline):
         tag_dict = proto_utils.pb_to_dict(data_frame.planning_tag)
         tag_data_frames = []
         for key in tag_dict:
-            logging.debug("{}: {}".format(key, tag_dict[key]))
+            logging.debug('{}: {}'.format(key, tag_dict[key]))
             logging.debug(len(tag_dict[key]))
             if len(tag_dict[key]) == 2:
                 # overlap features
@@ -128,23 +128,24 @@ class PostProcessor(BasePipeline):
     @staticmethod
     def _tagged_folder(src_dir_prefix, dir_tag_data):
         (file_path, origin_file_name), ((tag, tag_id), data) = dir_tag_data
-        logging.debug("file_path: {}; origin_file_name: {}".format(file_path, origin_file_name))
-        logging.debug("tag: {}; tag_id: {}".format(tag, tag_id))
+        logging.debug('file_path: {}; origin_file_name: {}'.format(file_path, origin_file_name))
+        logging.debug('tag: {}; tag_id: {}'.format(tag, tag_id))
+
         # remove complete
         # pre_fix/record_dir/complete -> pre_fix/record_dir
         origin_file_path = os.path.split(file_path)[0]
-        logging.debug("origin_file_path: {}".format(origin_file_path))
+        logging.debug('origin_file_path: {}'.format(origin_file_path))
 
-        src_dir_elements = origin_file_path.split("/")
+        src_dir_elements = origin_file_path.split('/')
         dst_dir_elements = [
             'output_data_categorized' if x
             == 'output_data_evaluated' else x for x in src_dir_elements]
         dst_dir_elements.insert(-1, tag)
         dst_dir_elements.insert(-1, tag_id)
         if ('output_data_categorized' in dst_dir_elements):
-            dst_dir = "/".join(dst_dir_elements)
+            dst_dir = '/'.join(dst_dir_elements)
         else:
-            dst_dir_elements = src_dir_prefix.split("/")
+            dst_dir_elements = src_dir_prefix.split('/')
             while (dst_dir_elements[-1] == ''):
                 dst_dir_elements.pop()
             dst_dir_elements[-1] += '_output_data_categorized'
@@ -152,7 +153,7 @@ class PostProcessor(BasePipeline):
             dst_dir_elements.extend(src_dir_elements[prefix_len:])
             dst_dir_elements.append(tag)
             dst_dir_elements.append(tag_id)
-            dst_dir = "/".join(dst_dir_elements)
+            dst_dir = '/'.join(dst_dir_elements)
 
         return ((dst_dir, origin_file_name), data)
 

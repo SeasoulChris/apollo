@@ -186,7 +186,7 @@ class LabelGenerator(object):
             # dt between future sampling points
             dt = feature_sequence[j].timestamp_sec - feature_sequence[j - 1].timestamp_sec
             if dt > 0.5:
-                logging.info(f'current dt is larger than 0.5s {dt}')
+                logging.debug(f'current dt is larger than 0.5s {dt}')
             if dt > max_dt_interval:
                 # when dt is too large
                 future_end_index = j - 1
