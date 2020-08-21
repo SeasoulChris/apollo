@@ -160,7 +160,7 @@ class MultiJobFeatureExtraction(BasePipeline):
         email_receivers = email_utils.CONTROL_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
         if os.environ.get('PARTNER_EMAIL'):
             email_receivers.append(os.environ.get('PARTNER_EMAIL'))
-        if not sanity_check(origin_dir, job_owner, job_id, email_receivers):
+        if not sanity_check(origin_dir, job_owner, job_id, 'Vehicle-calibration', email_receivers):
             return
 
         """ vehicles """

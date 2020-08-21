@@ -32,6 +32,7 @@ py_binary(
     srcs = ["dynamic_model_training.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/control/common:multi_vehicle_utils",
         "//fueling/control/dynamic_model:flag",

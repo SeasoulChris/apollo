@@ -119,7 +119,7 @@ def missing_message_data(path, channels=CHANNELS):
     return False, []
 
 
-def sanity_check(input_folder, job_owner, job_id, email_receivers=None):
+def sanity_check(input_folder, job_owner, job_id, task_name, email_receivers=None):
     err_msg = None
     field_flag, field_result = missing_field(input_folder)
     channel_flag, channel_result = missing_message_data(input_folder)
@@ -142,7 +142,7 @@ def sanity_check(input_folder, job_owner, job_id, email_receivers=None):
     else:
         logging.info("%s Passed sanity check." % input_folder)
         if email_receivers:
-            title = 'Vehicle-calibration data sanity check passed for {}'.format(job_owner)
+            title = F'{task_name} data sanity check passed for {job_owner}'
             content = 'job_id={} input_folder={}\n' \
                 'We are processing your job now. Please expect another email with results.'.format(
                     job_id, input_folder)
@@ -150,8 +150,7 @@ def sanity_check(input_folder, job_owner, job_id, email_receivers=None):
         return True
 
     if email_receivers:
-        title = 'Error occurred during vehicle-calibration data sanity check for {}'.format(
-            job_owner)
+        title = F'Error occurred during {task_name} data sanity check for {job_owner}'
         content = 'job_id={} input_folder={}\n{}'.format(job_id, input_folder, cgi.escape(err_msg))
         email_utils.send_email_error(title, content, email_receivers)
 

@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
+import collections
 import os
 
 import glob
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.email_utils as email_utils
 import fueling.common.logging as logging
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 from fueling.control.dynamic_model.conf.model_config import task_config
@@ -43,27 +45,39 @@ class DynamicModelTraining(BasePipeline):
         is_backward = self.FLAGS.get('is_backward')
         is_holistic = self.FLAGS.get('is_holistic')
 
-        # TODO (Longtao /Yu): add partner storage for online service
-        our_storage = self.our_storage()
+        # Check partner storage for online service
+        object_storage = self.partner_storage() or self.our_storage()
 
         data_dir = task_config['uniform_output_folder']
         if is_backward:
             data_prefix = os.path.join(data_dir, job_owner, 'backward', job_id)
         else:
             data_prefix = os.path.join(data_dir, job_owner, 'forward', job_id)
-        training_data_path = our_storage.abs_path(data_prefix)
+        training_data_path = object_storage.abs_path(data_prefix)
 
-        output_dir = our_storage.abs_path(task_config['model_output_folder'])
+        output_dir = object_storage.abs_path(task_config['model_output_folder'])
 
         # get vehicles
         vehicles = multi_vehicle_utils.get_vehicle(training_data_path)
         logging.info(f'vehicles: {vehicles}')
+
+        # prepare for email notification
+        SummaryTuple = collections.namedtuple(
+            'Summary',
+            ['Vehicle', 'Input_Data_Path', 'Output_Model_Path', 'Is_Backward', 'Is_Holistic'])
+        messages = []
+
         # run proc as a vehicle ID
         for vehicle in vehicles:
             self.execute_task(vehicle, training_data_path, output_dir, is_backward, is_holistic)
+            messages.append(SummaryTuple(
+                Vehicle=vehicle, Input_Data_Path=training_data_path, Output_Model_Path=output_dir,
+                Is_Backward=is_backward, Is_Holistic=is_holistic))
 
-        # TODO (Longtao /Yu): refer to calibration or control profiling to add email data report
-        # The model output results are stored at task_config['model_output_folder']
+        # send email notification
+        title = F'Control Dynamic Model Training Results For {len(vehicles)} Vehicles'
+        # TODO(longtao): add all receivers after testing email notification
+        email_utils.send_email_info(title, messages, email_utils.DATA_TEAM)
 
     def execute_task(self, vehicle, training_data_path, output_dir,
                      is_backward=False, is_holistic=False):

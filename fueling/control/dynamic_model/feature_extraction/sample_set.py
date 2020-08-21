@@ -6,9 +6,11 @@ import shutil
 import os
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.control.common.sanity_check import sanity_check
 from fueling.control.dynamic_model.conf.model_config import task_config
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 
+import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
@@ -199,7 +201,14 @@ class SampleSet(BasePipeline):
         logging.info("origin_dir: %s" % origin_dir)
         logging.info("target_prefix: %s" % target_prefix)
 
-        # TODO (Longtao /Yu): refer to calibration table feature extraction to add sanity check
+        # Do sanity check
+        task_name = 'dynamic model training'
+        logging.info(F'Doing sanity check for {task_name}')
+        email_receivers = email_utils.CONTROL_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
+        if os.environ.get('PARTNER_EMAIL'):
+            email_receivers.append(os.environ.get('PARTNER_EMAIL'))
+        if not sanity_check(origin_dir, job_owner, job_id, task_name, email_receivers):
+            return
 
         """ vehicles """
         vehicles = spark_helper.cache_and_log(
