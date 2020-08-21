@@ -85,6 +85,7 @@ py_binary(
     deps = [
         ":gp_model",
         ":train",
+        "//fueling/learning:train_utils",
     ],
 )
 

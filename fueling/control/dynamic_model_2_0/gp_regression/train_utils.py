@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_state_dict
 from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_torch_script
+from fueling.learning.train_utils import cuda
 import fueling.common.logging as logging
 
 
@@ -35,7 +36,7 @@ def init_train(inducing_points, encoder_net_model, output_dim, total_train_numbe
     return model, likelihood, optimizer, loss
 
 
-def basic_train_loop(train_loader, model, loss_fn, optimizer, is_transpose=False):
+def basic_train_loop(train_loader, model, loss_fn, optimizer, is_transpose=False, use_cuda=False):
     loss_history = []
     for x_batch, y_batch in train_loader:
         # **[window_size, batch_size, channel]
@@ -43,6 +44,8 @@ def basic_train_loop(train_loader, model, loss_fn, optimizer, is_transpose=False
         optimizer.zero_grad()
         if is_transpose:
             x_batch = torch.transpose(x_batch, 0, 1).type(torch.FloatTensor)
+        if use_cuda:
+            x_batch, y_batch = cuda(x_batch), cuda(y_batch)
         output = model(x_batch)
         # train loss
         train_loss = -loss_fn(output, y_batch)
@@ -55,7 +58,8 @@ def basic_train_loop(train_loader, model, loss_fn, optimizer, is_transpose=False
 
 
 def train_with_adjusted_lr(num_epochs, train_loader, model, likelihood,
-                           loss_fn, optimizer, fig_file_path=None, is_transpose=False):
+                           loss_fn, optimizer, fig_file_path=None, is_transpose=False,
+                           use_cuda=False):
     # adjust learning rate
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10,
                                   verbose=False, threshold=0.0001, threshold_mode='rel',
@@ -71,7 +75,8 @@ def train_with_adjusted_lr(num_epochs, train_loader, model, likelihood,
     for i in epochs_iter:
         # Within each iteration, we will go over each minibatch of data
         tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
-        train_loss = basic_train_loop(train_loader, model, loss_fn, optimizer, is_transpose)
+        train_loss = basic_train_loop(train_loader, model, loss_fn,
+                                      optimizer, is_transpose, use_cuda)
         scheduler.step(train_loss)
         train_loss_all.append(train_loss)
         if i == 10:

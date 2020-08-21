@@ -26,16 +26,24 @@ import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_util
 
 
 train_model = True
-test_type = "toy_test"
+test_type = "smoke_test"
 platform_dir = '/fuel/fueling/control/dynamic_model_2_0/testdata'
-data_dir = '0707_smoke_test'
+
+# CUDA setup:
+if (torch.cuda.is_available()):
+    print("Using CUDA to speed up training.")
+    use_cuda = True
+else:
+    print("Not using CUDA.")
 
 if test_type == "full_test":
     config = training_config
+    data_dir = '0708_2'
     training_data_path = os.path.join(platform_dir, data_dir, 'train')
     validation_data_path = os.path.join(platform_dir, data_dir, 'test')
 elif test_type == "smoke_test":
     config = smoke_test_training_config
+    data_dir = '0707_smoke_test'
     training_data_path = os.path.join(platform_dir, data_dir, 'train')
     validation_data_path = os.path.join(platform_dir, data_dir, 'test')
 else:
@@ -56,7 +64,7 @@ online_model_path = os.path.join(result_folder, 'gp_model.pt')
 # setup data loader
 train_dataset = DynamicModelDataset(training_data_path)
 train_loader = DataLoader(train_dataset, batch_size=config["batch_size"],
-                          shuffle=True, drop_last=True)
+                          shuffle=True, num_workers=4, drop_last=True)
 total_train_number = len(train_loader.dataset)
 train_y = train_dataset[0][1].unsqueeze(0)
 logging.info(train_y.shape)
@@ -80,7 +88,7 @@ logging.info(inducing_points.shape)
 # validate loader
 valid_dataset = DynamicModelDataset(validation_data_path)
 # reduce batch size when memory is not enough len(valid_dataset.datasets)
-valid_loader = DataLoader(valid_dataset, batch_size=1024)
+valid_loader = DataLoader(valid_dataset, batch_size=1024, shuffle=True, num_workers=4)
 
 
 # encoder
@@ -91,11 +99,16 @@ model, likelihood, optimizer, loss_fn = train_utils.init_train(
     inducing_points, encoder_net_model, feature_config["output_dim"],
     total_train_number, config["lr"], kernel_dim=config["kernel_dim"])
 
+if use_cuda:
+    model = model.cuda()
+    likelihood = likelihood.cuda()
+
 train_loss_plot = os.path.join(validation_data_path, f'{timestr}', 'train_loss.png')
 if train_model:
     model, likelihood, final_train_loss = train_utils.train_with_adjusted_lr(
         config["num_epochs"], train_loader, model, likelihood,
-        loss_fn, optimizer, fig_file_path=train_loss_plot, is_transpose=True)
+        loss_fn, optimizer, fig_file_path=train_loss_plot, is_transpose=True,
+        use_cuda=use_cuda)
     print(f'final train loss is {final_train_loss}')
     # test save and load model
     save_model_state_dict(model, likelihood, offline_model_path)
@@ -103,7 +116,7 @@ if train_model:
     for idx, (test_features, test_labels) in enumerate(valid_loader):
         test_features = torch.transpose(test_features, 0, 1).type(torch.FloatTensor)
         break
-    save_model_torch_script(model, likelihood, test_features, online_model_path)
+    save_model_torch_script(model, likelihood, test_features.cuda(), online_model_path)
     # save inducing points for load model
     np.save(os.path.join(result_folder, 'inducing_points.npy'), inducing_points)
 else:
@@ -122,7 +135,7 @@ with torch.no_grad(), gpytorch.settings.fast_pred_var():
     for i, (test_x, y) in enumerate(valid_loader):
         logging.info(test_x.shape)
         test_x = torch.transpose(test_x, 0, 1)
-        predictions = likelihood(model(test_x))
+        predictions = likelihood(model(test_x.cuda()))
         mean = predictions.mean
         lower, upper = predictions.confidence_region()
 
@@ -147,7 +160,7 @@ ax.plot(y[:, 0], y[:, 1],
 ax.plot(train_y[:, 0], train_y[:, 1],
         'kx', label='Training ground truth')
 # predicted mean value
-ax.plot(mean[:, 0], mean[:, 1], 's', color='r', label='Predicted mean')
+ax.plot(mean[:, 0].cpu(), mean[:, 1].cpu(), 's', color='r', label='Predicted mean')
 ax.legend(fontsize=12, frameon=False)
 ax.grid(True)
 # save validation figures to folder
@@ -158,7 +171,7 @@ plt.show()
 #  accuracy
 print(y.shape)
 print(mean.shape)
-mse_x = mean_squared_error(mean[:, 0], y[:, 0])
-mse_y = mean_squared_error(mean[:, 1], y[:, 1])
+mse_x = mean_squared_error(mean[:, 0].cpu(), y[:, 0])
+mse_y = mean_squared_error(mean[:, 1].cpu(), y[:, 1])
 print(f'mse loss is {mse_x}')
 print(f'mse loss is {mse_y}')
