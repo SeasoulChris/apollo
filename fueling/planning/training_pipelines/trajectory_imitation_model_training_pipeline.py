@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
+import random
 import os
 
 from absl import app
 from absl import flags
 import cv2 as cv
 import numpy as np
-import random
 import torch
 
 from modules.planning.proto import planning_semantic_map_config_pb2
@@ -19,14 +19,16 @@ from fueling.planning.datasets.img_in_traj_out_dataset \
     TrajectoryImitationConvRNNDataset, \
     TrajectoryImitationSelfCNNLSTMDataset, \
     TrajectoryImitationSelfCNNLSTMWithEnvLossDataset,\
-    TrajectoryImitationCNNLSTMDataset
+    TrajectoryImitationCNNLSTMDataset, \
+    TrajectoryImitationCNNLSTMWithEnvLossDataset
 from fueling.planning.models.trajectory_imitation.cnn_fc_model import \
     TrajectoryImitationCNNFC
 from fueling.planning.models.trajectory_imitation.cnn_lstm_model import \
     TrajectoryImitationUnconstrainedCNNLSTM,\
     TrajectoryImitationKinematicConstrainedCNNLSTM,\
     TrajectoryImitationSelfCNNLSTM,\
-    TrajectoryImitationSelfCNNLSTMWithRasterizer
+    TrajectoryImitationSelfCNNLSTMWithRasterizer,\
+    TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer
 from fueling.planning.models.trajectory_imitation.conv_rnn_model import TrajectoryImitationConvRNN
 from fueling.planning.models.trajectory_imitation.image_representation_loss import \
     ImageRepresentationLoss
@@ -215,7 +217,7 @@ def training(model_type,
             embed_size=64,
             hidden_size=128)
         loss = ImageRepresentationLoss(pos_reg_loss_weight=1,
-                                       pos_dist_loss_weight=0,
+                                       pos_dist_loss_weight=1,
                                        box_loss_weight=1,
                                        collision_loss_weight=1,
                                        offroad_loss_weight=1,
@@ -268,6 +270,41 @@ def training(model_type,
                                                                delta_t=0.2,
                                                                wheel_base=2.8448)
         loss = TrajectoryPointDisplacementMSELoss(4)
+
+    elif model_type == 'kinematic_cnn_lstm_aux':
+        train_dataset = TrajectoryImitationCNNLSTMDataset(train_set_dir,
+                                                          regions_list,
+                                                          renderer_config_file,
+                                                          renderer_base_map_img_dir,
+                                                          renderer_base_map_data_dir,
+                                                          img_feature_rotation,
+                                                          past_motion_dropout,
+                                                          ouput_point_num=10)
+        valid_dataset = TrajectoryImitationCNNLSTMDataset(validation_set_dir,
+                                                          regions_list,
+                                                          renderer_config_file,
+                                                          renderer_base_map_img_dir,
+                                                          renderer_base_map_data_dir,
+                                                          img_feature_rotation,
+                                                          past_motion_dropout,
+                                                          ouput_point_num=10)
+        model = TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(
+            pred_horizon=10,
+            max_abs_steering_angle=0.52,
+            max_acceleration=2,
+            max_deceleration=-4,
+            delta_t=0.2,
+            wheel_base=2.8448)
+        loss = ImageRepresentationLoss(pos_reg_loss_weight=1,
+                                       pos_dist_loss_weight=1,
+                                       box_loss_weight=1,
+                                       collision_loss_weight=1,
+                                       offroad_loss_weight=1,
+                                       onrouting_loss_weight=1,
+                                       imitation_dropout=False,
+                                       batchwise_focal_loss=False,
+                                       losswise_focal_loss=False,
+                                       focal_loss_gamma=1)
 
     else:
         logging.info('model {} is not implemnted'.format(model_type))
