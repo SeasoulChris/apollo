@@ -35,7 +35,6 @@ PREDICTION_TEAM = [
 ]
 
 PERCEPTION_TEAM = [
-    'zhangweide@baidu.com',
 ]
 QA_TEAM = [
     'fuyiqun@baidu.com',
