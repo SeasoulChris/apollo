@@ -9,7 +9,7 @@ import torch
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
-from fueling.learning.train_utils import train_valid_dataloader
+from fueling.learning.train_utils import cuda, train_valid_dataloader
 from fueling.prediction.learning.pipelines.pedestrian_trajectory_prediction \
     .pedestrian_trajectory_dataset_cloud import PedestrianTrajectoryDatasetCloud
 from fueling.prediction.learning.models.semantic_map_model.semantic_map_model \
@@ -64,7 +64,8 @@ class PedestrianTraining(BasePipeline):
         model_path = os.path.join(self.input_abs_path, 'models/')
         os.makedirs(model_path, exist_ok=True)
         train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer, scheduler,
-                               epochs=30, save_name=model_path, print_period=10, save_mode=1)
+                               epochs=10, save_name=model_path, print_period=10, save_mode=1)
+        self.jit_trace_semantic_map_model(model, model_path)
 
     def get_region_from_input_path(self, input_path):
         map_path = os.path.join(input_path, 'map/')
@@ -80,6 +81,16 @@ class PedestrianTraining(BasePipeline):
         if end == -1:
             return sub_path
         return sub_path[:end]
+
+    def jit_trace_semantic_map_model(self, model, path):
+        model.eval()
+        model = model.cpu()
+        X = (torch.ones([1, 3, 224, 224]), torch.ones([1, 20, 2]), torch.ones([1, 20, 2]))
+        _ = model.forward(X)
+        traced_cpu_model = torch.jit.trace(model.cpu(), (X,))
+        traced_cpu_model.save(os.path.join(path, 'semantic_lstm_pedestrian_cpu_model.pt'))
+        traced_gpu_model = torch.jit.trace(model.cuda(), (cuda(X),))
+        traced_gpu_model.save(os.path.join(path, 'semantic_lstm_pedestrian_gpu_model.pt'))
 
 
 if __name__ == '__main__':

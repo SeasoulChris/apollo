@@ -206,10 +206,10 @@ class PedestrianTrajectoryDatasetCloud(Dataset):
                 target_obs_pos_step[i, :] = target_obs_pos_rel[i, :] - target_obs_pos_rel[i - 1, :]
 
         return ((img,
-                 torch.from_numpy(target_obs_pos_abs).float(),
-                 torch.from_numpy(target_obs_hist_size).float(),
                  torch.from_numpy(target_obs_pos_rel).float(),
                  torch.from_numpy(target_obs_pos_step).float(),
+                 torch.from_numpy(target_obs_pos_abs).float(),
+                 torch.from_numpy(target_obs_hist_size).float(),
                  origin_img),
                 torch.from_numpy(target_obs_future_traj).float())
 

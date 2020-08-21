@@ -172,8 +172,8 @@ class SemanticMapSelfLSTMModel(nn.Module):
 
     def forward(self, X):
         img = X[0]
-        obs_pos = X[3]
-        obs_pos_step = X[4]
+        obs_pos = X[1]
+        obs_pos_step = X[2]
         N = obs_pos.size(0)
         ht, ct = self.h0.repeat(1, N, 1), self.h0.repeat(1, N, 1)
 
