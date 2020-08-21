@@ -827,6 +827,7 @@ class TrajectoryImitationCNNLSTMWithEnvLossDataset(Dataset):
         renderer_config = proto_utils.get_pb_from_text_file(
             renderer_config_file,
             planning_semantic_map_config_pb2.PlanningSemanticMapConfig())
+        self.img_size = [renderer_config.width, renderer_config.height]
         self.max_rand_coordinate_heading = np.radians(
             renderer_config.max_rand_delta_phi)
         self.ouput_point_num = ouput_point_num

@@ -3,6 +3,16 @@ load("@rules_python//python:defs.bzl", "py_library")
 package(default_visibility = ["//visibility:public"])
 
 py_library(
+    name = "differentiable_kinematic_models",
+    srcs = ["differentiable_kinematic_models.py"],
+)
+
+py_library(
+    name = "differentiable_rasterizer",
+    srcs = ["differentiable_rasterizer.py"],
+)
+
+py_library(
     name = "cnn_fc_model",
     srcs = ["cnn_fc_model.py"],
 )
@@ -11,6 +21,8 @@ py_library(
     name = "cnn_lstm_model",
     srcs = ["cnn_lstm_model.py"],
     deps = [
+        ":differentiable_kinematic_models",
+        ":differentiable_rasterizer",
         "//fueling/learning:network_utils",
     ],
 )
