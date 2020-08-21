@@ -485,8 +485,12 @@ small-records/2020/2020-08-11 sunnyvale_big_loop bay_area batch_20200811
 
 >> sv-batch7
 
-small-records/2020/2020-08-12 sunnyvale_big_loop bay_area batch_20200818
-small-records/2020/2020-08-13 sunnyvale_big_loop bay_area batch_20200818
-small-records/2020/2020-08-14 sunnyvale_big_loop bay_area batch_20200818
-small-records/2020/2020-08-17 sunnyvale_big_loop bay_area batch_20200818
-small-records/2020/2020-08-18 sunnyvale_big_loop bay_area batch_20200818
+small-records/2020/2020-08-12 sunnyvale_with_two_offices bay_area batch_20200818
+small-records/2020/2020-08-13 sunnyvale_with_two_offices bay_area batch_20200818
+small-records/2020/2020-08-14 sunnyvale_with_two_offices bay_area batch_20200818
+small-records/2020/2020-08-17 sunnyvale_with_two_offices bay_area batch_20200818
+small-records/2020/2020-08-18 sunnyvale_with_two_offices bay_area batch_20200818
+
+>> bj-batch2
+
+modules/planning/temp/converted_data_with_routing/batch_20200818_110916 yizhuangdaluwang beijing batch_20200630

@@ -1,4 +1,7 @@
-bj-batch1
+# bj-batch1 2020 7
 
 modules/planning/temp/converted_data/batch_20200803_121003/
 
+# bj-batch2 2020 5-6
+
+modules/planning/temp/converted_data/batch_20200812_141624/
