@@ -319,7 +319,7 @@ class TrajectoryImitationSelfCNNLSTMWithRasterizer(nn.Module):
              self.input_img_size_h, self.input_img_size_w),
             device=img_feature.device)
         for t in range(self.pred_horizon):
-            box_heading = (-pred_traj[:, t, 2]
+            box_heading = (-pred_traj[:, t + 1, 2]
                            - ego_rendering_heading).unsqueeze(1).unsqueeze(2)
             heading_offset = -(ego_rendering_heading - np.pi / 2)
 
@@ -337,8 +337,8 @@ class TrajectoryImitationSelfCNNLSTMWithRasterizer(nn.Module):
             sigma_y = torch.Tensor([1.8]).to(img_feature.device)
             pred_boxs[:, t, 0, :, :] = \
                 rasterize_vehicle_three_circles_guassian(
-                pred_traj[:, t, 0],
-                pred_traj[:, t, 1],
+                pred_traj[:, t + 1, 0],
+                pred_traj[:, t + 1, 1],
                 box_heading,
                 heading_offset,
                 self.initial_box_x_idx,
@@ -358,8 +358,8 @@ class TrajectoryImitationSelfCNNLSTMWithRasterizer(nn.Module):
 
             # use geometry algorithm to subdifferentiably draw the box
             # pred_boxs[:, t, 0, :, :] = rasterize_vehicle_box(
-            #     pred_traj[:, t, 0],
-            #     pred_traj[:, t, 1],
+            #     pred_traj[:, t + 1, 0],
+            #     pred_traj[:, t + 1, 1],
             #     box_heading,
             #     heading_offset,
             #     self.initial_box_x_idx,
@@ -488,7 +488,7 @@ class TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(nn.Module):
              self.input_img_size_h, self.input_img_size_w),
             device=img_feature.device)
         for t in range(self.pred_horizon):
-            box_heading = (-pred_traj[:, t, 2]
+            box_heading = (-pred_traj[:, t + 2, 2]
                            - ego_rendering_heading).unsqueeze(1).unsqueeze(2)
             heading_offset = -(ego_rendering_heading - np.pi / 2)
 
@@ -506,8 +506,8 @@ class TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(nn.Module):
             sigma_y = torch.Tensor([1.8]).to(img_feature.device)
             pred_boxs[:, t, 0, :, :] = \
                 rasterize_vehicle_three_circles_guassian(
-                pred_traj[:, t, 0],
-                pred_traj[:, t, 1],
+                pred_traj[:, t + 2, 0],
+                pred_traj[:, t + 2, 1],
                 box_heading,
                 heading_offset,
                 self.initial_box_x_idx,
@@ -526,7 +526,7 @@ class TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(nn.Module):
                 rear_center_guassian[:, 0, :, :])
 
         # for model export usage
-        # return pred_traj[:, 1:, :]
+        # return pred_traj[:, 2:, :]
 
         return pred_traj[:, 2:, :], pred_boxs
 
