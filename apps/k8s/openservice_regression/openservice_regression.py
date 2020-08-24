@@ -169,6 +169,7 @@ if __name__ == '__main__':
         if checking_seconds > max_checking_seconds:
             error_label = True
             logging.error('Checking time exceeds max limit')
+            break
         time.sleep(WAIT_INTERVAL_SECONDS)
 
     # send report

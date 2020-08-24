@@ -10,7 +10,7 @@ spec:
         spec:
           containers:
           - name: openservice-regression
-            image: hub.baidubce.com/apollofuel/openservice_regression:20200820_1511
+            image: hub.baidubce.com/apollofuel/openservice_regression:20200824_1450
             env:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
