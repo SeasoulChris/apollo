@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import shutil
+import math
 
 from absl import app
 from absl import flags
@@ -10,6 +11,7 @@ import torch
 from tqdm import tqdm
 
 from modules.planning.proto import planning_semantic_map_config_pb2
+from modules.planning.proto import planning_pb2
 
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
@@ -33,6 +35,7 @@ from fueling.planning.input_feature_preprocessor.agent_poses_future_img_renderer
 import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
 from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator \
     import ChauffeurNetFeatureGenerator
+from fueling.planning.math_utils.math_utils import NormalizeAngle
 
 flags.DEFINE_string('model_type', None,
                     'model type, cnn, conv_rnn, self_cnn_lstm, self_cnn_lstm_aux')
@@ -50,6 +53,8 @@ flags.DEFINE_string('renderer_base_map_img_dir', '/fuel/testdata/planning/semant
                     'location to store map base img')
 flags.DEFINE_string('renderer_base_map_data_dir', '/apollo/modules/map/data/',
                     'location to store map base img')
+flags.DEFINE_string('evaluation_output_dir', '/fuel/evaluation_output_dir',
+                    'location to evaluation result')
 
 
 def calculate_cnn_displacement_error(pred, y):
@@ -64,6 +69,90 @@ def calculate_cnn_displacement_error(pred, y):
     heading_error = torch.mean(torch.abs(heading_diff)).item()
     v_error = torch.mean(torch.abs(v_diff)).item()
     return displacement_error, heading_error, v_error
+
+
+WHEEL_BASE = 2.8448
+MAX_STEERING = 0.6
+MAX_CURVATURE = math.tan(MAX_STEERING) / WHEEL_BASE
+DELTA_T = 0.2
+MAX_ACCELERATION = 4
+MAX_DECELERATION = -6
+
+
+def calculate_kinematic_feasibility(pred, current_x, current_y, current_theta, current_v):
+    batch_size = pred.shape[0]
+    trajectory_horizon = pred.shape[1]
+
+    # restore the trajectory in worldframe
+    trajectory_batch = []
+    # action in shape of [time_horizon, [dx, dy, dtheta, v]]
+    for batch_num in range(batch_size):
+        planning_message = planning_pb2.ADCTrajectory()
+        current_point = planning_message.trajectory_point.add()
+        current_point.path_point.x = current_x[batch_num]
+        current_point.path_point.y = current_y[batch_num]
+        current_point.path_point.theta = current_theta[batch_num]
+        current_point.v = current_v[batch_num]
+
+        for i in range(trajectory_horizon):
+            point = planning_message.trajectory_point.add()
+            dx = pred[batch_num][i][0]
+            dy = pred[batch_num][i][1]
+            dtheta = pred[batch_num][i][2]
+            point.path_point.x = dx * math.cos(current_theta[batch_num]) - \
+                dy * math.sin(current_theta[batch_num]) + current_x[batch_num]
+            point.path_point.y = dx * math.sin(current_theta[batch_num]) + \
+                dy * math.cos(current_theta[batch_num]) + current_y[batch_num]
+            point.path_point.theta = NormalizeAngle(
+                current_theta[batch_num] + dtheta)
+            point.v = pred[batch_num][i][3]
+
+        accumulated_s = 0.0
+        for i in range(len(planning_message.trajectory_point) - 1):
+            point = planning_message.trajectory_point[i].path_point
+            nextpoint = planning_message.trajectory_point[i + 1].path_point
+            point.s = accumulated_s
+            accumulated_s += math.sqrt((nextpoint.x - point.x)
+                                       ** 2 + (nextpoint.y - point.y) ** 2)
+        for i in range(len(planning_message.trajectory_point) - 1):
+            point = planning_message.trajectory_point[i]
+            nextpoint = planning_message.trajectory_point[i + 1]
+            point.a = (nextpoint.v - point.v) / DELTA_T
+        for i in range(len(planning_message.trajectory_point) - 1):
+            point = planning_message.trajectory_point[i]
+            nextpoint = planning_message.trajectory_point[i + 1]
+            point.da = (nextpoint.a - point.a) / DELTA_T
+
+        kepsilon = 1e-6
+        for i in range(len(planning_message.trajectory_point) - 1):
+            point = planning_message.trajectory_point[i].path_point
+            nextpoint = planning_message.trajectory_point[i + 1].path_point
+            point.kappa = NormalizeAngle(nextpoint.theta - point.theta) / \
+                (nextpoint.s - point.s + kepsilon)
+        for i in range(len(planning_message.trajectory_point) - 1):
+            point = planning_message.trajectory_point[i].path_point
+            nextpoint = planning_message.trajectory_point[i + 1].path_point
+            point.dkappa = (nextpoint.kappa - point.kappa) / \
+                (nextpoint.s - point.s + kepsilon)
+        for i in range(len(planning_message.trajectory_point) - 1):
+            point = planning_message.trajectory_point[i].path_point
+            nextpoint = planning_message.trajectory_point[i + 1].path_point
+            point.ddkappa = (nextpoint.dkappa - point.dkappa) / \
+                (nextpoint.s - point.s + kepsilon)
+
+        trajectory_batch.append(planning_message)
+
+    # check feasibility by path curvature and max acceleration
+    infeasible_num = 0
+    for batch_num in range(batch_size):
+        planning_message = trajectory_batch[batch_num]
+        for i in range(trajectory_horizon):
+            if math.fabs(planning_message.trajectory_point[i].path_point.kappa) > \
+                MAX_CURVATURE or planning_message.trajectory_point[i].a > MAX_ACCELERATION or \
+                    planning_message.trajectory_point[i].a < MAX_DECELERATION:
+                infeasible_num += 1
+                break
+    return infeasible_num
 
 
 def visualize_cnn_result(renderer, img_feature, coordinate_heading,
@@ -99,12 +188,11 @@ def visualize_cnn_result(renderer, img_feature, coordinate_heading,
         merged_img = renderer_utils.img_notblack_stacking(
             pred_pose_img, merged_img)
 
-        print(merged_img.shape)
-        print(cv.imwrite(os.path.join(pred_points_dir, "{:.3f}.png".format(
-            message_timestamp_sec[i])), merged_img))
+        cv.imwrite(os.path.join(pred_points_dir, "{:.3f}.png".format(
+            message_timestamp_sec[i])), merged_img)
 
 
-def cnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_img_dir):
+def cnn_model_evaluator(test_loader, model, renderer_config, evaluation_output_dir):
     with torch.no_grad():
         model.eval()
 
@@ -115,7 +203,7 @@ def cnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_i
         output_renderer = AgentPosesFutureImgRenderer(renderer_config)
 
         output_dir = os.path.join(
-            renderer_base_map_img_dir, "cnn_model_evaluation/")
+            evaluation_output_dir, "cnn_model_evaluation/")
         if os.path.isdir(output_dir):
             print(output_dir + " directory exists, delete it!")
             shutil.rmtree(output_dir)
@@ -124,14 +212,24 @@ def cnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_i
         pred_points_dir = os.path.join(output_dir, 'pred_points/')
         file_utils.makedirs(pred_points_dir)
 
-        for X, y, img_feature, coordinate_heading, message_timestamp_sec in tqdm(test_loader):
+        total_frame_num = 0
+        total_infeasible_num = 0
+        for X, y, img_feature, coordinate_heading, message_timestamp_sec, \
+                current_x, current_y, current_theta, current_v in tqdm(test_loader):
             X, y = cuda(X), cuda(y)
             pred = model(X)
+
             displacement_error, heading_error, v_error = \
                 calculate_cnn_displacement_error(pred, y)
             displcement_errors.append(displacement_error)
             heading_errors.append(heading_error)
             v_errors.append(v_error)
+
+            infeasible_num = calculate_kinematic_feasibility(
+                pred, current_x, current_y, current_theta, current_v)
+            total_infeasible_num += infeasible_num
+            total_frame_num += img_feature.shape[0]
+
             visualize_cnn_result(output_renderer, img_feature, coordinate_heading,
                                  message_timestamp_sec, pred_points_dir, pred, y)
 
@@ -140,18 +238,22 @@ def cnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_i
         average_heading_error = 'average heading error: {}.'.format(
             np.mean(heading_errors))
         average_v_error = 'average speed error: {}.'.format(np.mean(v_errors))
+        infeasibility_ratio = 'infeasibility_ratio: {}%.'.format(
+            total_infeasible_num / total_frame_num * 100)
 
         with open(os.path.join(output_dir, "statistics.txt"), "w") as output_file:
             output_file.write(average_displacement_error + "\n")
             output_file.write(average_heading_error + "\n")
             output_file.write(average_v_error + "\n")
+            output_file.write(infeasibility_ratio + "\n")
 
         print(average_displacement_error)
         print(average_heading_error)
         print(average_v_error)
+        print(infeasibility_ratio)
 
 
-def calculate_rnn_displacement_error(pred, y):
+def calculate_conv_rnn_displacement_error(pred, y):
     pred_points = pred[0]
     true_points = y[0]
     points_diff = pred_points - true_points
@@ -166,9 +268,9 @@ def calculate_rnn_displacement_error(pred, y):
     return displacement_error, heading_error, v_error
 
 
-def visualize_rnn_result(renderer, img_feature, coordinate_heading,
-                         message_timestamp_sec, pred_points_dir, explicit_memory_dir,
-                         pos_dists_dir, pos_boxs_dir, pred, y):
+def visualize_conv_rnn_result(renderer, img_feature, coordinate_heading,
+                              message_timestamp_sec, pred_points_dir, explicit_memory_dir,
+                              pos_dists_dir, pos_boxs_dir, pred, y):
 
     batched_pred_points = pred[0]
     for i, pred_point in enumerate(batched_pred_points):
@@ -251,7 +353,7 @@ def visualize_rnn_result(renderer, img_feature, coordinate_heading,
                    last_mat)
 
 
-def rnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_img_dir):
+def conv_rnn_model_evaluator(test_loader, model, renderer_config, evaluation_output_dir):
     with torch.no_grad():
         model.eval()
 
@@ -262,7 +364,7 @@ def rnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_i
         output_renderer = AgentPosesFutureImgRenderer(renderer_config)
 
         output_dir = os.path.join(
-            renderer_base_map_img_dir, "rnn_model_evaluation/")
+            evaluation_output_dir, "conv_rnn_model_evaluation/")
         if os.path.isdir(output_dir):
             print(output_dir + " directory exists, delete it!")
             shutil.rmtree(output_dir)
@@ -281,11 +383,11 @@ def rnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_i
             X, y = cuda(X), cuda(y)
             pred = model(X)
             displacement_error, heading_error, v_error = \
-                calculate_rnn_displacement_error(pred, y)
+                calculate_conv_rnn_displacement_error(pred, y)
             displcement_errors.append(displacement_error)
             heading_errors.append(heading_error)
             v_errors.append(v_error)
-            visualize_rnn_result(
+            visualize_conv_rnn_result(
                 output_renderer, img_feature, coordinate_heading,
                 message_timestamp_sec, pred_points_dir, explicit_memory_dir,
                 pos_dists_dir, pos_boxs_dir, pred, y)
@@ -308,7 +410,7 @@ def rnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_i
 
 def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map,
                renderer_config_file, renderer_base_map_img_dir,
-               renderer_base_map_data_dir, regions_list):
+               renderer_base_map_data_dir, evaluation_output_dir, regions_list):
     # TODO(Jinyun): check performance
     cv.setNumThreads(0)
 
@@ -407,10 +509,10 @@ def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map
     if model_type == 'cnn' or model_type == 'self_cnn_lstm' or model_type == 'self_cnn_lstm_aux'\
             or model_type == "unconstrained_cnn_lstm" or model_type == "kinematic_cnn_lstm":
         cnn_model_evaluator(test_loader, model,
-                            renderer_config_file, renderer_base_map_img_dir)
+                            renderer_config_file, evaluation_output_dir)
     elif model_type == 'conv_rnn':
-        rnn_model_evaluator(test_loader, model,
-                            renderer_config_file, renderer_base_map_img_dir)
+        conv_rnn_model_evaluator(test_loader, model,
+                                 renderer_config_file, evaluation_output_dir)
     else:
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
@@ -427,6 +529,7 @@ def main(argv):
     renderer_config_file = gflag.renderer_config_file
     renderer_base_map_img_dir = gflag.renderer_base_map_img_dir
     renderer_base_map_data_dir = gflag.renderer_base_map_data_dir
+    evaluation_output_dir = gflag.evaluation_output_dir
 
     evaluating(model_type,
                model_file,
@@ -436,6 +539,7 @@ def main(argv):
                renderer_config_file,
                renderer_base_map_img_dir,
                renderer_base_map_data_dir,
+               evaluation_output_dir,
                regions_list)
 
 

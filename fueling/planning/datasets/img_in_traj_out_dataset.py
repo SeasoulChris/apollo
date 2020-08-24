@@ -387,6 +387,7 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
         current_x = current_path_point.x
         current_y = current_path_point.y
         current_theta = current_path_point.theta
+        current_v = current_traj_point.v
 
         img_feature = self.chauffeur_net_feature_generator.\
             render_stacked_img_features(region,
@@ -441,7 +442,11 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
                     torch.from_numpy(pred_points).float(),
                     merged_img_feature,
                     coordinate_heading,
-                    frame.message_timestamp_sec)
+                    frame.message_timestamp_sec,
+                    current_x,
+                    current_y,
+                    current_theta,
+                    current_v)
 
         return ((transformed_img_feature,
                  current_v,
@@ -515,6 +520,7 @@ class TrajectoryImitationSelfCNNLSTMDataset(Dataset):
         current_x = current_path_point.x
         current_y = current_path_point.y
         current_theta = current_path_point.theta
+        current_v = frame.adc_trajectory_point[-1].trajectory_point.v
 
         img_feature = self.chauffeur_net_feature_generator.\
             render_stacked_img_features(region,
@@ -582,7 +588,11 @@ class TrajectoryImitationSelfCNNLSTMDataset(Dataset):
                     torch.from_numpy(pred_points).float(),
                     merged_img_feature,
                     coordinate_heading,
-                    frame.message_timestamp_sec)
+                    frame.message_timestamp_sec,
+                    current_x,
+                    current_y,
+                    current_theta,
+                    current_v)
 
         return ((transformed_img_feature,
                  torch.from_numpy(hist_points).float(),

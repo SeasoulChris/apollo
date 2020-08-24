@@ -29,11 +29,13 @@ py_binary(
         "//fueling/learning:train_utils",
         "//fueling/planning/datasets:img_in_traj_out_dataset",
         "//fueling/planning/input_feature_preprocessor:chauffeur_net_feature_generator",
+        "//fueling/planning/math_utils",
         "//fueling/planning/models/trajectory_imitation:cnn_fc_model",
         "//fueling/planning/models/trajectory_imitation:cnn_lstm_model",
         "//fueling/planning/models/trajectory_imitation:conv_rnn_model",
         "//fueling/planning/models/trajectory_imitation:image_representation_loss",
         "//fueling/planning/models/trajectory_imitation:trajectory_point_displacement_loss",
+        "@apollo//modules/planning/proto:planning_py_pb2",
         "@apollo//modules/planning/proto:planning_semantic_map_config_py_pb2",
     ],
 )
