@@ -65,8 +65,13 @@ def update_status():
             save_account_operation(account_id, email, comment,
                                    "account " + action_type.lower(), action)
         logging.info(f"comment_dict:{comment_dict}")
+        objs = account_utils.AccountUtils().get_account_info({"_id": account_id})
         if comment_dict:
+            used_objs = account.get_job_used(objs)
             comment_dict["time"] = time_utils.get_datetime_str(comment_dict["time"])
+            if used_objs:
+                used_obj = used_objs[0]
+                comment_dict["status"] = used_obj["status"]
             res["operation"] = comment_dict
             res["code"] = 200
             res["msg"] = "update success"

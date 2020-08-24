@@ -84,6 +84,7 @@ class AccountServices(flask_restful.Resource):
                 account_dict["vehicle_sn"] = (obj_vehicle_sn if is_virtual else
                                               account.get_virtual_vehicle_sn())
             account.account_db.update_account_msg(account_id, account_dict)
+            account.account_db.upadate_account_status(account_id, 'Pending')
         elif account_obj["status"] == "Enabled":
             for arg in must_args:
                 if arg not in account_dict:

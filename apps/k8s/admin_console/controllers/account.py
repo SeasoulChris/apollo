@@ -183,7 +183,7 @@ def update_services(objs, services_list):
 
 def is_over_quota(used, quota):
     """Whether the account is over quota"""
-    return used > quota
+    return used >= quota
 
 
 def is_expired(expire_date):

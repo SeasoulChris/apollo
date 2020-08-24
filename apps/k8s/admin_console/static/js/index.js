@@ -310,7 +310,7 @@ $(document).ready(function () {
                         // Set the lable of button data
                         button.data("label", not_action);
                         button.data("account_status", status);
-                        if (status == "Enabled")
+                        if (status == "Enabled" || status == "Expired" ||status == "Over-quota")
                         {
                             if(first_status == "Pending")
                             {
