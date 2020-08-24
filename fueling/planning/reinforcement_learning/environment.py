@@ -95,7 +95,14 @@ class ADSEnv(object):
         self.sequence_num += 1
         planning_message.total_path_time = 2
 
-        current_x, current_y, current_theta = self.current_adv_pose
+        current_x, current_y, current_theta, current_v = self.current_adv_pose
+        current_point = planning_message.trajectory_point.add()
+        current_point.path_point.x = current_x
+        current_point.path_point.y = current_y
+        current_point.path_point.theta = current_theta
+        current_point.v = current_v
+        current_point.relative_time = 0
+
         point_relative_time = 0.0
         # action in shape of [time_horizon, [dx, dy, dtheta, v]]
         for i in range(action.shape[0]):
@@ -109,36 +116,37 @@ class ADSEnv(object):
                 dy * math.cos(current_theta) + current_y
             point.path_point.theta = NormalizeAngle(current_theta + dtheta)
             point.v = action[i][3]
-            point.relative_time = point_relative_time
             point_relative_time += self.delta_t
+            point.relative_time = point_relative_time
 
         accumulated_s = 0.0
-        for i in range(0, len(planning_message.trajectory_point) - 1):
+        for i in range(len(planning_message.trajectory_point) - 1):
             point = planning_message.trajectory_point[i].path_point
             nextpoint = planning_message.trajectory_point[i + 1].path_point
+            point.s = accumulated_s
             accumulated_s += math.sqrt((nextpoint.x - point.x)
                                        ** 2 + (nextpoint.y - point.y) ** 2)
-            point.s = accumulated_s
-        for i in range(0, len(planning_message.trajectory_point) - 1):
+        for i in range(len(planning_message.trajectory_point) - 1):
             point = planning_message.trajectory_point[i]
             nextpoint = planning_message.trajectory_point[i + 1]
             point.a = (nextpoint.v - point.v) / self.delta_t
-        for i in range(0, len(planning_message.trajectory_point) - 1):
+        for i in range(len(planning_message.trajectory_point) - 1):
             point = planning_message.trajectory_point[i]
             nextpoint = planning_message.trajectory_point[i + 1]
             point.da = (nextpoint.a - point.a) / self.delta_t
+
         kepsilon = 1e-6
-        for i in range(0, len(planning_message.trajectory_point) - 1):
+        for i in range(len(planning_message.trajectory_point) - 1):
             point = planning_message.trajectory_point[i].path_point
             nextpoint = planning_message.trajectory_point[i + 1].path_point
-            point.kappa = (nextpoint.theta - point.theta) / \
+            point.kappa = NormalizeAngle(nextpoint.theta - point.theta) / \
                 (nextpoint.s - point.s + kepsilon)
-        for i in range(0, len(planning_message.trajectory_point) - 1):
+        for i in range(len(planning_message.trajectory_point) - 1):
             point = planning_message.trajectory_point[i].path_point
             nextpoint = planning_message.trajectory_point[i + 1].path_point
             point.dkappa = (nextpoint.kappa - point.kappa) / \
                 (nextpoint.s - point.s + kepsilon)
-        for i in range(0, len(planning_message.trajectory_point) - 1):
+        for i in range(len(planning_message.trajectory_point) - 1):
             point = planning_message.trajectory_point[i].path_point
             nextpoint = planning_message.trajectory_point[i + 1].path_point
             point.ddkappa = (nextpoint.dkappa - point.dkappa) / \
@@ -255,6 +263,7 @@ class ADSEnv(object):
         current_x = current_path_point.x
         current_y = current_path_point.y
         current_theta = current_path_point.theta
+        current_v = frame.adc_trajectory_point[-1].trajectory_point.v
 
         birdview_feature_input = self.img_transform(
             self.birdview_feature_renderer.
@@ -292,6 +301,8 @@ class ADSEnv(object):
         hist_points_step = np.zeros_like(hist_points)
         hist_points_step[1:, :] = hist_points[1:, :] - hist_points[:-1, :]
 
-        self.state = tuple([birdview_feature_input.detach().numpy(), hist_points, hist_points_step])
+        self.state = tuple(
+            [birdview_feature_input.detach().numpy(), hist_points, hist_points_step])
+        ref_coords.append(current_v)
         self.current_adv_pose = tuple(ref_coords)
         self.is_input_ready = True
