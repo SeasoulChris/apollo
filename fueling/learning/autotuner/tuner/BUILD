@@ -38,6 +38,7 @@ py_library(
         "//fueling/learning/autotuner/config",
     ],
     deps = [
+        "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common:proto_utils",

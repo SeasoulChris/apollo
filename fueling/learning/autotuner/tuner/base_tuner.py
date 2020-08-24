@@ -1,9 +1,11 @@
+from collections import namedtuple
 from datetime import datetime
 import glob
 import json
 import os
 import shutil
 import sys
+import tarfile
 import time
 import uuid
 
@@ -13,9 +15,10 @@ import numpy as np
 
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
+import fueling.common.email_utils as email_utils
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
-import fueling.common.file_utils as file_utils
 
 
 flags.DEFINE_string(
@@ -251,20 +254,30 @@ class BaseTuner():
 
     def save_result(self):
         tic_start = time.perf_counter()
-        tuner_param_config_dict = proto_utils.pb_to_dict(self.tuner_param_config_pb)
-        self.tuner_results = {'target_max': self.best_cost,
-                              'config_max': self.best_params,
+        self.tuner_results = {'best_target': self.best_cost,
+                              'best_params': self.best_params,
                               'optimize_time': self.optimize_time,
-                              'time_efficiency': self.time_efficiency,
-                              'tuner_parameters': tuner_param_config_dict['tuner_parameters'],
-                              'iteration_records': self.iteration_records}
-
+                              'time_efficiency': self.time_efficiency}
         saving_path = self.get_saving_path()
         if not os.path.isdir(saving_path):
             os.makedirs(saving_path)
-        # Save step-by-step detailed optimization data
+        # Save multiple optimization data
+        # (1) tuner_results.json file for internal developers
         with open(os.path.join(saving_path, "tuner_results.json"), 'w') as tuner_json:
             tuner_json.write(json.dumps(self.tuner_results))
+        # (2) tuner_results.txt file for online service
+        with open(os.path.join(saving_path, "tuner_results.txt"), 'w') as tuner_txt:
+            tuner_txt.write('Control Parameters Auto-Tune Results: \n')
+            for key in self.tuner_results.keys():
+                if isinstance(self.tuner_results[key], dict):
+                    tuner_txt.write(f'\n{key}: \n')
+                    for subkey in self.tuner_results[key].keys():
+                        tuner_txt.write(f'\t{subkey}: \t{self.tuner_results[key][subkey]} \n')
+                else:
+                    tuner_txt.write(f'\n{key}: \t{self.tuner_results[key]} \n')
+        # (3) tuner_parameters.txt file for online service
+        with open(os.path.join(saving_path, "tuner_parameters.txt"), 'w') as param_txt:
+            param_txt.write(f'{self.tuner_param_config_pb.tuner_parameters}')
         # Save the final visual plots if the original figures are stored in single-iteration folder
         if saving_path != self.visual_storage_dir:
             final_visual_file = glob.glob(os.path.join(self.visual_storage_dir, '*.png'))
@@ -272,8 +285,59 @@ class BaseTuner():
                 shutil.copyfile(
                     visual_file, os.path.join(
                         saving_path, os.path.basename(visual_file)))
-        logging.info(f"Complete results saved at {saving_path} ")
+        logging.info(f"Complete results saved at {saving_path}")
+        self.summarize_task(saving_path)
+        logging.info("Complete results summarized and released by email")
         logging.info(f"Timer: save_result  - {time.perf_counter() - tic_start: 0.04f} sec")
+
+    def summarize_task(self, tuner_results_path, job_email='', error_msg=''):
+        """Make summaries to specified task"""
+        SummaryTuple = namedtuple(
+            'Summary', [
+                'Tuner_Config', 'Best_Target', 'Best_Params', 'Optimize_Time', 'Time_Efficiency'])
+        title = 'Control Parameter Autotune Results'
+        receivers = email_utils.DATA_TEAM + \
+            email_utils.CONTROL_TEAM + email_utils.SIMULATION_TEAM
+        receivers = []
+        receivers.append(job_email)
+        if tuner_results_path:
+            email_content = []
+            attachments = []
+            # Initialize the attached files in reprot email
+            target_file = glob.glob(os.path.join(
+                tuner_results_path, '*tuner_results.txt'))
+            target_conf = glob.glob(os.path.join(
+                tuner_results_path, '*tuner_parameters.txt'))
+            # Fill out the results summary in reprot email
+            email_content.append(SummaryTuple(
+                Tuner_Config=flags.FLAGS.tuner_param_config_filename,
+                Best_Target=self.tuner_results['best_target'],
+                Best_Params=self.tuner_results['best_params'],
+                Optimize_Time=self.tuner_results['optimize_time'],
+                Time_Efficiency=self.tuner_results['time_efficiency']))
+            # Attach the result files in reprot email
+            if target_file and target_conf:
+                output_filename = os.path.join(
+                    tuner_results_path,
+                    f'control_autotune_{self.timestamp}.tar.gz')
+                tar = tarfile.open(output_filename, 'w:gz')
+                task_name = f'control_autotune_{self.timestamp}'
+                file_name = os.path.basename(target_file[0])
+                conf_name = os.path.basename(target_conf[0])
+                tar.add(target_file[0], arcname=F'{task_name}_{file_name}')
+                tar.add(target_conf[0], arcname=F'{task_name}_{conf_name}')
+                tar.close()
+                attachments.append(output_filename)
+            file_utils.touch(os.path.join(tuner_results_path, 'COMPLETE'))
+        else:
+            logging.info('tuner_results_path in summarize_task: None')
+            if error_msg:
+                email_content = error_msg
+            else:
+                email_content = 'No autotune results: unknown reason.'
+            attachments = []
+        email_utils.send_email_info(
+            title, email_content, receivers, attachments)
 
     def run(self):
         try:
