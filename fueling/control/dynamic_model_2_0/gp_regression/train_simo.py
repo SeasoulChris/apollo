@@ -44,9 +44,6 @@ model, likelihood, optimizer, loss = train_utils.init_train(
 train_loader = torch.utils.data.DataLoader(
     torch.utils.data.TensorDataset(train_x, train_y))
 
-model, likelihood, train_loss_all = train_utils.train_with_adjusted_lr(
-    num_epochs, train_loader, model, likelihood,
-    loss, optimizer)
 
 # validation loader
 test_x = torch.linspace(0, 1, 51)
@@ -56,6 +53,14 @@ test_y = torch.stack([
 ], -1)
 validation_loader = torch.utils.data.DataLoader(
     torch.utils.data.TensorDataset(test_x, test_y))
+
+
+# put training method here
+model, likelihood = train_utils.train_with_cross_validation(
+    num_epochs, train_loader, validation_loader, model, likelihood,
+    loss, optimizer)
+
+
 with torch.no_grad():
     mean_loss, mean_accuracy = train_utils.validation_loop(
         validation_loader, model, likelihood, loss_fn=loss, accuracy_fn=torch.nn.MSELoss(),

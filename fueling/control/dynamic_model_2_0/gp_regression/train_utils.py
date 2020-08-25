@@ -86,6 +86,42 @@ def train_with_adjusted_lr(num_epochs, train_loader, model, likelihood,
     return model, likelihood, train_loss_all[-1]
 
 
+def train_with_cross_validation(num_epochs, train_loader, validation_loader, model, likelihood,
+                                loss_fn, optimizer, fig_file_path=None, is_transpose=False,
+                                use_cuda=False):
+    # adjust learning rate
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10,
+                                  verbose=False, threshold=0.0001, threshold_mode='rel',
+                                  cooldown=0, min_lr=0.0, eps=1e-08)
+
+    # save train loss
+    loss_dict = dict()
+    loss_dict["train_loss_all"] = []
+    loss_dict["validation_mean_loss_all"] = []
+    loss_dict["validation_mean_accuracy_all"] = []
+    epochs_iter = tqdm.tqdm(range(num_epochs), desc="Epoch")
+    for i in epochs_iter:
+        tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
+        # training loop
+        model.train()
+        likelihood.train()
+        train_loss = basic_train_loop(train_loader, model, loss_fn,
+                                      optimizer, is_transpose, use_cuda)
+        with torch.no_grad(), gpytorch.settings.fast_pred_var():
+            # validation loop
+            validation_mean_loss, validation_mean_accuracy = validation_loop(
+                validation_loader, model, likelihood, loss_fn,
+                accuracy_fn=torch.nn.MSELoss(), is_transpose=is_transpose, use_cuda=use_cuda)
+        scheduler.step(validation_mean_loss)
+        if i == 10:
+            gpytorch.settings.tridiagonal_jitter(1e-4)
+        loss_dict["train_loss_all"].append(train_loss)
+        loss_dict["validation_mean_loss_all"].append(validation_mean_loss)
+        loss_dict["validation_mean_accuracy_all"].append(validation_mean_accuracy)
+    plot_loss(loss_dict, fig_file_path)
+    return model, likelihood
+
+
 def train_save_best_model(num_epochs, train_loader, model, likelihood,
                           loss_fn, optimizer, test_features, result_folder,
                           fig_file_path=None, is_transpose=False):
@@ -168,7 +204,7 @@ def validation_loop(data_loader, model, likelihood, loss_fn, accuracy_fn=torch.n
     mean_loss = np.mean(loss_history)
     mean_accuracy = np.mean(accuracy_history)
     logging.info(f'loss: {mean_loss}.')
-    logging.info(f'accuracy = {mean_accuracy}')
+    logging.info(f'accuracy: {mean_accuracy}')
     return mean_loss, mean_accuracy
 
 
@@ -183,7 +219,20 @@ def plot_train_loss(train_losses, fig_file_path):
     plt.grid(True)
     if fig_file_path is not None:
         plt.savefig(fig_file_path)
-    # plt.show()
+
+
+def plot_loss(loss_dict, fig_file_path):
+    fig = plt.figure(figsize=(12, 8))
+    ax1 = fig.add_subplot(1, 1, 1)
+    ax1.set_xlabel('epoch', fontdict={'size': 12})
+    ax1.set_ylabel('loss', fontdict={'size': 12})
+    for key in loss_dict:
+        ax1.plot(loss_dict[key], label=key)
+    plt.legend(fontsize=12, numpoints=5, frameon=False)
+    plt.title("Loss and Accuracy")
+    plt.grid(True)
+    if fig_file_path is not None:
+        plt.savefig(fig_file_path)
 
 
 def load_model(file_path, encoder_net_model, model, likelihood):

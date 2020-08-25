@@ -128,7 +128,6 @@ else:
 model.eval()
 likelihood.eval()
 
-
 # use all validation data
 # Make predictions
 with torch.no_grad(), gpytorch.settings.fast_pred_var():
@@ -165,7 +164,6 @@ ax.legend(fontsize=12, frameon=False)
 ax.grid(True)
 # save validation figures to folder
 plt.savefig(os.path.join(validation_data_path, f'{timestr}', 'validation.png'))
-plt.show()
 
 
 #  accuracy
