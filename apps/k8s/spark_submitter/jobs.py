@@ -26,7 +26,7 @@ class BaseJob(object):
 class ControlProfiling(BaseJob):
     def parse_arg(self, job_arg):
         entrypoint = 'fueling/profiling/control/control_profiling.py'
-        client_flags = {'workers': 6, 'cpu': 4, 'memory': 60}
+        client_flags = {'workers': 4, 'cpu': 2, 'memory': 32}
         job_flags = {'input_data_path': job_arg.flags.get("input_data_path")}
         return (entrypoint, client_flags, job_flags)
 
@@ -52,6 +52,20 @@ class VehicleCalibration(BaseJob):
         client_flags = {'workers': 6, 'cpu': 4, 'memory': 60}
         job_flags = {
             'input_data_path': job_arg.flags.get("input_data_path"),
+        }
+        return (entrypoint, client_flags, job_flags)
+
+
+class DynamicModeling(BaseJob):
+    def parse_arg(self, job_arg):
+        entrypoint = 'fueling/control/calibration_table/dynamic_model.py'
+        client_flags = {
+            'workers': 6, 'cpu': 4, 'memory': 64,
+            'partner_storage_writable': True,
+        }
+        job_flags = {
+            'input_data_path': job_arg.flags.get("input_data_path"),
+            'is_backward': job_arg.flags.get("is_backward"),
         }
         return (entrypoint, client_flags, job_flags)
 
