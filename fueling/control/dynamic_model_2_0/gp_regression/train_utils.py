@@ -141,6 +141,37 @@ def train_save_best_model(num_epochs, train_loader, model, likelihood,
     return model, likelihood, train_loss_all[-1]
 
 
+def validation_loop(data_loader, model, likelihood, loss_fn, accuracy_fn=torch.nn.MSELoss(),
+                    is_transpose=False, use_cuda=False):
+    """ training with validation loss """
+    model.eval()
+    likelihood.eval()
+    loss_history = []
+    accuracy_history = []
+    # loop over batches
+    for i, (x_batch, y_batch) in enumerate(data_loader):
+        if is_transpose:
+            x_batch = torch.transpose(x_batch, 0, 1)
+        if use_cuda:
+            x_batch, y_batch = cuda(x_batch), cuda(y_batch)
+        # same as training loss formation
+        output = model(x_batch)
+        loss = -loss_fn(output, y_batch)
+        loss_history.append(loss.item())
+        # evaluation accuracy
+        predictions = likelihood(model(x_batch))
+        mean = predictions.mean
+        # lower, upper = predictions.confidence_region()
+        accuracy = accuracy_fn(mean, y_batch)
+        accuracy_history.append(accuracy.item())
+
+    mean_loss = np.mean(loss_history)
+    mean_accuracy = np.mean(accuracy_history)
+    logging.info(f'loss: {mean_loss}.')
+    logging.info(f'accuracy = {mean_accuracy}')
+    return mean_loss, mean_accuracy
+
+
 def plot_train_loss(train_losses, fig_file_path):
     fig = plt.figure(figsize=(12, 8))
     ax1 = fig.add_subplot(1, 1, 1)

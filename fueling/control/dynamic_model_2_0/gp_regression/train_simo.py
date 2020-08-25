@@ -44,9 +44,24 @@ model, likelihood, optimizer, loss = train_utils.init_train(
 train_loader = torch.utils.data.DataLoader(
     torch.utils.data.TensorDataset(train_x, train_y))
 
-model, likelihood = train_utils.train_with_adjusted_lr(num_epochs, train_loader, model, likelihood,
-                                                       loss, optimizer)
+model, likelihood, train_loss_all = train_utils.train_with_adjusted_lr(
+    num_epochs, train_loader, model, likelihood,
+    loss, optimizer)
 
+# validation loader
+test_x = torch.linspace(0, 1, 51)
+test_y = torch.stack([
+    torch.sin(test_x * (2 * math.pi)) + torch.randn(test_x.size()) * 0.2,
+    torch.cos(test_x * (2 * math.pi)) + torch.randn(test_x.size()) * 0.2,
+], -1)
+validation_loader = torch.utils.data.DataLoader(
+    torch.utils.data.TensorDataset(test_x, test_y))
+with torch.no_grad():
+    mean_loss, mean_accuracy = train_utils.validation_loop(
+        validation_loader, model, likelihood, loss_fn=loss, accuracy_fn=torch.nn.MSELoss(),
+        is_transpose=False, use_cuda=False)
+
+print(f'validation mean loss is: {mean_loss}; mean accuracy is: {mean_accuracy}')
 # Set into eval mode
 model.eval()
 likelihood.eval()
