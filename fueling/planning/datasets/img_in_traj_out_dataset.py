@@ -603,7 +603,7 @@ class TrajectoryImitationSelfCNNLSTMDataset(Dataset):
 class TrajectoryImitationSelfCNNLSTMWithEnvLossDataset(Dataset):
     def __init__(self, data_dir, regions_list, renderer_config_file,
                  renderer_base_map_img_dir,
-                 renderer_base_map_data_dir, on,
+                 renderer_base_map_data_dir,
                  img_feature_rotation=False, past_motion_dropout=False,
                  history_point_num=10, ouput_point_num=10, evaluate_mode=False):
         # TODO(Jinyun): refine transform function
@@ -648,6 +648,8 @@ class TrajectoryImitationSelfCNNLSTMWithEnvLossDataset(Dataset):
 
     def __getitem__(self, idx):
         frame_name = self.instances[idx]
+
+        is_synthesized = 'is_synthesized' in frame_name
 
         frame = proto_utils.get_pb_from_bin_file(
             frame_name, learning_data_pb2.LearningDataFrame())
@@ -797,7 +799,8 @@ class TrajectoryImitationSelfCNNLSTMWithEnvLossDataset(Dataset):
                  torch.empty(1),
                  pred_obs,
                  offroad_mask,
-                 routing_mask))
+                 routing_mask,
+                 torch.tensor([is_synthesized])))
 
 
 class TrajectoryImitationCNNLSTMWithEnvLossDataset(Dataset):
@@ -848,6 +851,8 @@ class TrajectoryImitationCNNLSTMWithEnvLossDataset(Dataset):
 
     def __getitem__(self, idx):
         frame_name = self.instances[idx]
+
+        is_synthesized = 'is_synthesized' in frame_name
 
         frame = proto_utils.get_pb_from_bin_file(
             frame_name, learning_data_pb2.LearningDataFrame())
@@ -985,4 +990,5 @@ class TrajectoryImitationCNNLSTMWithEnvLossDataset(Dataset):
                  torch.empty(1),
                  pred_obs,
                  offroad_mask,
-                 routing_mask))
+                 routing_mask,
+                 torch.tensor([is_synthesized])))
