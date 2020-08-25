@@ -7,6 +7,7 @@ import os
 
 from cyber.proto.record_pb2 import Header
 from cyber.python.cyber_py3.record import RecordReader
+from modules.audio.proto.audio_pb2 import AudioDetection
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.control.proto.control_cmd_pb2 import ControlCommand
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
@@ -14,7 +15,9 @@ from modules.drivers.proto.conti_radar_pb2 import ContiRadar
 from modules.drivers.proto.pointcloud_pb2 import PointCloud
 from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 from modules.drivers.proto.sensor_image_pb2 import Image
+from modules.drivers.microphone.proto.audio_pb2 import AudioData
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
+from modules.perception.proto.perception_obstacle_pb2 import PerceptionObstacles
 from modules.planning.proto.planning_pb2 import ADCTrajectory
 from modules.prediction.proto.prediction_obstacle_pb2 import PredictionObstacles
 from modules.routing.proto.routing_pb2 import RoutingResponse
@@ -24,6 +27,7 @@ import fueling.common.logging as logging
 import fueling.common.time_utils as time_utils
 
 
+AUDIO_CHANNEL = '/apollo/audio_detection'
 CHASSIS_CHANNEL = '/apollo/canbus/chassis'
 CONTROL_CHANNEL = '/apollo/control'
 DRIVE_EVENT_CHANNEL = '/apollo/drive_event'
@@ -48,8 +52,11 @@ GNSS_INS_STAT_CHANNEL = '/apollo/sensor/gnss/ins_stat'
 FRONT_RADAR_CHANNEL = '/apollo/sensor/radar/front'
 REAR_RADAR_CHANNEL = '/apollo/sensor/radar/rear'
 LIDAR_128_CHANNEL = '/apollo/sensor/lidar128/compensator/PointCloud2'
+MICROPHONE_CHANNEL = '/apollo/sensor/microphone'
+OBSTACLES_CHANNEL = '/apollo/perception/obstacles'
 
 CHANNEL_TO_TYPE = {
+    AUDIO_CHANNEL: AudioDetection,
     CHASSIS_CHANNEL: Chassis,
     CONTROL_CHANNEL: ControlCommand,
     HMI_STATUS_CHANNEL: HMIStatus,
@@ -70,7 +77,9 @@ CHANNEL_TO_TYPE = {
     PLANNING_CHANNEL: ADCTrajectory,
     FRONT_RADAR_CHANNEL: ContiRadar,
     REAR_RADAR_CHANNEL: ContiRadar,
-    LIDAR_128_CHANNEL: PointCloud
+    LIDAR_128_CHANNEL: PointCloud,
+    MICROPHONE_CHANNEL: AudioData,
+    OBSTACLES_CHANNEL: PerceptionObstacles
 }
 
 
