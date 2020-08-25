@@ -7,10 +7,10 @@ import casadi as ca
 import matplotlib.pyplot as plt
 import numpy as np
 
+from fueling.planning.math_utils.math_utils import NormalizeAngle
+
 flags.DEFINE_multi_float('perturbate_xy_range', [-1.5, 1.5],
                          'points num in the past to be synthesized')
-flags.DEFINE_multi_float('perturbate_heading_range', [-np.pi / 3, np.pi / 3],
-                         'points num in the future to be synthesized')
 flags.DEFINE_float(
     'ref_cost', 1.0, 'points num in the past to be synthesized')
 flags.DEFINE_float('elastic_band_smoothing_cost', 10.0,
@@ -24,10 +24,9 @@ class TrajectoryPerturbationSynthesizer(object):
     a synthesizer using optimiaztion to perturbate input trajectory
     '''
 
-    def __init__(self, perturbate_xy_range, perturbate_heading_range,
+    def __init__(self, perturbate_xy_range,
                  ref_cost, elastic_band_smoothing_cost, max_curvature):
         self.perturbate_xy_range = perturbate_xy_range
-        self.perturbate_heading_range = perturbate_heading_range
         self.ref_cost = ref_cost
         self.elastic_band_smoothing_cost = elastic_band_smoothing_cost
         self.max_curvature = max_curvature
@@ -40,11 +39,9 @@ class TrajectoryPerturbationSynthesizer(object):
                                            high=self.perturbate_xy_range[1])
         y_perturbation = np.random.uniform(low=self.perturbate_xy_range[0],
                                            high=self.perturbate_xy_range[1])
-        heading_perturbation = np.random.uniform(low=self.perturbate_heading_range[0],
-                                                 high=self.perturbate_heading_range[1])
         trajectory[perturbation_point_idx] = np.array([original_x + x_perturbation,
                                                        original_y + y_perturbation,
-                                                       original_heading + heading_perturbation])
+                                                       original_heading])
         return trajectory
 
     def ebs_with_fixed_point(self, trajectory, fixed_point_idx_list):
@@ -96,20 +93,19 @@ class TrajectoryPerturbationSynthesizer(object):
 
         return smoothed_xy
 
-    def evaluate_trajectory_heading(self, xy_point, original_trajectory):
-        if len(original_trajectory) < 2:
-            return original_trajectory
-        state_horizon = original_trajectory.shape[0]
+    def evaluate_trajectory_heading(self, xy_point):
+        state_horizon = xy_point.shape[0]
+        if state_horizon < 2:
+            return xy_point, False
         headings = np.zeros((state_horizon, 1))
-        headings[0] = math.atan2(original_trajectory[1][1] - original_trajectory[0][1],
-                                 original_trajectory[1][0] - original_trajectory[0][0])
-        headings[-1] = math.atan2(original_trajectory[-1][1] - original_trajectory[-2][1],
-                                  original_trajectory[-1][0] - original_trajectory[-2][0])
+        headings[0] = math.atan2(xy_point[1][1] - xy_point[0][1],
+                                 xy_point[1][0] - xy_point[0][0])
+        headings[-1] = math.atan2(xy_point[-1][1] - xy_point[-2][1],
+                                  xy_point[-1][0] - xy_point[-2][0])
         for i in range(1, state_horizon - 1):
-            headings[i] = math.atan2(original_trajectory[i + 1][1] - original_trajectory[i - 1][1],
-                                     original_trajectory[i + 1][0] - original_trajectory[i - 1][0])
-        trajectory = np.hstack((xy_point, headings))
-        return trajectory
+            headings[i] = math.atan2(xy_point[i + 1][1] - xy_point[i - 1][1],
+                                     xy_point[i + 1][0] - xy_point[i - 1][0])
+        return np.hstack((xy_point, headings)), True
 
     def check_trajectory_curvature(self, smoothed_trajectory):
         for i in range(smoothed_trajectory.shape[0] - 1):
@@ -118,10 +114,8 @@ class TrajectoryPerturbationSynthesizer(object):
                                        + (smoothed_trajectory[i][1]
                                           - smoothed_trajectory[i + 1][1])**2)
             angle_difference = math.fabs(
-                smoothed_trajectory[i + 1][2] - smoothed_trajectory[i][2])
-            minimal_angle_difference = (
-                angle_difference + np.pi / 2) % np.pi - np.pi / 2
-            estimated_curvature = minimal_angle_difference / point_distance
+                NormalizeAngle(smoothed_trajectory[i + 1][2] - smoothed_trajectory[i][2]))
+            estimated_curvature = angle_difference / point_distance
             if estimated_curvature > self.max_curvature:
                 return False
         return True
@@ -146,6 +140,12 @@ class TrajectoryPerturbationSynthesizer(object):
         fig.scatter(traj_for_plot[perturbate_point_idx][0],
                     traj_for_plot[perturbate_point_idx][1],
                     marker='D', color='g')
+        for i in range(traj_for_plot.shape[0]):
+            fig.arrow(traj_for_plot[i, 0], traj_for_plot[i, 1], np.cos(
+                traj_for_plot[i, 2]), np.sin(traj_for_plot[i, 2]), color='g')
+            fig.arrow(origin_traj_for_plot[i, 0], origin_traj_for_plot[i, 1], np.cos(
+                origin_traj_for_plot[i, 2]), np.sin(origin_traj_for_plot[i, 2]), color='r')
+
         fig.set_aspect('equal')
         canvas.savefig(frame_file_path)
         plt.close(canvas)
@@ -176,23 +176,24 @@ class TrajectoryPerturbationSynthesizer(object):
 
         normalization_point = np.copy(perturbated_trajectory[0, :])
 
-        perturbated_trajectory -= normalization_point
+        perturbated_trajectory[:, :2] -= normalization_point[:2]
 
         smoothed_xy = self.ebs_with_fixed_point(perturbated_trajectory,
                                                 [0,
                                                  perturbate_point_idx,
                                                  merged_trajectory.shape[0] - 1])
 
-        smoothed_trajectory = self.evaluate_trajectory_heading(smoothed_xy,
-                                                               perturbated_trajectory)
-        smoothed_trajectory += normalization_point
+        smoothed_trajectory, is_long_enough = self.evaluate_trajectory_heading(
+            smoothed_xy)
+
+        smoothed_trajectory[:, :2] += normalization_point[:2]
 
         is_valid = self.check_trajectory_curvature(smoothed_trajectory)
 
         perturbated_past_trajectory = smoothed_trajectory[:splitting_idx + 1]
         perturbated_future_trajectory = smoothed_trajectory[splitting_idx + 1:]
 
-        return is_valid, \
+        return is_valid and is_long_enough, \
             perturbated_past_trajectory, \
             perturbated_future_trajectory, \
             perturbate_point_idx
@@ -205,8 +206,6 @@ if __name__ == "__main__":
         trajectory = np.vstack((trajectory, point))
 
     synthesizer = TrajectoryPerturbationSynthesizer(perturbate_xy_range=[-1.5, 1.5],
-                                                    perturbate_heading_range=[
-                                                        -np.pi / 3, np.pi / 3],
                                                     ref_cost=1.0,
                                                     elastic_band_smoothing_cost=10.0,
                                                     max_curvature=0.3)

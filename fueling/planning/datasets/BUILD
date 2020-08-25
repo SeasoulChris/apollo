@@ -128,6 +128,7 @@ py_library(
     srcs = ["trajectory_perturbation_synthesizer.py"],
     deps = [
         "//fueling/common:logging",
+        "//fueling/planning/math_utils",
     ],
 )
 
