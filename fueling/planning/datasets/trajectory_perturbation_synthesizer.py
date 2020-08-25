@@ -9,7 +9,7 @@ import numpy as np
 
 from fueling.planning.math_utils.math_utils import NormalizeAngle
 
-flags.DEFINE_multi_float('perturbate_xy_range', [-1.5, 1.5],
+flags.DEFINE_multi_float('perturbate_normal_direction_range', [-2, 2],
                          'points num in the past to be synthesized')
 flags.DEFINE_float(
     'ref_cost', 1.0, 'points num in the past to be synthesized')
@@ -24,9 +24,9 @@ class TrajectoryPerturbationSynthesizer(object):
     a synthesizer using optimiaztion to perturbate input trajectory
     '''
 
-    def __init__(self, perturbate_xy_range,
+    def __init__(self, perturbate_normal_direction_range,
                  ref_cost, elastic_band_smoothing_cost, max_curvature):
-        self.perturbate_xy_range = perturbate_xy_range
+        self.perturbate_normal_direction_range = perturbate_normal_direction_range
         self.ref_cost = ref_cost
         self.elastic_band_smoothing_cost = elastic_band_smoothing_cost
         self.max_curvature = max_curvature
@@ -35,12 +35,15 @@ class TrajectoryPerturbationSynthesizer(object):
         original_x = trajectory[perturbation_point_idx][0]
         original_y = trajectory[perturbation_point_idx][1]
         original_heading = trajectory[perturbation_point_idx][2]
-        x_perturbation = np.random.uniform(low=self.perturbate_xy_range[0],
-                                           high=self.perturbate_xy_range[1])
-        y_perturbation = np.random.uniform(low=self.perturbate_xy_range[0],
-                                           high=self.perturbate_xy_range[1])
-        trajectory[perturbation_point_idx] = np.array([original_x + x_perturbation,
-                                                       original_y + y_perturbation,
+        perturbate_normal_direction_range = \
+            np.random.uniform(low=self.perturbate_normal_direction_range[0],
+                              high=self.perturbate_normal_direction_range[1])
+        normal_vectors = NormalizeAngle(
+            trajectory[perturbation_point_idx][2] + math.pi / 2)
+        trajectory[perturbation_point_idx] = np.array([original_x + np.cos(normal_vectors)
+                                                       * perturbate_normal_direction_range,
+                                                       original_y + np.sin(normal_vectors)
+                                                       * perturbate_normal_direction_range,
                                                        original_heading])
         return trajectory
 
@@ -205,7 +208,7 @@ if __name__ == "__main__":
         point = np.array([[i, 0, 0]])
         trajectory = np.vstack((trajectory, point))
 
-    synthesizer = TrajectoryPerturbationSynthesizer(perturbate_xy_range=[-1.5, 1.5],
+    synthesizer = TrajectoryPerturbationSynthesizer(perturbate_normal_direction_range=[-1.5, 1.5],
                                                     ref_cost=1.0,
                                                     elastic_band_smoothing_cost=10.0,
                                                     max_curvature=0.3)
