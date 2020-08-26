@@ -137,6 +137,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             #   Exit with error emails if doesn't pass the sanity check
             sanity_status = sanity_check(origin_dir, job_id,
                                          feature_utils.CONF_FILE, feature_utils.CHANNELS)
+            if not flags.FLAGS.ctl_metrics_test_in_local:
+                JobUtils(job_id).save_job_input_data_size(origin_dir)
             if sanity_status == 'OK':
                 logging.info('Sanity_Check: Passed.')
                 if not flags.FLAGS.ctl_metrics_test_in_local:
