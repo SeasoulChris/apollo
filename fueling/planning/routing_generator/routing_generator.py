@@ -39,7 +39,7 @@ class RoutingGenerator(BasePipeline):
         self.route_generator = None
 
         self.topic_descs = dict()
-        self.RUN_IN_DRIVER = True
+        self.RUN_IN_DRIVER = False
 
     def run_test(self):
         """Run test."""

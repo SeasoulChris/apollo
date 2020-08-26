@@ -7,3 +7,7 @@ bj-batch2
 modules/data/afs-data/Pilot/YiZhuangDaDiTu/YiZhuangDaLuWang/collection/2020/ _202006
 modules/data/afs-data/Pilot/YiZhuangDaDiTu/YiZhuangDaLuWang/collection/2020/ _202005
 
+bj-batch3
+
+modules/data/afs-data/Pilot/YiZhuangDaDiTu/YiZhuangDaLuWang/collection/2020/ _202004
+modules/data/afs-data/Pilot/YiZhuangDaDiTu/YiZhuangDaLuWang/collection/2020/ _202003
