@@ -185,10 +185,10 @@ class MultiJobControlProfilingVisualization(BasePipeline):
             """Step 4: Summarize by scanning the target directory and send out emails"""
             summarize_tasks(todo_tasks.values().collect(), origin_dir, target_dir,
                             job_owner, job_email)
+            JobUtils(job_id).save_job_progress(100)
 
         logging.info(f"Timer: total run() - {time.perf_counter() - tic_start: 0.04f} sec")
         logging.info('Control Profiling Visualization: All Done, PROD')
-        JobUtils(job_id).save_job_progress(100)
 
     def process(self, todo_tasks):
         """Run the pipeline with given parameters"""
