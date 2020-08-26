@@ -49,7 +49,7 @@ class OpenSpacePlannerProfiling(BaseJob):
 class VehicleCalibration(BaseJob):
     def parse_arg(self, job_arg):
         entrypoint = 'fueling/control/calibration_table/vehicle_calibration.py'
-        client_flags = {'workers': 6, 'cpu': 4, 'memory': 60}
+        client_flags = {'workers': 6, 'cpu': 4, 'memory': 10}
         job_flags = {
             'input_data_path': job_arg.flags.get("input_data_path"),
         }
@@ -60,7 +60,7 @@ class DynamicModeling(BaseJob):
     def parse_arg(self, job_arg):
         entrypoint = 'fueling/control/calibration_table/dynamic_model.py'
         client_flags = {
-            'workers': 6, 'cpu': 4, 'memory': 64,
+            'workers': 6, 'cpu': 4, 'memory': 16,
             'partner_storage_writable': True,
         }
         job_flags = {
