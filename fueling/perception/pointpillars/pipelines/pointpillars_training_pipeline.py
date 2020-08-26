@@ -3,13 +3,17 @@
 import os
 import sys
 import time
-
+from absl import flags
 import torch
 import cv2 as cv
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 from fueling.perception.pointpillars.second.pytorch.train import train
+
+flags.DEFINE_string('config_path', None, 'training config file')
+flags.DEFINE_string('pretrained_path', None, 'finetune pertrained model path')
+flags.DEFINE_string('model_dir', None, 'training models saved dir')
 
 
 class PointPillarsTraining(BasePipeline):
@@ -21,8 +25,7 @@ class PointPillarsTraining(BasePipeline):
         self.to_rdd(range(1)).foreach(self.training)
         logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
 
-    @staticmethod
-    def training(instance_id):
+    def training(self, instance_id):
         """Run training task"""
         cv.setNumThreads(0)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -36,11 +39,11 @@ class PointPillarsTraining(BasePipeline):
         logging.info('cuda version: {}'.format(torch.version.cuda))
         logging.info('gpu device count: {}'.format(torch.cuda.device_count()))
 
-        config_path = "/fuel/fueling/perception/pointpillars/second/configs/"\
-                      "nuscenes/all.pp.mhead.config"
-        model_dir = "/fuel/fueling/perception/pointpillars/second/temp"
+        config_path = self.FLAGS.get('config_path')
+        model_dir = self.FLAGS.get('model_dir')
+        pretrained_path = self.FLAGS.get('pretrained_path')
 
-        train(config_path, model_dir)
+        train(config_path, model_dir, pretrained_path=pretrained_path)
 
 
 if __name__ == '__main__':

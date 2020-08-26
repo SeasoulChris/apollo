@@ -530,3 +530,97 @@ class RPNNoHead(RPNNoHeadBase):
             block.add(nn.ReLU())
 
         return block, planes
+
+
+@register_rpn
+class RPNMultiHead(RPNNoHeadBase):
+    def __init__(self,
+                 small_head,
+                 large_head,
+                 use_norm=True,
+                 num_class=2,
+                 layer_nums=(3, 5, 5),
+                 layer_strides=(2, 2, 2),
+                 num_filters=(128, 128, 256),
+                 upsample_strides=(1, 2, 4),
+                 num_upsample_filters=(256, 256, 256),
+                 num_input_features=128,
+                 num_anchor_per_loc=2,
+                 encode_background_as_zeros=True,
+                 use_direction_classifier=True,
+                 use_groupnorm=False,
+                 num_groups=32,
+                 box_code_size=7,
+                 num_direction_bins=2,
+                 name='rpn'):
+
+        super(RPNMultiHead, self).__init__(
+            use_norm=use_norm,
+            num_class=num_class,
+            layer_nums=layer_nums,
+            layer_strides=layer_strides,
+            num_filters=num_filters,
+            upsample_strides=upsample_strides,
+            num_upsample_filters=num_upsample_filters,
+            num_input_features=num_input_features,
+            num_anchor_per_loc=num_anchor_per_loc,
+            encode_background_as_zeros=encode_background_as_zeros,
+            use_direction_classifier=use_direction_classifier,
+            use_groupnorm=use_groupnorm,
+            num_groups=num_groups,
+            box_code_size=box_code_size,
+            num_direction_bins=num_direction_bins,
+            name=name)
+
+        self.small_head = small_head
+        self.large_head = large_head
+        self._use_direction_classifier = use_direction_classifier
+
+    def _make_layer(self, inplanes, planes, num_blocks, stride=1):
+        if self._use_norm:
+            if self._use_groupnorm:
+                BatchNorm2d = change_default_args(
+                    num_groups=self._num_groups, eps=1e-3)(GroupNorm)
+            else:
+                BatchNorm2d = change_default_args(
+                    eps=1e-3, momentum=0.01)(nn.BatchNorm2d)
+            Conv2d = change_default_args(bias=False)(nn.Conv2d)
+        else:
+            BatchNorm2d = Empty
+            Conv2d = change_default_args(bias=True)(nn.Conv2d)
+
+        block = Sequential(
+            nn.ZeroPad2d(1),
+            Conv2d(inplanes, planes, 3, stride=stride),
+            BatchNorm2d(planes),
+            nn.ReLU(),
+        )
+        for j in range(num_blocks):
+            block.add(Conv2d(planes, planes, 3, padding=1))
+            block.add(BatchNorm2d(planes))
+            block.add(nn.ReLU())
+
+        return block, planes
+
+    def forward(self, x):
+
+        rpn_out = super().forward(x)
+
+        r1 = rpn_out["stage0"]
+        _, _, H, W = r1.shape
+        # cropsize40x40 = np.round(H * 0.1).astype(np.int64)
+        cropsize40x40 = torch.tensor(np.round(H * 0.1), dtype=torch.int64)
+        r1 = r1[:, :, cropsize40x40:-cropsize40x40, cropsize40x40:-cropsize40x40]
+        small = self.small_head(r1)
+        large = self.large_head(rpn_out["out"])
+
+        # concated preds MUST match order in class_settings in config.
+        res = {
+            "box_preds": torch.cat([large["box_preds"], small["box_preds"]], dim=1),
+            "cls_preds": torch.cat([large["cls_preds"], small["cls_preds"]], dim=1),
+        }
+
+        if self._use_direction_classifier:
+            res["dir_cls_preds"] = torch.cat(
+                [large["dir_cls_preds"], small["dir_cls_preds"]], dim=1)
+        return res

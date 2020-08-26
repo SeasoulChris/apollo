@@ -3,7 +3,7 @@ import torch
 from torch import nn
 
 from fueling.perception.pointpillars.second.pytorch.models.voxelnet import (
-    register_voxelnet, VoxelNet)
+    register_voxelnet, VoxelNet, LossNormType)
 from fueling.perception.pointpillars.second.pytorch.models import rpn
 
 
@@ -174,3 +174,150 @@ class VoxelNetNuscenesMultiHead(VoxelNet):
             res["dir_cls_preds"] = torch.cat(
                 [large["dir_cls_preds"], small["dir_cls_preds"]], dim=1)
         return res
+
+
+@register_voxelnet
+class ApolloVoxelNetNuscenesMultiHead(VoxelNet):
+    def __init__(self,
+                 output_shape,
+                 num_class=2,
+                 num_input_features=4,
+                 vfe_class_name="VoxelFeatureExtractor",
+                 vfe_num_filters=[32, 128],
+                 with_distance=False,
+                 middle_class_name="SparseMiddleExtractor",
+                 middle_num_input_features=-1,
+                 middle_num_filters_d1=[64],
+                 middle_num_filters_d2=[64, 64],
+                 rpn_class_name="RPN",
+                 rpn_num_input_features=-1,
+                 rpn_layer_nums=[3, 5, 5],
+                 rpn_layer_strides=[2, 2, 2],
+                 rpn_num_filters=[128, 128, 256],
+                 rpn_upsample_strides=[1, 2, 4],
+                 rpn_num_upsample_filters=[256, 256, 256],
+                 use_norm=True,
+                 use_groupnorm=False,
+                 num_groups=32,
+                 use_direction_classifier=True,
+                 use_sigmoid_score=False,
+                 encode_background_as_zeros=True,
+                 use_rotate_nms=True,
+                 multiclass_nms=False,
+                 nms_score_thresholds=None,
+                 nms_pre_max_sizes=None,
+                 nms_post_max_sizes=None,
+                 nms_iou_thresholds=None,
+                 target_assigner=None,
+                 cls_loss_weight=1.0,
+                 loc_loss_weight=1.0,
+                 pos_cls_weight=1.0,
+                 neg_cls_weight=1.0,
+                 direction_loss_weight=1.0,
+                 loss_norm_type=LossNormType.NormByNumPositives,
+                 encode_rad_error_by_sin=False,
+                 loc_loss_ftor=None,
+                 cls_loss_ftor=None,
+                 measure_time=False,
+                 voxel_generator=None,
+                 post_center_range=None,
+                 dir_offset=0.0,
+                 sin_error_factor=1.0,
+                 nms_class_agnostic=False,
+                 num_direction_bins=2,
+                 direction_limit_offset=0,
+                 name='voxelnet'):
+
+        super().__init__(output_shape,
+                         num_class,
+                         num_input_features,
+                         vfe_class_name,
+                         vfe_num_filters,
+                         with_distance,
+                         middle_class_name,
+                         middle_num_input_features,
+                         middle_num_filters_d1,
+                         middle_num_filters_d2,
+                         rpn_class_name,
+                         rpn_num_input_features,
+                         rpn_layer_nums,
+                         rpn_layer_strides,
+                         rpn_num_filters,
+                         rpn_upsample_strides,
+                         rpn_num_upsample_filters,
+                         use_norm,
+                         use_groupnorm,
+                         num_groups,
+                         use_direction_classifier,
+                         use_sigmoid_score,
+                         encode_background_as_zeros,
+                         use_rotate_nms,
+                         multiclass_nms,
+                         nms_score_thresholds,
+                         nms_pre_max_sizes,
+                         nms_post_max_sizes,
+                         nms_iou_thresholds,
+                         target_assigner,
+                         cls_loss_weight,
+                         loc_loss_weight,
+                         pos_cls_weight,
+                         neg_cls_weight,
+                         direction_loss_weight,
+                         loss_norm_type,
+                         encode_rad_error_by_sin,
+                         loc_loss_ftor,
+                         cls_loss_ftor,
+                         measure_time,
+                         voxel_generator,
+                         post_center_range,
+                         dir_offset,
+                         sin_error_factor,
+                         nms_class_agnostic,
+                         num_direction_bins,
+                         direction_limit_offset,
+                         name)
+        assert self._num_class == 10
+        assert isinstance(self.rpn, rpn.RPNNoHead)
+        self.small_classes = ["pedestrian", "traffic_cone", "bicycle", "motorcycle", "barrier"]
+        self.large_classes = ["car", "truck", "trailer", "bus", "construction_vehicle"]
+        small_num_anchor_loc = sum(
+            [self.target_assigner.num_anchors_per_location_class(c) for c in self.small_classes])
+        large_num_anchor_loc = sum(
+            [self.target_assigner.num_anchors_per_location_class(c) for c in self.large_classes])
+        small_head = SmallObjectHead(
+            num_filters=self.rpn._num_filters[0],
+            num_class=self._num_class,
+            num_anchor_per_loc=small_num_anchor_loc,
+            encode_background_as_zeros=self._encode_background_as_zeros,
+            use_direction_classifier=self._use_direction_classifier,
+            box_code_size=self._box_coder.code_size,
+            num_direction_bins=self._num_direction_bins,
+        )
+        large_head = DefaultHead(
+            num_filters=np.sum(self.rpn._num_upsample_filters),
+            num_class=self._num_class,
+            num_anchor_per_loc=large_num_anchor_loc,
+            encode_background_as_zeros=self._encode_background_as_zeros,
+            use_direction_classifier=self._use_direction_classifier,
+            box_code_size=self._box_coder.code_size,
+            num_direction_bins=self._num_direction_bins,
+        )
+
+        self.rpn = rpn.RPNMultiHead(
+            small_head=small_head,
+            large_head=large_head,
+            use_norm=True,
+            num_class=num_class,
+            layer_nums=rpn_layer_nums,
+            layer_strides=rpn_layer_strides,
+            num_filters=rpn_num_filters,
+            upsample_strides=rpn_upsample_strides,
+            num_upsample_filters=rpn_num_upsample_filters,
+            num_input_features=rpn_num_input_features,
+            num_anchor_per_loc=self.target_assigner.num_anchors_per_location,
+            encode_background_as_zeros=encode_background_as_zeros,
+            use_direction_classifier=use_direction_classifier,
+            use_groupnorm=use_groupnorm,
+            num_groups=num_groups,
+            box_code_size=self.target_assigner.box_coder.code_size,
+            num_direction_bins=self._num_direction_bins)

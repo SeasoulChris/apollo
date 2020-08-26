@@ -302,7 +302,7 @@ class NuScenesDataset(Dataset):
     def evaluation_nusc(self, detections, output_dir):
         version = self.version
         eval_set_map = {
-            "v1.0-mini": "mini_train",
+            "v1.0-mini": "mini_val",
             "v1.0-trainval": "val",
         }
         gt_annos = self.ground_truth_annotations
