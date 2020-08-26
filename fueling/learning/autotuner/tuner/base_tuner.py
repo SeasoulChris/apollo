@@ -36,6 +36,11 @@ flags.DEFINE_string(
     "/mnt/bos/autotuner",
     "Tuner storage root directory"
 )
+flags.DEFINE_boolean(
+    "tuner_generate_report",
+    True,
+    "whether an email report with autotune results is required'"
+)
 flags.DEFINE_string(
     "running_role_postfix",
     "",
@@ -286,8 +291,9 @@ class BaseTuner():
                     visual_file, os.path.join(
                         saving_path, os.path.basename(visual_file)))
         logging.info(f"Complete results saved at {saving_path}")
-        self.summarize_task(saving_path)
-        logging.info("Complete results summarized and released by email")
+        if flags.FLAGS.tuner_generate_report:
+            self.summarize_task(saving_path)
+            logging.info("Complete results summarized and released by email")
         logging.info(f"Timer: save_result  - {time.perf_counter() - tic_start: 0.04f} sec")
 
     def summarize_task(self, tuner_results_path, job_email='', error_msg=''):

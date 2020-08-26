@@ -1,5 +1,5 @@
 git_info {
-  commit_id: "d9ad5291d6715b975d772fec4e02a8515b51acc6"
+  commit_id: "22c3add900fa9589f807909fc37b619447d3da88"
   repo: "https://github.com/ApolloAuto/apollo.git"
 }
 tuner_parameters {
