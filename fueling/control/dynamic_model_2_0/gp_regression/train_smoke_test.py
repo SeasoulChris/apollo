@@ -18,7 +18,7 @@ from fueling.control.dynamic_model_2_0.conf.model_conf import training_config
 from fueling.control.dynamic_model_2_0.conf.model_conf import toy_test_training_config
 from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset \
     import DynamicModelDataset
-from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
+from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder, TransformerEncoderCNN
 from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_state_dict
 from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_torch_script
 import fueling.common.logging as logging
@@ -28,7 +28,7 @@ import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_util
 train_model = True
 test_type = "smoke_test"
 platform_dir = '/fuel/fueling/control/dynamic_model_2_0/testdata'
-
+econder_type = "Transformer"
 # CUDA setup:
 if (torch.cuda.is_available()):
     print("Using CUDA to speed up training.")
@@ -93,8 +93,12 @@ valid_loader = DataLoader(valid_dataset, batch_size=1024, shuffle=True, num_work
 
 # encoder
 # bench mark encoder
-encoder_net_model = Encoder(u_dim=feature_config["input_dim"],
-                            kernel_dim=config["kernel_dim"])
+if econder_type == "Transformer":
+    encoder_net_model = TransformerEncoderCNN(
+        u_dim=feature_config["input_dim"], kernel_dim=config["kernel_dim"])
+else:
+    encoder_net_model = Encoder(u_dim=feature_config["input_dim"],
+                                kernel_dim=config["kernel_dim"])
 model, likelihood, optimizer, loss_fn = train_utils.init_train(
     inducing_points, encoder_net_model, feature_config["output_dim"],
     total_train_number, config["lr"], kernel_dim=config["kernel_dim"])
@@ -105,11 +109,10 @@ if use_cuda:
 
 train_loss_plot = os.path.join(validation_data_path, f'{timestr}', 'train_loss.png')
 if train_model:
-    model, likelihood, final_train_loss = train_utils.train_with_adjusted_lr(
-        config["num_epochs"], train_loader, model, likelihood,
+    model, likelihood = train_utils.train_with_cross_validation(
+        config["num_epochs"], train_loader, valid_loader, model, likelihood,
         loss_fn, optimizer, fig_file_path=train_loss_plot, is_transpose=True,
         use_cuda=use_cuda)
-    print(f'final train loss is {final_train_loss}')
     # test save and load model
     save_model_state_dict(model, likelihood, offline_model_path)
     # save model as jit script
@@ -164,7 +167,7 @@ ax.legend(fontsize=12, frameon=False)
 ax.grid(True)
 # save validation figures to folder
 plt.savefig(os.path.join(validation_data_path, f'{timestr}', 'validation.png'))
-
+plt.show()
 
 #  accuracy
 print(y.shape)
