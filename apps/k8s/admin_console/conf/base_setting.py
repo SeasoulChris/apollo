@@ -59,7 +59,8 @@ class Config(object):
     SUPER_USER_NAME = "apollo"
     ROLE_TYPE = {
         "all": [],
-        "system_admin": ["/index", "/jobs", "/reset_pwd", "/submit_job"],
+        "system_admin": ["/jobs", "/reset_pwd", "/submit_job",
+                         "/update_status", "/edit_quota", "/accounts"],
         "service_specialist": ["/index", "/jobs"]
     }
     WHITE_URL = ["/static", "/login", "/logout", "/api"]

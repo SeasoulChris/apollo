@@ -217,7 +217,8 @@ def get_account_objs(filters):
     accounts = account_db.get_account_info(filters)
     account_used = get_job_used(accounts)
     account_objs = format_account_time(account_used)
-    account_list = sorted(account_objs,
+    new_accounts = modify_services_operation(account_objs)
+    account_list = sorted(new_accounts,
                           key=lambda x: x.get("apply_date"), reverse=True)
     return account_list
 
@@ -302,3 +303,21 @@ def compare_services(old_services, new_services):
     else:
         diff_dict = {}
     return diff_dict
+
+
+def modify_services_operation(objs):
+    for account_data in objs:
+        operations = account_data.get("operations")
+        if operations:
+            for opt in operations:
+                pass
+                actions = opt.get("action")
+                if actions:
+                    status = actions.get("status")
+                    types = actions.get("type")
+                    new_history = {}
+                    if status:
+                        for i in range(len(status)):
+                            new_history[types[i]] = status[i]
+                        actions["type_status"] = new_history
+    return objs

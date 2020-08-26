@@ -199,17 +199,10 @@
         {% if opt.action.status %}
         <tr style="display: none" class="account_operation_span">
             <td colspan="12" style="border-top: none">
-                {% if opt.action.status.0 %}
-                {{ opt.action.type.0 | show_type }}服务{{ opt.action.status.0 | show_account_status }}。
-                {% endif %}
-                {% if opt.action.status.1 %}
-                {{ opt.action.type.1 | show_type }}服务{{ opt.action.status.1 | show_account_status }}。
-                {% endif %}
-                {% if opt.action.status.2 %}
-                {{ opt.action.type.2 | show_type }}服务{{ opt.action.status.2 | show_account_status }}。
-                {% endif %}
-                {% if opt.action.status.3 %}
-                {{ opt.action.type.3 | show_type }}服务{{ opt.action.status.3 | show_account_status }}。
+                {% if opt.action.type_status %}
+                    {% for type, status in opt.action.type_status.items() %}
+                        {{ type | show_type }}服务{{ status | show_account_status }}。
+                    {% endfor %}
                 {% endif %}
                 {% if opt.action.remaining_quota %}
                 剩余配额设置为{{ opt.action.remaining_quota}}，截止日期设置为{{ opt.action.due_date }}。

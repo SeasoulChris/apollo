@@ -7,7 +7,6 @@ py_library(
     srcs = ["account_services.py"],
     data = [
         "//apps/k8s/admin_console:resource",
-        "//apps/k8s/admin_console/conf:admin_json",
     ],
     deps = [
         "//apps/k8s/admin_console/controllers:account",
