@@ -14,6 +14,13 @@ def kinematic_action_constraints_layer(max_abs_steering_angle, max_acceleration,
                       constrained_a.clone().unsqueeze(1)), dim=1)
 
 
+def kinematic_state_constraints_layer(current_states):
+    current_x_y_phi = current_states[:, :3]
+    current_v = current_states[:, 3]
+    constrained_v = torch.clamp(current_v, min=0, max=35)
+    return torch.cat((current_x_y_phi.clone(), constrained_v.clone().view(-1, 1)), dim=1)
+
+
 def rear_kinematic_model_layer(wheel_base, delta_t, current_states, current_action):
     '''
     current_states: x_0, y_0, phi_0, v_0

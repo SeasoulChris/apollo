@@ -6,6 +6,7 @@ from torchvision import models
 from fueling.learning.network_utils import generate_lstm
 from fueling.planning.models.trajectory_imitation.differentiable_kinematic_models import \
     kinematic_action_constraints_layer, \
+    kinematic_state_constraints_layer, \
     rear_kinematic_model_layer
 from fueling.planning.models.trajectory_imitation.differentiable_rasterizer import \
     rasterize_vehicle_three_circles_guassian
@@ -222,6 +223,8 @@ class TrajectoryImitationKinematicConstrainedCNNLSTM(nn.Module):
 
             current_states = rear_kinematic_model_layer(
                 self.wheel_base, self.delta_t, previous_states, current_action)
+
+            current_states = kinematic_state_constraints_layer(current_states)
 
             pred_traj = torch.cat(
                 (pred_traj, current_states.clone().unsqueeze(1)), dim=1)
@@ -471,6 +474,8 @@ class TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(nn.Module):
 
             current_states = rear_kinematic_model_layer(
                 self.wheel_base, self.delta_t, previous_states, current_action)
+
+            current_states = kinematic_state_constraints_layer(current_states)
 
             pred_traj = torch.cat(
                 (pred_traj, current_states.clone().unsqueeze(1)), dim=1)
