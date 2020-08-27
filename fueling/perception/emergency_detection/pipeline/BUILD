@@ -10,3 +10,16 @@ py_binary(
         "@yolov4",
     ],
 )
+
+py_binary(
+    name = "record_image_parser",
+    srcs = ["record_image_parser.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
+        "//fueling/data:record_parser",
+        "//fueling/perception:decode_video",
+        "@apollo//modules/canbus/proto:chassis_py_pb2",
+        "@apollo//modules/localization/proto:localization_py_pb2",
+    ],
+)

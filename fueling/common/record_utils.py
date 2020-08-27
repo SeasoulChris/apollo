@@ -13,6 +13,7 @@ from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.drivers.proto.conti_radar_pb2 import ContiRadar
 from modules.drivers.proto.pointcloud_pb2 import PointCloud
 from modules.drivers.proto.sensor_image_pb2 import CompressedImage
+from modules.drivers.proto.sensor_image_pb2 import Image
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 from modules.planning.proto.planning_pb2 import ADCTrajectory
 from modules.prediction.proto.prediction_obstacle_pb2 import PredictionObstacles
@@ -32,9 +33,15 @@ PREDICTION_CHANNEL = '/apollo/prediction'
 PLANNING_CHANNEL = '/apollo/planning'
 ROUTING_RESPONSE_HISTORY_CHANNEL = '/apollo/routing_response_history'
 FRONT_12mm_CHANNEL = '/apollo/sensor/camera/front_12mm/image/compressed'
+FRONT_12mm_VIDEO_CHANNEL = '/apollo/sensor/camera/front_12mm/video/compressed'
+FRONT_12mm_IMAGE_CHANNEL = '/apollo/sensor/camera/front_12mm/image'
 FRONT_6mm_CHANNEL = '/apollo/sensor/camera/front_6mm/image/compressed'
+FRONT_6mm_VIDEO_CHANNEL = '/apollo/sensor/camera/front_6mm/video/compressed'
+FRONT_6mm_IMAGE_CHANNEL = '/apollo/sensor/camera/front_6mm/image'
 LEFT_FISHEYE_CHANNEL = '/apollo/sensor/camera/left_fisheye/image/compressed'
 REAR_6mm_CHANNEL = '/apollo/sensor/camera/rear_6mm/image/compressed'
+REAR_6mm_VIDEO_CHANNEL = '/apollo/sensor/camera/rear_6mm/video/compressed'
+REAR_6mm_IMAGE_CHANNEL = '/apollo/sensor/camera/rear_6mm/image'
 RIGHT_FISHEYE_CHANNEL = '/apollo/sensor/camera/right_fisheye/image/compressed'
 GNSS_ODOMETRY_CHANNEL = '/apollo/sensor/gnss/odometry'
 GNSS_INS_STAT_CHANNEL = '/apollo/sensor/gnss/ins_stat'
@@ -49,8 +56,14 @@ CHANNEL_TO_TYPE = {
     LOCALIZATION_CHANNEL: LocalizationEstimate,
     ROUTING_RESPONSE_HISTORY_CHANNEL: RoutingResponse,
     FRONT_6mm_CHANNEL: CompressedImage,
+    FRONT_6mm_VIDEO_CHANNEL: CompressedImage,
+    FRONT_6mm_IMAGE_CHANNEL: Image,
     FRONT_12mm_CHANNEL: CompressedImage,
+    FRONT_12mm_VIDEO_CHANNEL: CompressedImage,
+    FRONT_12mm_IMAGE_CHANNEL: Image,
     REAR_6mm_CHANNEL: CompressedImage,
+    REAR_6mm_VIDEO_CHANNEL: CompressedImage,
+    REAR_6mm_IMAGE_CHANNEL: Image,
     LEFT_FISHEYE_CHANNEL: CompressedImage,
     RIGHT_FISHEYE_CHANNEL: CompressedImage,
     PREDICTION_CHANNEL: PredictionObstacles,
