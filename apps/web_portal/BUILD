@@ -5,7 +5,6 @@ package(default_visibility = ["//visibility:public"])
 filegroup(
     name = "resource",
     srcs = glob([
-        "scripts/**",
         "ssl_keys/**",
         "templates/**",
     ]),
