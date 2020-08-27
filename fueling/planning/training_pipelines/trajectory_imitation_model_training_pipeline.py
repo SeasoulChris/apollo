@@ -265,8 +265,8 @@ def training(model_type,
                                                           ouput_point_num=10)
         model = TrajectoryImitationKinematicConstrainedCNNLSTM(pred_horizon=10,
                                                                max_abs_steering_angle=0.52,
-                                                               max_acceleration=2,
-                                                               max_deceleration=-4,
+                                                               max_acceleration=4,
+                                                               max_deceleration=-6,
                                                                delta_t=0.2,
                                                                wheel_base=2.8448)
         loss = TrajectoryPointDisplacementMSELoss(4)
@@ -291,8 +291,8 @@ def training(model_type,
         model = TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(
             pred_horizon=10,
             max_abs_steering_angle=0.52,
-            max_acceleration=2,
-            max_deceleration=-4,
+            max_acceleration=4,
+            max_deceleration=-6,
             delta_t=0.2,
             wheel_base=2.8448,
             input_img_size=[
