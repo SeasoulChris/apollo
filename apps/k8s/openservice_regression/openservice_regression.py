@@ -181,7 +181,7 @@ if __name__ == '__main__':
         end_time = job_info[job].get('end_time', '-').strftime("%m/%d/%Y %H:%M:%S")
         duration = job_info[job].get('duration', '-')
         status = job_info[job].get('status', '-')
-        job_name = job.lstrip('submit_')
+        job_name = job.replace('submit_', '')
         if status != 'Completed':
             error_label = True
         reports.append(job_tuple(job_name, status, job_id, start_time, end_time, duration))
