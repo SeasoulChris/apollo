@@ -387,7 +387,7 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
         current_x = current_path_point.x
         current_y = current_path_point.y
         current_theta = current_path_point.theta
-        current_v = current_traj_point.v
+        current_v = torch.tensor([current_traj_point.v]).float()
 
         img_feature = self.chauffeur_net_feature_generator.\
             render_stacked_img_features(region,
@@ -425,20 +425,11 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
         if pred_points.shape[0] < self.ouput_point_num:
             return self.__getitem__(idx - 1)
 
-        current_v = torch.tensor([current_traj_point.v]).float()
-        current_a = torch.tensor([current_traj_point.a]).float()
-        # TODO(Jinyun): add kappa to CommonPathPointFeature,
-        # use localization angular velocity for now
-        current_curvature = torch.tensor(
-            [frame.localization.angular_velocity.z]).float()
-
         if self.evaluate_mode:
             merged_img_feature = self.chauffeur_net_feature_generator.render_merged_img_feature(
                 img_feature)
             return ((transformed_img_feature,
-                     current_v,
-                     current_a,
-                     current_curvature),
+                     current_v),
                     torch.from_numpy(pred_points).float(),
                     merged_img_feature,
                     coordinate_heading,
@@ -449,9 +440,7 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
                     current_v)
 
         return ((transformed_img_feature,
-                 current_v,
-                 current_a,
-                 current_curvature),
+                 current_v),
                 torch.from_numpy(pred_points).float())
 
 
@@ -875,6 +864,7 @@ class TrajectoryImitationCNNLSTMWithEnvLossDataset(Dataset):
         current_x = current_path_point.x
         current_y = current_path_point.y
         current_theta = current_path_point.theta
+        current_v = torch.tensor([current_traj_point.v]).float()
 
         img_feature = self.chauffeur_net_feature_generator.\
             render_stacked_img_features(region,
@@ -937,13 +927,6 @@ class TrajectoryImitationCNNLSTMWithEnvLossDataset(Dataset):
         if pred_points.shape[0] < self.ouput_point_num:
             return self.__getitem__(idx - 1)
 
-        current_v = torch.tensor([current_traj_point.v]).float()
-        current_a = torch.tensor([current_traj_point.a]).float()
-        # TODO(Jinyun): add kappa to CommonPathPointFeature,
-        # use localization angular velocity for now
-        current_curvature = torch.tensor(
-            [frame.localization.angular_velocity.z]).float()
-
         offroad_mask = self.chauffeur_net_feature_generator.\
             render_offroad_mask(region,
                                 current_x,
@@ -967,9 +950,7 @@ class TrajectoryImitationCNNLSTMWithEnvLossDataset(Dataset):
             merged_img_feature = self.chauffeur_net_feature_generator.render_merged_img_feature(
                 img_feature)
             return ((transformed_img_feature,
-                     current_v,
-                     current_a,
-                     current_curvature),
+                     current_v),
                     (torch.from_numpy(pred_points).float(),
                      pred_boxs,
                      torch.empty(1),
@@ -982,8 +963,6 @@ class TrajectoryImitationCNNLSTMWithEnvLossDataset(Dataset):
 
         return ((transformed_img_feature,
                  current_v,
-                 current_a,
-                 current_curvature,
                  coordinate_heading + np.pi / 2),
                 (torch.from_numpy(pred_points).float(),
                  pred_boxs,

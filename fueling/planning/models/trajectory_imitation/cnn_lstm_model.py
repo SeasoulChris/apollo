@@ -92,7 +92,7 @@ class TrajectoryImitationUnconstrainedCNNLSTM(nn.Module):
         self.pred_horizon = pred_horizon
 
         self.h0_fc_layer = torch.nn.Sequential(
-            nn.Linear(3 + self.cnn_out_size, 512),
+            nn.Linear(self.cnn_out_size + 1, 512),
             nn.ReLU(),
             nn.Linear(512, 128),
             nn.ReLU(),
@@ -110,17 +110,17 @@ class TrajectoryImitationUnconstrainedCNNLSTM(nn.Module):
         )
 
         self.output_fc_layer = torch.nn.Sequential(
-            nn.Linear(hidden_size + self.cnn_out_size + 3, 4),
+            nn.Linear(hidden_size + self.cnn_out_size + 1, 4),
         )
 
     def forward(self, X):
-        img_feature, current_v, current_a, current_curvature = X
+        img_feature, current_v = X
         batch_size = img_feature.size(0)
         ct = self.c0.repeat(1, batch_size, 1)
         img_embedding = self.cnn(
             self.compression_cnn_layer(img_feature)).view(batch_size, -1)
         concatenated_states = torch.cat(
-            (img_embedding, current_v, current_a, current_curvature), dim=1)
+            (img_embedding, current_v), dim=1)
         ht = self.h0_fc_layer(concatenated_states).unsqueeze(0)
         path_point_input = torch.zeros(
             (batch_size, 3), device=img_feature.device)
@@ -161,7 +161,7 @@ class TrajectoryImitationKinematicConstrainedCNNLSTM(nn.Module):
         self.pred_horizon = pred_horizon
 
         self.h0_fc_layer = torch.nn.Sequential(
-            nn.Linear(3 + self.cnn_out_size, 512),
+            nn.Linear(self.cnn_out_size + 1, 512),
             nn.ReLU(),
             nn.Linear(512, 128),
             nn.ReLU(),
@@ -179,7 +179,7 @@ class TrajectoryImitationKinematicConstrainedCNNLSTM(nn.Module):
         )
 
         self.output_fc_layer = torch.nn.Sequential(
-            nn.Linear(hidden_size + self.cnn_out_size + 3, 2),
+            nn.Linear(hidden_size + self.cnn_out_size + 1, 2),
         )
 
         self.max_abs_steering_angle = max_abs_steering_angle
@@ -192,13 +192,13 @@ class TrajectoryImitationKinematicConstrainedCNNLSTM(nn.Module):
         self.lr = wheel_base / 2
 
     def forward(self, X):
-        img_feature, current_v, current_a, current_curvature = X
+        img_feature, current_v = X
         batch_size = img_feature.size(0)
         ct = self.c0.repeat(1, batch_size, 1)
         img_embedding = self.cnn(
             self.compression_cnn_layer(img_feature)).view(batch_size, -1)
         concatenated_states = torch.cat(
-            (img_embedding, current_v, current_a, current_curvature), dim=1)
+            (img_embedding, current_v), dim=1)
         ht = self.h0_fc_layer(concatenated_states).unsqueeze(0)
         path_point_input = torch.zeros(
             (batch_size, 3), device=img_feature.device)
@@ -399,7 +399,7 @@ class TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(nn.Module):
         self.input_img_size_w = input_img_size[1]
 
         self.h0_fc_layer = torch.nn.Sequential(
-            nn.Linear(3 + self.cnn_out_size, 512),
+            nn.Linear(self.cnn_out_size + 1, 512),
             nn.ReLU(),
             nn.Linear(512, 128),
             nn.ReLU(),
@@ -417,7 +417,7 @@ class TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(nn.Module):
         )
 
         self.output_fc_layer = torch.nn.Sequential(
-            nn.Linear(hidden_size + self.cnn_out_size + 3, 2),
+            nn.Linear(hidden_size + self.cnn_out_size + 1, 2),
         )
 
         self.max_abs_steering_angle = max_abs_steering_angle
@@ -442,14 +442,14 @@ class TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(nn.Module):
         self.front_shift_distance = half_box_length * 2 - 2 * vehicle_back_edge_to_center
 
     def forward(self, X):
-        img_feature, current_v, current_a, current_curvature, ego_rendering_heading = X
+        img_feature, current_v, ego_rendering_heading = X
         batch_size = img_feature.size(0)
         ct = self.c0.repeat(1, batch_size, 1)
 
         img_embedding = self.cnn(
             self.compression_cnn_layer(img_feature)).view(batch_size, -1)
         concatenated_states = torch.cat(
-            (img_embedding, current_v, current_a, current_curvature), dim=1)
+            (img_embedding, current_v), dim=1)
         ht = self.h0_fc_layer(concatenated_states).unsqueeze(0)
 
         path_point_input = torch.zeros(
