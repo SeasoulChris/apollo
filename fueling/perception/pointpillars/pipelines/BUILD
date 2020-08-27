@@ -23,3 +23,14 @@ py_binary(
         "//fueling/perception/pointpillars/second:create_data",
     ],
 )
+
+py_binary(
+    name = "pointpillars_end_to_end_pipeline",
+    srcs = [
+        "pointpillars_end_to_end_pipeline.py",
+    ],
+    deps = [
+        ":create_data_pipeline",
+        ":pointpillars_training_pipeline",
+    ],
+)
