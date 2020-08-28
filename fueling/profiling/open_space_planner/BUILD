@@ -18,6 +18,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
+        "//fueling/common:job_utils",
         "//fueling/common:logging",
         "//fueling/common:record_utils",
         "//fueling/common:spark_op",

@@ -12,6 +12,7 @@ from absl import flags
 from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.job_utils import JobUtils
 from fueling.profiling.open_space_planner.feature_extraction.feature_visualization_utils import \
     plot, save
 from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import \
@@ -96,6 +97,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
     def __init__(self):
         self.error_msg = ''
         self.partner_email = ''
+        self.job_id = ''
+        self.is_on_cloud = False
 
     def run(self):
         tic = time.perf_counter()
@@ -109,6 +112,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
             vehicle_conf_path = None
             logging.info('No open_space_planner_profiling_vehicle_conf_path specified')
         job_owner = self.FLAGS['job_owner']
+        self.job_id = self.FLAGS['job_id']
+        self.is_on_cloud = self.FLAGS['cloud']
         if os.environ.get('PARTNER_EMAIL'):
             self.partner_email = os.environ.get('PARTNER_EMAIL')
         logging.info(F'Email address of job owner {job_owner}: {self.partner_email}')
@@ -128,6 +133,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
         if invalid_src_dirs and (vehicle_conf_path is None):
             logging.warn(F'invalid_src_dirs: {invalid_src_dirs}')
             self.error_msg = F'No {VEHICLE_PARAM_FILE} found in directory: {invalid_src_dirs}'
+            if self.is_on_cloud:
+                JobUtils(self.job_id).save_job_failure_code('E500')
         if logging.level_debug():
             logging.debug(F'src_dirs: {src_dirs.collect()}')
             logging.debug(F'valid_src_dirs: {valid_src_dirs.collect()}')
@@ -167,6 +174,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
             logging.debug(F'todo_task_dirs: {todo_task_dirs.collect()}')
         if not todo_task_dirs.collect():
             logging.info('No data to perform open space planner profiling on.')
+            if self.is_on_cloud:
+                JobUtils(self.job_id).save_job_failure_code('E503')
             if self.FLAGS['open_space_planner_profiling_generate_report']:
                 return self.email_output(todo_task_dirs.keys().collect(), origin_prefix,
                                          target_prefix)
@@ -204,6 +213,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
         if logging.level_debug():
             logging.debug(F'open_space_message_count: {open_space_msgs.count()}')
             logging.debug(F'open_space_message_first: {open_space_msgs.first()}')
+        if self.is_on_cloud:
+            JobUtils(self.job_id).save_job_progress(20)
 
         # 3. get feature from all frames with desired stage
         stage_feature = open_space_msgs.map(extract_stage_feature)
@@ -219,6 +230,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
             logging.debug(F'zigzag_feature_first: {zigzag_feature.first()}')
             logging.debug(F'trajectory_feature_count: {trajectory_feature.count()}')
             logging.debug(F'trajectory_feature_first: {trajectory_feature.first()}')
+        if self.is_on_cloud:
+            JobUtils(self.job_id).save_job_progress(40)
 
         # 4. grading, process feature (count, max, mean, standard deviation, 95 percentile)
         stage_result = stage_feature.map(stage_grading)
@@ -235,6 +248,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
         if logging.level_debug():
             logging.debug(F'grading_result_count: {grading_result.count()}')
             logging.debug(F'grading_result_first: {grading_result.first()}')
+        if self.is_on_cloud:
+            JobUtils(self.job_id).save_job_progress(60)
 
         # 5. plot and visualize features, save grading result
         # PairRDD(target, combined_grading_result), output grading results for each target
@@ -258,6 +273,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
         else:
             results = grading_result.collect()
             logging.info(F'Evaluation alone took {time.perf_counter() - tic:0.3f} sec')
+            if self.is_on_cloud:
+                JobUtils(self.job_id).save_job_progress(100)
             if self.error_msg:
                 logging.warn(self.error_msg)
             return results
