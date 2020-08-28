@@ -30,6 +30,8 @@ class ImuAngularVelocity:
     def correct_angular_velocity(self, angular_velocity, timestamp_sec):
         if self.last_corrected_angular_velocity is None:
             return angular_velocity
+        if self.last_corrected_angular_velocity == 0.0:
+            self.last_corrected_angular_velocity = 1e-6
         delta = abs(angular_velocity - self.last_corrected_angular_velocity) \
             / abs(self.last_corrected_angular_velocity)
 
