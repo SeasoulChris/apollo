@@ -14,7 +14,9 @@ class TrajectoryPointDisplacementMSELoss():
 
     def loss_fn(self, y_pred, y_true):
         loss_func = nn.MSELoss()
-        return loss_func(y_pred, y_true)
+        losses = dict()
+        losses["total_loss"] = loss_func(y_pred, y_true)
+        return losses
 
     def loss_info(self, y_pred, y_true):
         batch_size = y_pred.size(0)
@@ -31,7 +33,9 @@ class TrajectoryPointDisplacementL1Loss():
 
     def loss_fn(self, y_pred, y_true):
         loss_func = nn.L1Loss()
-        return loss_func(y_pred, y_true)
+        losses = dict()
+        losses["total_loss"] = loss_func(y_pred, y_true)
+        return losses
 
     def loss_info(self, y_pred, y_true):
         batch_size = y_pred.size(0)

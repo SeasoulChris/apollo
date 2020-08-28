@@ -6,6 +6,8 @@ import os
 
 import numpy as np
 import torch
+import datetime
+from torch.utils.tensorboard import SummaryWriter
 
 import fueling.common.logging as logging
 
@@ -117,7 +119,7 @@ def train_valid_vanilla(train_X, train_y, valid_X, valid_y, model, loss, optimiz
 #########################################################
 
 
-def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=None):
+def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=None, Writer=None):
     model.train()
 
     loss_history = []
@@ -127,8 +129,14 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=N
         X, y = cuda(X), cuda(y)
         pred = model(X)
         train_loss = loss.loss_fn(pred, y)
-        loss_history.append(train_loss.item())
-        train_loss.backward()
+        for key, value in train_loss.items():
+            if key=="total_loss" and Writer!=None:
+                Writer.add_scalar("Train Total Loss", value, (epoch-1)*len(train_loader)+i)
+            elif Writer != None:
+                Writer.add_scalar("Train Loss/"+key, value, (epoch-1)*len(train_loader)+i)
+
+        loss_history.append(train_loss["total_loss"].item())
+        train_loss["total_loss"].backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 10)
         optimizer.step()
 
@@ -151,7 +159,7 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
         X, y = cuda(X), cuda(y)
         pred = model(X)
         valid_loss = loss.loss_fn(pred, y)
-        loss_history.append(valid_loss.item())
+        loss_history.append(valid_loss["total_loss"].item())
 
         valid_loss_info = loss.loss_info(pred, y)
         if valid_loss_info is not None:
@@ -166,7 +174,7 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
     return np.mean(loss_info_history)
 
 
-def train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
+def train_valid_dataloader(model_type, train_loader, valid_loader, model, loss, optimizer,
                            scheduler, epochs, save_name, print_period=None,
                            early_stop=None, save_mode=1):
     '''
@@ -174,13 +182,23 @@ def train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
                     1 - save all models that are better than before
                     2 - save all
     '''
+
+    # Tensorboard, visualize losses.
+    curr_time = datetime.datetime.now()
+    time_str = datetime.datetime.strftime(curr_time,'%Y-%m-%d_%H:%M:%S')
+    model_name = model_type + '-' + time_str
+    logdir = os.path.join("/fuel/local/runs", model_name)
+    Writer = SummaryWriter(log_dir = logdir)
+
     best_valid_loss = float('+inf')
     num_epoch_valid_loss_not_decreasing = 0
     for epoch in range(1, epochs + 1):
-        train_dataloader(train_loader, model, loss, optimizer, epoch, print_period)
+        train_dataloader(train_loader, model, loss, optimizer, epoch, print_period, Writer=Writer)
         with torch.no_grad():
             valid_loss = valid_dataloader(valid_loader, model, loss)
         scheduler.step(valid_loss)
+
+        Writer.add_scalar("Valid Loss", valid_loss, epoch-1)
 
         # Determine if valid_loss is getting better and if early_stop is needed.
         is_better_model = False

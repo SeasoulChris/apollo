@@ -236,13 +236,23 @@ class ImageRepresentationLoss():
         imitation_dropout = False
         if dropout and self.imitation_dropout:
             imitation_dropout = self.imitation_dropout
-        return (0 if imitation_dropout and torch.rand(1) > 0.5 else 1) * \
+        
+        losses = dict()
+        losses["weighted_pos_reg_loss"] = weighted_pos_reg_loss
+        losses["weighted_box_loss"] = weighted_box_loss
+        losses["weighted_pos_dist_loss"] = weighted_pos_dist_loss
+        losses["weighted_collision_loss"] = weighted_collision_loss
+        losses["weighted_offroad_loss"] = weighted_offroad_loss
+        losses["weighted_onrouting_loss"] = weighted_onrouting_loss
+        losses["total_loss"] = (0 if imitation_dropout and torch.rand(1) > 0.5 else 1) * \
             (weighted_pos_reg_loss
              + weighted_box_loss
              + weighted_pos_dist_loss) + \
             weighted_collision_loss + \
             weighted_offroad_loss + \
             weighted_onrouting_loss
+        
+        return losses
 
     def loss_info(self, y_pred, y_true):
         pred_points = y_pred[0]
@@ -253,4 +263,5 @@ class ImageRepresentationLoss():
         out = torch.sqrt(torch.sum(pose_diff ** 2, dim=-1))
         out = torch.mean(out)
         logging.info("Average displacement mse loss is {}".format(out))
-        return self.loss_fn(y_pred, y_true, dropout=False)
+        total_loss = self.loss_fn(y_pred, y_true, dropout=False)["total_loss"]
+        return total_loss

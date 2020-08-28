@@ -350,7 +350,7 @@ def training(model_type,
     # Model training:
     torch.autograd.set_detect_anomaly(True)
 
-    train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
+    train_valid_dataloader(model_type, train_loader, valid_loader, model, loss, optimizer,
                            scheduler, epochs=50, save_name=model_save_dir, print_period=50,
                            save_mode=2)
 
