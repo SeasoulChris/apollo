@@ -30,7 +30,6 @@ CONTROL_TEAM = [
 ]
 PREDICTION_TEAM = [
     'hongyisun@baidu.com',
-    'jiachengpan@baidu.com',
     'xukecheng@baidu.com',
 ]
 

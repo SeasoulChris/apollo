@@ -7,6 +7,7 @@ import time
 import torch
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 from fueling.learning.train_utils import cuda, train_valid_dataloader
@@ -25,9 +26,11 @@ class PedestrianTraining(BasePipeline):
         self.input_abs_path = self.our_storage().abs_path(self.input_path)
         self.region = self.get_region_from_input_path(self.input_abs_path)
         self.data_dir = os.path.join(self.input_abs_path, 'train')
+        self.model_dir_name = 'models/'
         time_start = time.time()
         self.to_rdd(range(1)).foreach(lambda instance: self.train(instance, self.data_dir))
         logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
+        self.send_email_notification(os.path.join(self.input_path, self.model_dir_name))
 
     def train(self, instance_id, data_dir):
         """Run training task"""
@@ -61,7 +64,7 @@ class PedestrianTraining(BasePipeline):
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             optimizer, factor=0.3, patience=3, min_lr=1e-9, verbose=True, mode='min')
         # Model training:
-        model_path = os.path.join(self.input_abs_path, 'models/')
+        model_path = os.path.join(self.input_abs_path, self.model_dir_name)
         os.makedirs(model_path, exist_ok=True)
         train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer, scheduler,
                                epochs=10, save_name=model_path, print_period=10, save_mode=1)
@@ -91,6 +94,19 @@ class PedestrianTraining(BasePipeline):
         traced_cpu_model.save(os.path.join(path, 'semantic_lstm_pedestrian_cpu_model.pt'))
         traced_gpu_model = torch.jit.trace(model.cuda(), (cuda(X),))
         traced_gpu_model.save(os.path.join(path, 'semantic_lstm_pedestrian_gpu_model.pt'))
+
+    def send_email_notification(self, model_path):
+        """Send email notification to users"""
+        title = 'Your prediction model training job is done!'
+        content = {
+            'Job Owner': self.FLAGS.get('job_owner'),
+            'Job ID': self.FLAGS.get('job_id'),
+            'Model Path': model_path,
+        }
+        receivers = email_utils.PREDICTION_TEAM
+        if os.environ.get('PARTNER_EMAIL'):
+            receivers.append(os.environ.get('PARTNER_EMAIL'))
+        email_utils.send_email_info(title, content, receivers)
 
 
 if __name__ == '__main__':
