@@ -236,7 +236,7 @@ class ImageRepresentationLoss():
         imitation_dropout = False
         if dropout and self.imitation_dropout:
             imitation_dropout = self.imitation_dropout
-        
+
         losses = dict()
         losses["weighted_pos_reg_loss"] = weighted_pos_reg_loss
         losses["weighted_box_loss"] = weighted_box_loss
@@ -251,7 +251,7 @@ class ImageRepresentationLoss():
             weighted_collision_loss + \
             weighted_offroad_loss + \
             weighted_onrouting_loss
-        
+
         return losses
 
     def loss_info(self, y_pred, y_true):

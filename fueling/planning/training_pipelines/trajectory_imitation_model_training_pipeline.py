@@ -62,6 +62,7 @@ flags.DEFINE_string('model_save_dir', '/fuel',
 flags.DEFINE_string('visualize_log_dir', '/fuel/local/runs',
                     'save loss visualization logs')
 
+
 def seed_torch(seed=0):
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -85,7 +86,6 @@ def training(model_type,
              past_motion_dropout,
              model_save_dir,
              visualize_log_dir):
-
 
     # TODO(Jinyun): check performance
     cv.setNumThreads(0)
@@ -353,9 +353,9 @@ def training(model_type,
     # Model training:
     torch.autograd.set_detect_anomaly(True)
 
-    train_valid_dataloader(model_type, train_loader, valid_loader, model, loss, optimizer,
+    train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
                            scheduler, epochs=50, save_name=model_save_dir, print_period=50,
-                           save_mode=2, visualize_dir=visualize_log_dir)
+                           save_mode=2, model_type=model_type, visualize_dir=visualize_log_dir)
 
 
 def main(argv):
