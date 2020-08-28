@@ -205,6 +205,11 @@ def train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
     '''
 
     # Tensorboard, visualize losses.
+    '''
+        tensorboard usage:
+            in sever container, input command: tensorboard --logdir=visualize_dir
+            in local host, open browser: server_ip:6006
+    '''
     curr_time = datetime.datetime.now()
     time_str = datetime.datetime.strftime(curr_time, '%Y-%m-%d_%H:%M:%S')
     model_name = model_type + '-' + time_str
