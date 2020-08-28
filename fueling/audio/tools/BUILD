@@ -21,3 +21,14 @@ py_binary(
         "@apollo//modules/drivers/microphone/proto:microphone_config_py_pb2",
     ],
 )
+
+py_binary(
+    name = "audio_saver",
+    srcs = ["audio_saver.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:logging",
+        "//fueling/common:record_utils",
+        "@apollo//modules/drivers/microphone/proto:microphone_config_py_pb2",
+    ],
+)
