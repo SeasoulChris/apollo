@@ -18,6 +18,7 @@ py_library(
         "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
+        "//fueling/common:job_utils",
         "//fueling/common:proto_utils",
         "//fueling/common:record_utils",
         "//fueling/common:spark_helper",
@@ -39,6 +40,7 @@ py_library(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:h5_utils",
+        "//fueling/common:job_utils",
         "//fueling/common:spark_helper",
         "//fueling/control/common:multi_vehicle_utils",
         "//fueling/control/dynamic_model:flag",

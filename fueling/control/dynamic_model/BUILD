@@ -7,6 +7,7 @@ py_library(
     srcs = ["dynamic_model_data_visualization.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:job_utils",
         "//fueling/common:spark_helper",
         "//fueling/control/common:multi_vehicle_plot_utils",
         "//fueling/control/dynamic_model:flag",
@@ -34,6 +35,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
+        "//fueling/common:job_utils",
         "//fueling/control/common:multi_vehicle_utils",
         "//fueling/control/dynamic_model:flag",
         "//fueling/control/dynamic_model/conf:model_config",

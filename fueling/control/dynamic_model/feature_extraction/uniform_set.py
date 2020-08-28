@@ -3,6 +3,7 @@ import glob
 import os
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.job_utils import JobUtils
 from fueling.control.dynamic_model.conf.model_config import task_config
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
@@ -92,7 +93,7 @@ class UniformSet(BasePipeline):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         is_backward = self.FLAGS.get('is_backward')
-        bos_client = self.our_storage()
+        bos_client = self.partner_storage() or self.our_storage()
 
         # intermediate result folder
         if is_backward:
@@ -126,8 +127,10 @@ class UniformSet(BasePipeline):
             'hdf5_files',
             origin_vehicle_dir
             .flatMapValues(lambda path: self.our_storage().list_files(path, '.hdf5')))
+        JobUtils(job_id).save_job_progress(35)
 
         self.run_internal(hdf5_files, origin_vehicle_dir, target_dir)
+        JobUtils(job_id).save_job_progress(40)
 
     def run_internal(self, feature_dir, origin_vehicle_conf_dir, target_dir):
         def _generate_key(elements):

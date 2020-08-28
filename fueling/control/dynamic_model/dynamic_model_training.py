@@ -7,10 +7,11 @@ import glob
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.job_utils import JobUtils
+from fueling.control.dynamic_model.conf.model_config import task_config
 import fueling.common.email_utils as email_utils
 import fueling.common.logging as logging
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
-from fueling.control.dynamic_model.conf.model_config import task_config
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 import fueling.control.dynamic_model.data_generator.training_data_generator as data_generator
 import fueling.control.dynamic_model.model_factory.lstm_keras as lstm_keras
@@ -59,6 +60,7 @@ class DynamicModelTraining(BasePipeline):
 
         # get vehicles
         vehicles = multi_vehicle_utils.get_vehicle(training_data_path)
+        vehicles_num = len(vehicles)
         logging.info(f'vehicles: {vehicles}')
 
         # prepare for email notification
@@ -68,16 +70,20 @@ class DynamicModelTraining(BasePipeline):
         messages = []
 
         # run proc as a vehicle ID
+        vehicle_count = 0
         for vehicle in vehicles:
+            vehicle_count += 1
             self.execute_task(vehicle, training_data_path, output_dir, is_backward, is_holistic)
             messages.append(SummaryTuple(
                 Vehicle=vehicle, Input_Data_Path=training_data_path, Output_Model_Path=output_dir,
                 Is_Backward=is_backward, Is_Holistic=is_holistic))
+            JobUtils(job_id).save_job_progress(45 + (95 - 45) * vehicle_count / vehicles_num)
 
         # send email notification
         title = F'Control Dynamic Model Training Results For {len(vehicles)} Vehicles'
         # TODO(longtao): add all receivers after testing email notification
         email_utils.send_email_info(title, messages, email_utils.DATA_TEAM)
+        JobUtils(job_id).save_job_progress(100)
 
     def execute_task(self, vehicle, training_data_path, output_dir,
                      is_backward=False, is_holistic=False):

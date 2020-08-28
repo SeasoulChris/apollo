@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
+import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
+from fueling.control.dynamic_model.conf.model_config import task_config
+import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
+import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
+import fueling.common.spark_helper as spark_helper
+import fueling.common.logging as logging
+from fueling.common.job_utils import JobUtils
+from fueling.common.base_pipeline import BasePipeline
 import os
 import time
 
 import glob
 import matplotlib
 matplotlib.use('Agg')
-
-from fueling.common.base_pipeline import BasePipeline
-import fueling.common.logging as logging
-import fueling.common.spark_helper as spark_helper
-import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
-import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
-from fueling.control.dynamic_model.conf.model_config import task_config
-import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 
 
 class DynamicModelDatasetDistribution(BasePipeline):
@@ -68,6 +68,7 @@ class DynamicModelDatasetDistribution(BasePipeline):
             logging.info(f'Visual result file: {result_file}')
             # generate visual result file
             self.run_internal(vehicle, hdf5_file_list, result_file)
+        JobUtils(job_id).save_job_progress(45)
 
     def run_internal(self, vehicle, hdf5_file_list, result_file):
 

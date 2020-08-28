@@ -6,6 +6,7 @@ import shutil
 import os
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.job_utils import JobUtils
 from fueling.control.common.sanity_check import sanity_check
 from fueling.control.dynamic_model.conf.model_config import task_config
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
@@ -177,7 +178,8 @@ class SampleSet(BasePipeline):
 
     def run(self):
         """Run prod."""
-        origin_prefix = self.FLAGS.get('input_data_path', 'modules/control/data/records')
+        origin_prefix = self.FLAGS.get('input_data_path',
+                                       'modules/control/learning_based_model/test_data')
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         is_backward = self.FLAGS.get('is_backward')
@@ -190,7 +192,7 @@ class SampleSet(BasePipeline):
         else:
             target_prefix = os.path.join(INTER_FOLDER, job_owner, 'forward', job_id)
             GEAR = 1
-        our_storage = self.our_storage()
+        our_storage = self.partner_storage() or self.our_storage()
         target_dir = our_storage.abs_path(target_prefix)
         logging.info('target_dir %s' % target_dir)
 
@@ -200,6 +202,7 @@ class SampleSet(BasePipeline):
 
         logging.info("origin_dir: %s" % origin_dir)
         logging.info("target_prefix: %s" % target_prefix)
+        JobUtils(job_id).save_job_progress(1)
 
         # Do sanity check
         task_name = 'dynamic model training'
@@ -209,6 +212,7 @@ class SampleSet(BasePipeline):
             email_receivers.append(os.environ.get('PARTNER_EMAIL'))
         if not sanity_check(origin_dir, job_owner, job_id, task_name, email_receivers):
             return
+        JobUtils(job_id).save_job_progress(5)
 
         """ vehicles """
         vehicles = spark_helper.cache_and_log(
@@ -243,6 +247,7 @@ class SampleSet(BasePipeline):
                                                             os.path.join(src_dst[1], VEHICLE_CONF)))
 
         logging.info('copy vehicle param conf from src to dst: %s' % src_dst_rdd.collect())
+        JobUtils(job_id).save_job_progress(8)
 
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
@@ -286,8 +291,10 @@ class SampleSet(BasePipeline):
 
         # PairRDD(vehicle_type, dir_of_todos_with_origin_prefix)
         todo_task_dirs = todo_task_dirs.subtract(processed_dirs)
+        JobUtils(job_id).save_job_progress(10)
 
         self.run_internal(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
+        JobUtils(job_id).save_job_progress(30)
 
     def run_internal(self, todo_task_dirs, vehicle_conf_folder, origin_prefix, target_prefix):
         """ processing RDD """
