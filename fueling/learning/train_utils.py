@@ -197,24 +197,24 @@ def valid_dataloader(valid_loader, model, loss, epoch, visualizer=None, analyzer
 
 def train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
                            scheduler, epochs, save_name, print_period=None,
-                           early_stop=None, save_mode=1, model_type="vis_log", visualize_dir=None):
+                           early_stop=None, save_mode=1, model_type="none", visualize_dir=None):
     '''
         -save_mode: 0 - save the best one only
                     1 - save all models that are better than before
                     2 - save all
-    '''
 
-    # Tensorboard, visualize losses.
-    '''
         tensorboard usage:
             in sever container, input command: tensorboard --logdir=visualize_dir
             in local host, open browser: server_ip:6006
     '''
-    curr_time = datetime.datetime.now()
-    time_str = datetime.datetime.strftime(curr_time, '%Y-%m-%d_%H:%M:%S')
-    model_name = model_type + '-' + time_str
-    logdir = os.path.join(visualize_dir, model_name)
-    Writer = SummaryWriter(log_dir=logdir)
+
+    Writer = None
+    if visualize_dir is not None:
+        curr_time = datetime.datetime.now()
+        time_str = datetime.datetime.strftime(curr_time, '%Y-%m-%d_%H:%M:%S')
+        model_name = model_type + '-' + time_str
+        logdir = os.path.join(visualize_dir, model_name)
+        Writer = SummaryWriter(log_dir=logdir)
 
     best_valid_loss = float('+inf')
     num_epoch_valid_loss_not_decreasing = 0
