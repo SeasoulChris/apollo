@@ -40,8 +40,9 @@ class AgentPosesFutureImgRenderer(object):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         ego_future_length = len(ego_pose_future)
+        color_gradient = 255 / ego_future_length
         for index, ego_pose in enumerate(ego_pose_future):
-            color = index / ego_future_length * 255
+            color = (index + 1) * color_gradient
             traj_point = tuple(renderer_utils.get_img_idx(
                 renderer_utils.point_affine_transformation(
                     np.array([ego_pose[0],
@@ -59,8 +60,9 @@ class AgentPosesFutureImgRenderer(object):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         ego_future_length = len(ego_pose_future)
+        color_gradient = 255 / ego_future_length
         for index, ego_pose in enumerate(ego_pose_future):
-            color = index / ego_future_length * 255
+            color = (index + 1) * color_gradient
             ego_path_point = np.array([ego_pose[0], ego_pose[1]])
             box_theta = ego_pose[2] + np.pi / 2 + coordinate_heading
             theta = np.pi / 2 + coordinate_heading
