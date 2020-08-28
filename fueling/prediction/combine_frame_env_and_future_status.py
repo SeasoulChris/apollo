@@ -10,6 +10,7 @@ from modules.perception.proto import perception_obstacle_pb2
 from fueling.common.base_pipeline import BasePipeline
 from fueling.prediction.common.configure import semantic_map_config
 import fueling.common.context_utils as context_utils
+from fueling.common.job_utils import JobUtils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
@@ -50,6 +51,11 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
             return
 
         self.run_internal(frame_env_dir)
+
+        if self.FLAGS.get('show_job_details'):
+            job_id = (self.FLAGS.get('job_id') if self.is_partner_job() else
+                      self.FLAGS.get('job_id')[:4])
+            JobUtils(job_id).save_job_progress(40)
 
     def run_internal(self, frame_env_dir_rdd):
         '''Run the pipeline with given arguments.'''

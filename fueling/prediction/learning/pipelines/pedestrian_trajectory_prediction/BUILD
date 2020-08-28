@@ -64,6 +64,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
+        "//fueling/common:job_utils",
         "//fueling/common:logging",
         "//fueling/learning:loss_utils",
         "//fueling/learning:train_utils",

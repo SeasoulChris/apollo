@@ -4,6 +4,7 @@ import os
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.context_utils as context_utils
+from fueling.common.job_utils import JobUtils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
@@ -27,6 +28,11 @@ class FrameEnv(BasePipeline):
             # RDD(record_dir), which is unique
             .distinct())
         self.run_internal(records_dir, self.origin_prefix, self.target_prefix)
+
+        if self.FLAGS.get('show_job_details'):
+            job_id = (self.FLAGS.get('job_id') if self.is_partner_job() else
+                      self.FLAGS.get('job_id')[:4])
+            JobUtils(job_id).save_job_progress(30)
 
     def run_internal(self, records_dir_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""

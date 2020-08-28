@@ -9,6 +9,7 @@ import torch
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
+from fueling.common.job_utils import JobUtils
 import fueling.common.logging as logging
 from fueling.learning.train_utils import cuda, train_valid_dataloader
 from fueling.prediction.learning.pipelines.pedestrian_trajectory_prediction \
@@ -30,6 +31,12 @@ class PedestrianTraining(BasePipeline):
         time_start = time.time()
         self.to_rdd(range(1)).foreach(lambda instance: self.train(instance, self.data_dir))
         logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
+
+        if self.FLAGS.get('show_job_details'):
+            job_id = (self.FLAGS.get('job_id') if self.is_partner_job() else
+                      self.FLAGS.get('job_id')[:4])
+            JobUtils(job_id).save_job_progress(100)
+
         self.send_email_notification(os.path.join(self.input_path, self.model_dir_name))
 
     def train(self, instance_id, data_dir):

@@ -72,6 +72,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:db_backed_utils",
+        "//fueling/common:job_utils",
         "//fueling/common:mongo_utils",
         "//fueling/common:record_utils",
     ],
@@ -95,6 +96,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:db_backed_utils",
+        "//fueling/common:job_utils",
         "//fueling/common:logging",
         "//fueling/common:mongo_utils",
         "//fueling/common:record_utils",
@@ -114,6 +116,7 @@ py_binary(
     srcs = ["generate_labels.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:job_utils",
         "//fueling/common:logging",
         "//fueling/common:spark_op",
         "//fueling/prediction/common:bounding_rectangle",
@@ -177,6 +180,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
+        "//fueling/common:job_utils",
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/common:record_utils",

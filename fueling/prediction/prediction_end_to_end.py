@@ -13,6 +13,8 @@ from fueling.prediction.learning.pipelines.pedestrian_trajectory_prediction \
 
 flags.DEFINE_string('input_path', '/fuel/kinglong_data/', 'Iput data path')
 
+flags.DEFINE_bool('show_job_details', False, 'If show job details to partner')
+
 
 if __name__ == '__main__':
     SequentialPipeline([

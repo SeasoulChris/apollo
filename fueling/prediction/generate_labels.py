@@ -5,6 +5,7 @@ import operator
 from fueling.common.base_pipeline import BasePipeline
 from fueling.prediction.common.online_to_offline import LabelGenerator
 import fueling.common.context_utils as context_utils
+from fueling.common.job_utils import JobUtils
 import fueling.common.logging as logging
 import fueling.common.spark_op as spark_op
 
@@ -37,6 +38,11 @@ class GenerateLabels(BasePipeline):
             todo_bin_files = todo_bin_files.subtract(labeled_bin_files).distinct()
 
         self.run_internal(todo_bin_files)
+
+        if self.FLAGS.get('show_job_details'):
+            job_id = (self.FLAGS.get('job_id') if self.is_partner_job() else
+                      self.FLAGS.get('job_id')[:4])
+            JobUtils(job_id).save_job_progress(20)
 
     def run_internal(self, bin_files_rdd):
         """Run the pipeline with given arguments."""
