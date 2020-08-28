@@ -494,3 +494,15 @@ small-records/2020/2020-08-18 sunnyvale_with_two_offices bay_area batch_20200818
 >> bj-batch2
 
 modules/planning/temp/converted_data_with_routing/batch_20200818_110916 yizhuangdaluwang beijing batch_20200630
+
+>> bj-batch 3 pending
+
+modules/planning/temp/converted_data_with_routing/batch_20200826_095528 yizhuangdaluwang beijing batch_20200430
+
+>> sv-batch 8 pending
+
+small-records/2020/2020-08-19 sunnyvale_with_two_offices bay_area batch_20200825
+small-records/2020/2020-08-20 sunnyvale_with_two_offices bay_area batch_20200825
+small-records/2020/2020-08-21 sunnyvale_with_two_offices bay_area batch_20200825
+small-records/2020/2020-08-24 sunnyvale_with_two_offices bay_area batch_20200825
+small-records/2020/2020-08-25 sunnyvale_with_two_offices bay_area batch_20200825

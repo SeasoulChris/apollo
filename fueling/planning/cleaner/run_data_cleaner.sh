@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-bazel run //fueling/planning/cleaner:data_cleaner  -- --cloud --memory=5 --disk=100 --workers=1
+bazel run //fueling/planning/cleaner:data_cleaner  -- --cloud --memory=10 --disk=100 --workers=10

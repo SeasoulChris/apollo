@@ -20,7 +20,7 @@ class CleanPlanningRecords(BasePipeline):
 
     def __init__(self):
         self.IS_TEST_DATA = False
-        self.RUN_IN_DRIVER = True
+        self.RUN_IN_DRIVER = False
         now = datetime.now() - timedelta(hours=7)
         self.dt_string = now.strftime("%Y%m%d_%H%M%S")
         self.dst_prefix = '/mnt/bos/modules/planning/cleaned_data/'
