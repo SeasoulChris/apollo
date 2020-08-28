@@ -10,13 +10,14 @@ from fueling.perception.pointpillars.second.pytorch.models import rpn
 class SmallObjectHead(nn.Module):
     def __init__(self, num_filters, num_class, num_anchor_per_loc,
                  box_code_size, num_direction_bins, use_direction_classifier,
-                 encode_background_as_zeros):
+                 encode_background_as_zeros, export_onnx=False):
         super().__init__()
         self._num_anchor_per_loc = num_anchor_per_loc
         self._num_direction_bins = num_direction_bins
         self._num_class = num_class
         self._use_direction_classifier = use_direction_classifier
         self._box_code_size = box_code_size
+        self._export_onnx = export_onnx
         if encode_background_as_zeros:
             num_cls = num_anchor_per_loc * num_class
         else:
@@ -48,21 +49,34 @@ class SmallObjectHead(nn.Module):
         cls_preds = self.conv_cls(x)
         # [N, C, y(H), x(W)]
         C, H, W = box_preds.shape[1:]
-        box_preds = box_preds.view(-1, self._num_anchor_per_loc,
-                                   self._box_code_size, H, W).permute(
-                                       0, 1, 3, 4, 2).contiguous()
-        cls_preds = cls_preds.view(-1, self._num_anchor_per_loc,
-                                   self._num_class, H, W).permute(
-                                       0, 1, 3, 4, 2).contiguous()
+        if self._export_onnx:
+            box_preds = box_preds.view(-1, self._num_anchor_per_loc,
+                                       self._box_code_size, H, W).permute(
+                0, 3, 4, 1, 2).contiguous()
+            cls_preds = cls_preds.view(-1, self._num_anchor_per_loc,
+                                       self._num_class, H, W).permute(
+                0, 3, 4, 1, 2).contiguous()
+        else:
+            box_preds = box_preds.view(-1, self._num_anchor_per_loc,
+                                       self._box_code_size, H, W).permute(
+                0, 1, 3, 4, 2).contiguous()
+            cls_preds = cls_preds.view(-1, self._num_anchor_per_loc,
+                                       self._num_class, H, W).permute(
+                0, 1, 3, 4, 2).contiguous()
         ret_dict = {
             "box_preds": box_preds.view(batch_size, -1, self._box_code_size),
             "cls_preds": cls_preds.view(batch_size, -1, self._num_class),
         }
         if self._use_direction_classifier:
             dir_cls_preds = self.conv_dir_cls(x)
-            dir_cls_preds = dir_cls_preds.view(
-                -1, self._num_anchor_per_loc, self._num_direction_bins, H,
-                W).permute(0, 1, 3, 4, 2).contiguous()
+            if self._export_onnx:
+                dir_cls_preds = dir_cls_preds.view(
+                    -1, self._num_anchor_per_loc, self._num_direction_bins, H,
+                    W).permute(0, 3, 4, 1, 2).contiguous()
+            else:
+                dir_cls_preds = dir_cls_preds.view(
+                    -1, self._num_anchor_per_loc, self._num_direction_bins, H,
+                    W).permute(0, 1, 3, 4, 2).contiguous()
             ret_dict["dir_cls_preds"] = dir_cls_preds.view(batch_size, -1, self._num_direction_bins)
         return ret_dict
 
@@ -70,13 +84,14 @@ class SmallObjectHead(nn.Module):
 class DefaultHead(nn.Module):
     def __init__(self, num_filters, num_class, num_anchor_per_loc,
                  box_code_size, num_direction_bins, use_direction_classifier,
-                 encode_background_as_zeros):
+                 encode_background_as_zeros, export_onnx=False):
         super().__init__()
         self._num_anchor_per_loc = num_anchor_per_loc
         self._num_direction_bins = num_direction_bins
         self._num_class = num_class
         self._use_direction_classifier = use_direction_classifier
         self._box_code_size = box_code_size
+        self._export_onnx = export_onnx
         if encode_background_as_zeros:
             num_cls = num_anchor_per_loc * num_class
         else:
@@ -96,21 +111,34 @@ class DefaultHead(nn.Module):
         cls_preds = self.conv_cls(x)
         # [N, C, y(H), x(W)]
         C, H, W = box_preds.shape[1:]
-        box_preds = box_preds.view(-1, self._num_anchor_per_loc,
-                                   self._box_code_size, H, W).permute(
-                                       0, 1, 3, 4, 2).contiguous()
-        cls_preds = cls_preds.view(-1, self._num_anchor_per_loc,
-                                   self._num_class, H, W).permute(
-                                       0, 1, 3, 4, 2).contiguous()
+        if self._export_onnx:
+            box_preds = box_preds.view(-1, self._num_anchor_per_loc,
+                                       self._box_code_size, H, W).permute(
+                0, 3, 4, 1, 2).contiguous()
+            cls_preds = cls_preds.view(-1, self._num_anchor_per_loc,
+                                       self._num_class, H, W).permute(
+                0, 3, 4, 1, 2).contiguous()
+        else:
+            box_preds = box_preds.view(-1, self._num_anchor_per_loc,
+                                       self._box_code_size, H, W).permute(
+                0, 1, 3, 4, 2).contiguous()
+            cls_preds = cls_preds.view(-1, self._num_anchor_per_loc,
+                                       self._num_class, H, W).permute(
+                0, 1, 3, 4, 2).contiguous()
         ret_dict = {
             "box_preds": box_preds.view(batch_size, -1, self._box_code_size),
             "cls_preds": cls_preds.view(batch_size, -1, self._num_class),
         }
         if self._use_direction_classifier:
             dir_cls_preds = self.conv_dir_cls(x)
-            dir_cls_preds = dir_cls_preds.view(
-                -1, self._num_anchor_per_loc, self._num_direction_bins, H,
-                W).permute(0, 1, 3, 4, 2).contiguous()
+            if self._export_onnx:
+                dir_cls_preds = dir_cls_preds.view(
+                    -1, self._num_anchor_per_loc, self._num_direction_bins, H,
+                    W).permute(0, 3, 4, 1, 2).contiguous()
+            else:
+                dir_cls_preds = dir_cls_preds.view(
+                    -1, self._num_anchor_per_loc, self._num_direction_bins, H,
+                    W).permute(0, 1, 3, 4, 2).contiguous()
             ret_dict["dir_cls_preds"] = dir_cls_preds.view(batch_size, -1, self._num_direction_bins)
         return ret_dict
 
@@ -219,6 +247,7 @@ class ApolloVoxelNetNuscenesMultiHead(VoxelNet):
                  loc_loss_ftor=None,
                  cls_loss_ftor=None,
                  measure_time=False,
+                 export_onnx=False,
                  voxel_generator=None,
                  post_center_range=None,
                  dir_offset=0.0,
@@ -268,6 +297,7 @@ class ApolloVoxelNetNuscenesMultiHead(VoxelNet):
                          loc_loss_ftor,
                          cls_loss_ftor,
                          measure_time,
+                         export_onnx,
                          voxel_generator,
                          post_center_range,
                          dir_offset,
@@ -292,6 +322,7 @@ class ApolloVoxelNetNuscenesMultiHead(VoxelNet):
             use_direction_classifier=self._use_direction_classifier,
             box_code_size=self._box_coder.code_size,
             num_direction_bins=self._num_direction_bins,
+            export_onnx=export_onnx,
         )
         large_head = DefaultHead(
             num_filters=np.sum(self.rpn._num_upsample_filters),
@@ -301,6 +332,7 @@ class ApolloVoxelNetNuscenesMultiHead(VoxelNet):
             use_direction_classifier=self._use_direction_classifier,
             box_code_size=self._box_coder.code_size,
             num_direction_bins=self._num_direction_bins,
+            export_onnx=export_onnx,
         )
 
         self.rpn = rpn.RPNMultiHead(

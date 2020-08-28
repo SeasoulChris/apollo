@@ -101,6 +101,7 @@ class VoxelNet(nn.Module):
                  loc_loss_ftor=None,
                  cls_loss_ftor=None,
                  measure_time=False,
+                 export_onnx=False,
                  voxel_generator=None,
                  post_center_range=None,
                  dir_offset=0.0,
@@ -150,6 +151,7 @@ class VoxelNet(nn.Module):
             with_distance=with_distance,
             voxel_size=self.voxel_generator.voxel_size,
             pc_range=self.voxel_generator.point_cloud_range,
+            export_onnx=export_onnx,
         )
         self.middle_feature_extractor = middle.get_middle_class(middle_class_name)(
             output_shape,

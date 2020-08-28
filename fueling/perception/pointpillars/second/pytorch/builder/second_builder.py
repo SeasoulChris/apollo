@@ -23,7 +23,7 @@ import fueling.perception.pointpillars.second.pytorch.models.net_multi_head
 
 
 def build(model_cfg: second_pb2.VoxelNet, voxel_generator,
-          target_assigner, measure_time=False):
+          target_assigner, measure_time=False, export_onnx=False):
     """build second pytorch instance.
     """
     if not isinstance(model_cfg, second_pb2.VoxelNet):
@@ -125,6 +125,7 @@ def build(model_cfg: second_pb2.VoxelNet, voxel_generator,
         cls_loss_ftor=cls_loss_ftor,
         target_assigner=target_assigner,
         measure_time=measure_time,
+        export_onnx=export_onnx,
         voxel_generator=voxel_generator,
         post_center_range=list(model_cfg.post_center_limit_range),
         dir_offset=model_cfg.direction_offset,

@@ -25,12 +25,24 @@ py_binary(
 )
 
 py_binary(
+    name = "pointpillars_export_onnx_pipeline",
+    srcs = [
+        "pointpillars_export_onnx_pipeline.py",
+    ],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/perception/pointpillars/second/pytorch:trans_onnx",
+    ],
+)
+
+py_binary(
     name = "pointpillars_end_to_end_pipeline",
     srcs = [
         "pointpillars_end_to_end_pipeline.py",
     ],
     deps = [
         ":create_data_pipeline",
+        ":pointpillars_export_onnx_pipeline",
         ":pointpillars_training_pipeline",
     ],
 )

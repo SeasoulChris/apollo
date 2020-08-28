@@ -261,7 +261,8 @@ class PillarFeatureNetRadius(nn.Module):
                  num_filters=(64, ),
                  with_distance=False,
                  voxel_size=(0.2, 0.2, 4),
-                 pc_range=(0, -40, -3, 70.4, 40, 1)):
+                 pc_range=(0, -40, -3, 70.4, 40, 1),
+                 export_onnx=False):
         """
         Pillar Feature Net.
         The network prepares the pillar features and performs forward pass through PFNLayers.
@@ -304,6 +305,7 @@ class PillarFeatureNetRadius(nn.Module):
         self.vy = voxel_size[1]
         self.x_offset = self.vx / 2 + pc_range[0]
         self.y_offset = self.vy / 2 + pc_range[1]
+        self.export_onnx = export_onnx
 
     def forward(self, features, num_voxels, coors):
         # device = features.device
@@ -347,7 +349,8 @@ class PillarFeatureNetRadius(nn.Module):
         # Forward pass through PFNLayers
         for pfn in self.pfn_layers:
             features = pfn(features)
-
+        if self.export_onnx:
+            return features.squeeze().permute(1, 0)
         return features.squeeze()
 
 

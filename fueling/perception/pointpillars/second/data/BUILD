@@ -33,11 +33,17 @@ py_library(
 )
 
 py_library(
+    name = "nusc_eval",
+    srcs = ["nusc_eval.py"],
+)
+
+py_library(
     name = "nuscenes_dataset",
     srcs = ["nuscenes_dataset.py"],
     deps = [
         ":dataset",
         ":kitti_common",
+        ":nusc_eval",
         "//fueling/perception/pointpillars/second/core:box_np_ops",
         "//fueling/perception/pointpillars/second/core:preprocess",
         "//fueling/perception/pointpillars/second/utils:eval",

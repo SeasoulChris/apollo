@@ -2,7 +2,6 @@ import json
 import pickle
 from copy import deepcopy
 from pathlib import Path
-import subprocess
 
 import numpy as np
 
@@ -11,6 +10,7 @@ from fueling.perception.pointpillars.second.data.dataset import Dataset, registe
 from fueling.perception.pointpillars.second.utils.eval import (
     get_coco_eval_result, get_official_eval_result)
 from fueling.perception.pointpillars.second.utils.progress_bar import progress_bar_iter as prog_bar
+from fueling.perception.pointpillars.second.data.nusc_eval import eval_main
 
 
 @register_dataset
@@ -353,14 +353,9 @@ class NuScenesDataset(Dataset):
         res_path = Path(output_dir) / "results_nusc.json"
         with open(res_path, "w") as f:
             json.dump(nusc_submissions, f)
-        eval_main_file = Path(__file__).resolve().parent / "nusc_eval.py"
-        # why add \"{}\"? to support path with spaces.
-        cmd = f"python {str(eval_main_file)} --root_path=\"{str(self._root_path)}\""
-        cmd += f" --version={self.version} --eval_version={self.eval_version}"
-        cmd += f" --res_path=\"{str(res_path)}\" --eval_set={eval_set_map[self.version]}"
-        cmd += f" --output_dir=\"{output_dir}\""
-        # use subprocess can release all nusc memory after evaluation
-        subprocess.check_output(cmd, shell=True)
+
+        eval_main(self._root_path, self.version, self.eval_version,
+                  str(res_path), eval_set_map[self.version], output_dir)
         with open(Path(output_dir) / "metrics_summary.json", "r") as f:
             metrics = json.load(f)
         detail = {}

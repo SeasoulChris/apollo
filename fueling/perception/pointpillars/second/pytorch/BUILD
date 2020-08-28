@@ -23,3 +23,12 @@ py_library(
         "//fueling/perception/pointpillars/torchplus/train:optim",
     ],
 )
+
+py_library(
+    name = "trans_onnx",
+    srcs = ["trans_onnx.py"],
+    deps = [
+        ":train",
+        "//fueling/perception/pointpillars/second/protos:pipeline_py_pb2",
+    ],
+)
