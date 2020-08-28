@@ -119,7 +119,7 @@ def train_valid_vanilla(train_X, train_y, valid_X, valid_y, model, loss, optimiz
 #########################################################
 
 
-def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=None, Writer=None):
+def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=None, visualizer=None):
     model.train()
 
     loss_history = []
@@ -129,14 +129,22 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=N
         X, y = cuda(X), cuda(y)
         pred = model(X)
         train_loss = loss.loss_fn(pred, y)
-        for key, value in train_loss.items():
-            if key=="total_loss" and Writer!=None:
-                Writer.add_scalar("Train Total Loss", value, (epoch-1)*len(train_loader)+i)
-            elif Writer != None:
-                Writer.add_scalar("Train Loss/"+key, value, (epoch-1)*len(train_loader)+i)
 
-        loss_history.append(train_loss["total_loss"].item())
-        train_loss["total_loss"].backward()
+        train_total_loss = 0.0
+        if isinstance(train_loss, dict):
+            train_total_loss = train_loss["total_loss"]
+            for key, value in train_loss.items():
+                if key=="total_loss" and visualizer!=None:
+                    visualizer.add_scalar("Train Total Loss/total loss(every batch)", value, (epoch-1)*len(train_loader)+i)
+                elif visualizer != None:
+                    visualizer.add_scalar("Train Loss/"+key+"(every batch)", value, (epoch-1)*len(train_loader)+i)
+        else:
+            train_total_loss = train_loss
+            if visualizer != None:
+                visualizer.add_scalar("Train Total Loss/total loss(every batch)", train_total_loss, (epoch-1)*len(train_loader)+i)
+
+        loss_history.append(train_total_loss.item())
+        train_total_loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 10)
         optimizer.step()
 
@@ -159,7 +167,14 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
         X, y = cuda(X), cuda(y)
         pred = model(X)
         valid_loss = loss.loss_fn(pred, y)
-        loss_history.append(valid_loss["total_loss"].item())
+        
+        valid_total_loss = 0.0
+        if isinstance(valid_loss, dict):
+            valid_total_loss = valid_loss["total_loss"]
+        else:
+            valid_total_loss = valid_loss
+        
+        loss_history.append(valid_total_loss.item())
 
         valid_loss_info = loss.loss_info(pred, y)
         if valid_loss_info is not None:
@@ -167,8 +182,8 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
         if analyzer is not None:
             analyzer.process(X, y, pred)
 
-    valid_loss = np.mean(loss_history)
-    logging.info('Validation loss: {}.'.format(valid_loss))
+    valid_mean_loss = np.mean(loss_history)
+    logging.info('Validation loss: {}.'.format(valid_mean_loss))
     logging.info('Validation accuracy = {}'.format(np.mean(loss_info_history)))
 
     return np.mean(loss_info_history)
@@ -176,7 +191,7 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
 
 def train_valid_dataloader(model_type, train_loader, valid_loader, model, loss, optimizer,
                            scheduler, epochs, save_name, print_period=None,
-                           early_stop=None, save_mode=1):
+                           early_stop=None, save_mode=1, visualize_dir=None):
     '''
         -save_mode: 0 - save the best one only
                     1 - save all models that are better than before
@@ -187,18 +202,18 @@ def train_valid_dataloader(model_type, train_loader, valid_loader, model, loss, 
     curr_time = datetime.datetime.now()
     time_str = datetime.datetime.strftime(curr_time,'%Y-%m-%d_%H:%M:%S')
     model_name = model_type + '-' + time_str
-    logdir = os.path.join("/fuel/local/runs", model_name)
+    logdir = os.path.join(visualize_dir, model_name)
     Writer = SummaryWriter(log_dir = logdir)
 
     best_valid_loss = float('+inf')
     num_epoch_valid_loss_not_decreasing = 0
     for epoch in range(1, epochs + 1):
-        train_dataloader(train_loader, model, loss, optimizer, epoch, print_period, Writer=Writer)
+        train_dataloader(train_loader, model, loss, optimizer, epoch, print_period, visualizer=Writer)
         with torch.no_grad():
             valid_loss = valid_dataloader(valid_loader, model, loss)
         scheduler.step(valid_loss)
 
-        Writer.add_scalar("Valid Loss", valid_loss, epoch-1)
+        Writer.add_scalar("Valid Loss/val loss(every epoch)", valid_loss, epoch-1)
 
         # Determine if valid_loss is getting better and if early_stop is needed.
         is_better_model = False

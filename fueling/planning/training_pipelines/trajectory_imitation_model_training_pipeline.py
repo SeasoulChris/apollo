@@ -59,7 +59,8 @@ flags.DEFINE_bool('past_motion_dropout', True,
                   'whether to do past motion dropout')
 flags.DEFINE_string('model_save_dir', '/fuel',
                     'specify the directory to save trained models.')
-
+flags.DEFINE_string('visualize_log_dir', '/fuel/local/runs',
+                    'save loss visualization logs')
 
 def seed_torch(seed=0):
     random.seed(seed)
@@ -82,7 +83,9 @@ def training(model_type,
              renderer_base_map_data_dir,
              img_feature_rotation,
              past_motion_dropout,
-             model_save_dir):
+             model_save_dir,
+             visualize_log_dir):
+
 
     # TODO(Jinyun): check performance
     cv.setNumThreads(0)
@@ -352,7 +355,7 @@ def training(model_type,
 
     train_valid_dataloader(model_type, train_loader, valid_loader, model, loss, optimizer,
                            scheduler, epochs=50, save_name=model_save_dir, print_period=50,
-                           save_mode=2)
+                           save_mode=2, visualize_dir=visualize_log_dir)
 
 
 def main(argv):
@@ -369,6 +372,7 @@ def main(argv):
     img_feature_rotation = gflag.img_feature_rotation
     past_motion_dropout = gflag.past_motion_dropout
     model_save_dir = gflag.model_save_dir
+    visualize_log_dir = gflag.visualize_log_dir
 
     training(model_type,
              train_set_dir,
@@ -381,7 +385,8 @@ def main(argv):
              renderer_base_map_data_dir,
              img_feature_rotation,
              past_motion_dropout,
-             model_save_dir)
+             model_save_dir,
+             visualize_log_dir)
 
 
 if __name__ == "__main__":
