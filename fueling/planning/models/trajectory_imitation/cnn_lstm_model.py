@@ -92,7 +92,7 @@ class TrajectoryImitationUnconstrainedCNNLSTM(nn.Module):
         self.pred_horizon = pred_horizon
 
         self.h0_fc_layer = torch.nn.Sequential(
-            nn.Linear(self.cnn_out_size + 1, 512),
+            nn.Linear(self.cnn_out_size, 512),
             nn.ReLU(),
             nn.Linear(512, 128),
             nn.ReLU(),
@@ -110,7 +110,7 @@ class TrajectoryImitationUnconstrainedCNNLSTM(nn.Module):
         )
 
         self.output_fc_layer = torch.nn.Sequential(
-            nn.Linear(hidden_size + self.cnn_out_size + 1, 4),
+            nn.Linear(hidden_size, 4),
         )
 
     def forward(self, X):
@@ -119,9 +119,8 @@ class TrajectoryImitationUnconstrainedCNNLSTM(nn.Module):
         ct = self.c0.repeat(1, batch_size, 1)
         img_embedding = self.cnn(
             self.compression_cnn_layer(img_feature)).view(batch_size, -1)
-        concatenated_states = torch.cat(
-            (img_embedding, current_v), dim=1)
-        ht = self.h0_fc_layer(concatenated_states).unsqueeze(0)
+        ht = self.h0_fc_layer(img_embedding).unsqueeze(0)
+
         path_point_input = torch.zeros(
             (batch_size, 3), device=img_feature.device)
         current_pose = torch.cat(
@@ -130,18 +129,17 @@ class TrajectoryImitationUnconstrainedCNNLSTM(nn.Module):
         pred_traj = torch.zeros(
             (batch_size, 1, 4), device=img_feature.device)
         for t in range(self.pred_horizon):
-            current_pose_step = self.output_fc_layer(
-                torch.cat((ht.view(batch_size, -1), concatenated_states), dim=1))
+            states_input = self.embedding_fc_layer(
+                current_pose.clone()).view(batch_size, 1, -1)
+
+            _, (ht, ct) = self.lstm(states_input, (ht, ct))
+
+            current_pose_step = self.output_fc_layer(ht.view(batch_size, -1))
 
             current_pose = current_pose + current_pose_step
 
             pred_traj = torch.cat(
                 (pred_traj, current_pose.clone().unsqueeze(1)), dim=1)
-
-            states_input = self.embedding_fc_layer(
-                current_pose_step.clone()).view(batch_size, 1, -1)
-
-            _, (ht, ct) = self.lstm(states_input, (ht, ct))
 
         return pred_traj[:, 1:, :]
 
@@ -161,7 +159,7 @@ class TrajectoryImitationKinematicConstrainedCNNLSTM(nn.Module):
         self.pred_horizon = pred_horizon
 
         self.h0_fc_layer = torch.nn.Sequential(
-            nn.Linear(self.cnn_out_size + 1, 512),
+            nn.Linear(self.cnn_out_size, 512),
             nn.ReLU(),
             nn.Linear(512, 128),
             nn.ReLU(),
@@ -174,12 +172,12 @@ class TrajectoryImitationKinematicConstrainedCNNLSTM(nn.Module):
                             num_layers=1, batch_first=True)
 
         self.embedding_fc_layer = torch.nn.Sequential(
-            nn.Linear(2, embed_size),
+            nn.Linear(4, embed_size),
             nn.ReLU()
         )
 
         self.output_fc_layer = torch.nn.Sequential(
-            nn.Linear(hidden_size + self.cnn_out_size + 1, 2),
+            nn.Linear(hidden_size, 2),
         )
 
         self.max_abs_steering_angle = max_abs_steering_angle
@@ -197,9 +195,7 @@ class TrajectoryImitationKinematicConstrainedCNNLSTM(nn.Module):
         ct = self.c0.repeat(1, batch_size, 1)
         img_embedding = self.cnn(
             self.compression_cnn_layer(img_feature)).view(batch_size, -1)
-        concatenated_states = torch.cat(
-            (img_embedding, current_v), dim=1)
-        ht = self.h0_fc_layer(concatenated_states).unsqueeze(0)
+        ht = self.h0_fc_layer(img_embedding).unsqueeze(0)
         path_point_input = torch.zeros(
             (batch_size, 3), device=img_feature.device)
         current_states = torch.cat(
@@ -211,8 +207,12 @@ class TrajectoryImitationKinematicConstrainedCNNLSTM(nn.Module):
         pred_traj = torch.cat(
             (pred_traj, current_states.clone().unsqueeze(1)), dim=1)
         for t in range(self.pred_horizon):
-            current_action = self.output_fc_layer(
-                torch.cat((ht.view(batch_size, -1), concatenated_states), dim=1))
+            states_input = self.embedding_fc_layer(
+                current_states.clone()).view(batch_size, 1, -1)
+
+            _, (ht, ct) = self.lstm(states_input, (ht, ct))
+
+            current_action = self.output_fc_layer(ht.view(batch_size, -1))
 
             current_action = kinematic_action_constraints_layer(self.max_abs_steering_angle,
                                                                 self.max_acceleration,
@@ -228,11 +228,6 @@ class TrajectoryImitationKinematicConstrainedCNNLSTM(nn.Module):
 
             pred_traj = torch.cat(
                 (pred_traj, current_states.clone().unsqueeze(1)), dim=1)
-
-            states_input = self.embedding_fc_layer(
-                current_action.clone()).view(batch_size, 1, -1)
-
-            _, (ht, ct) = self.lstm(states_input, (ht, ct))
 
         return pred_traj[:, 2:, :]
 
@@ -399,7 +394,7 @@ class TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(nn.Module):
         self.input_img_size_w = input_img_size[1]
 
         self.h0_fc_layer = torch.nn.Sequential(
-            nn.Linear(self.cnn_out_size + 1, 512),
+            nn.Linear(self.cnn_out_size, 512),
             nn.ReLU(),
             nn.Linear(512, 128),
             nn.ReLU(),
@@ -412,12 +407,12 @@ class TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(nn.Module):
                             num_layers=1, batch_first=True)
 
         self.embedding_fc_layer = torch.nn.Sequential(
-            nn.Linear(2, embed_size),
+            nn.Linear(4, embed_size),
             nn.ReLU()
         )
 
         self.output_fc_layer = torch.nn.Sequential(
-            nn.Linear(hidden_size + self.cnn_out_size + 1, 2),
+            nn.Linear(hidden_size, 2),
         )
 
         self.max_abs_steering_angle = max_abs_steering_angle
@@ -448,9 +443,7 @@ class TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(nn.Module):
 
         img_embedding = self.cnn(
             self.compression_cnn_layer(img_feature)).view(batch_size, -1)
-        concatenated_states = torch.cat(
-            (img_embedding, current_v), dim=1)
-        ht = self.h0_fc_layer(concatenated_states).unsqueeze(0)
+        ht = self.h0_fc_layer(img_embedding).unsqueeze(0)
 
         path_point_input = torch.zeros(
             (batch_size, 3), device=img_feature.device)
@@ -462,8 +455,12 @@ class TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(nn.Module):
         pred_traj = torch.cat(
             (pred_traj, current_states.clone().unsqueeze(1)), dim=1)
         for t in range(self.pred_horizon):
-            current_action = self.output_fc_layer(
-                torch.cat((ht.view(batch_size, -1), concatenated_states), dim=1))
+            states_input = self.embedding_fc_layer(
+                current_states.clone()).view(batch_size, 1, -1)
+
+            _, (ht, ct) = self.lstm(states_input, (ht, ct))
+
+            current_action = self.output_fc_layer(ht.view(batch_size, -1))
 
             current_action = kinematic_action_constraints_layer(self.max_abs_steering_angle,
                                                                 self.max_acceleration,
@@ -479,11 +476,6 @@ class TrajectoryImitationKinematicConstrainedCNNLSTMWithRasterizer(nn.Module):
 
             pred_traj = torch.cat(
                 (pred_traj, current_states.clone().unsqueeze(1)), dim=1)
-
-            states_input = self.embedding_fc_layer(
-                current_action.clone()).view(batch_size, 1, -1)
-
-            _, (ht, ct) = self.lstm(states_input, (ht, ct))
 
         ego_rendering_heading = ego_rendering_heading.squeeze()
         idx_mesh = self.idx_mesh.repeat(
