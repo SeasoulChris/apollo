@@ -18,9 +18,14 @@ class Config(object):
     # Job config
     JOB_TYPE = {"A": "All", "VC": "vehicle_calibration",
                 "SC": "sensor_calibration", "VLG": "virtual_lane_generation",
-                "CP": "control_profiling"}
+                "CP": "control_profiling", "PP": "point_pillars",
+                "OSPP": "open_space_planner_profiling", "PMT": "prediction_model_training",
+                "CAT": "control_auto_tuning", "DMV": "dynamic_model_v1"}
     SHOW_JOB_TYPE = {"A": "所有", "VC": "Vehicle Calibration", "SC": "Sensor Calibration",
-                     "VLG": "Virtual Lane Generation", "CP": "Control Profiling"}
+                     "VLG": "Virtual Lane Generation", "CP": "Control Profiling",
+                     "PP": "Point Pillars",
+                     "OSPP": "Open Space Planner Profiling", "PMT": "Prediction Model Training",
+                     "CAT": "Control Auto Tuning", "DMV": "Dynamic Model V1"}
     TIME_FIELD = {"All": 0, "7d": 7, "30d": 30, "1y": 365}
     SHOW_TIME_FIELD = {"All": "所有", "7d": "过去7天", "30d": "过去30天", "1y": "1年前"}
     AGGREGATED_FIELD = {"W": "周", "M": "月", "Y": "年"}
@@ -59,8 +64,8 @@ class Config(object):
     SUPER_USER_NAME = "apollo"
     ROLE_TYPE = {
         "all": [],
-        "system_admin": ["/jobs", "/reset_pwd", "/submit_job",
-                         "/update_status", "/edit_quota", "/accounts"],
+        "system_admin": ["/jobs", "/reset_pwd", "/submit_job", "/statistics",
+                         "/update_status", "/edit_quota", "/accounts", "/"],
         "service_specialist": ["/index", "/jobs"]
     }
     WHITE_URL = ["/static", "/login", "/logout", "/api"]

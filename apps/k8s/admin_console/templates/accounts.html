@@ -38,7 +38,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" id="accountModalLabel">user</h4>
             </div>
-            <form>
+            <form class="action-form">
                 <div class="modal-body">
                     <p style="text-align: center">
                         <label for="action-name" class="action-label">你确定要禁用这个用户吗?</label>
@@ -136,7 +136,7 @@
         <td>{{ account.vehicle_sn }}</td>
         <td>{{ account.com_name }}</td>
         <td>{{ account.com_email }}</td>
-        <td>{{ account.bos_bucker_name }}</td>
+        <td>{{ account.bos_bucket_name }}</td>
         <td>{{ account.bos_region | show_account_region }}</td>
         <td id="status-{{ account._id }}">{{ account.status | show_account_status }}</td>
         <td>{{ account.apply_date }}</td>
