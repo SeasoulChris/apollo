@@ -272,8 +272,8 @@ class EncoderBlock(nn.Module):
         # STEP 1
         att = self.attn_head(x, x, x, mask=mask)
         isnan = torch.isnan(att)
-        if isnan.any():
-            raise NameError(f'Encoder: {att} results NaN data.')
+        # if isnan.any():
+        #     raise NameError(f'Encoder: {att} results NaN data.')
 
         # STEP 2
         # Apply normalization and residual connection
@@ -303,8 +303,8 @@ class TransformerEncoder(nn.Module):
     def forward(self, x, mask=None):
         for encoder in self.encoders:
             isnan = torch.isnan(x)
-            if isnan.any():
-                raise NameError(f'Encoder: {x} results NaN data.')
+            # if isnan.any():
+            #     raise NameError(f'Encoder: {x} results NaN data.')
             x = encoder(x)
         return x
 
