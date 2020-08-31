@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import math
 
+from torch.utils.checkpoint import checkpoint
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -271,9 +272,6 @@ class EncoderBlock(nn.Module):
 
         # STEP 1
         att = self.attn_head(x, x, x, mask=mask)
-        isnan = torch.isnan(att)
-        # if isnan.any():
-        #     raise NameError(f'Encoder: {att} results NaN data.')
 
         # STEP 2
         # Apply normalization and residual connection
@@ -302,9 +300,6 @@ class TransformerEncoder(nn.Module):
 
     def forward(self, x, mask=None):
         for encoder in self.encoders:
-            isnan = torch.isnan(x)
-            # if isnan.any():
-            #     raise NameError(f'Encoder: {x} results NaN data.')
             x = encoder(x)
         return x
 
@@ -380,12 +375,13 @@ class TransformerEncoderCNN(nn.Module):
     def forward(self, data):
         """Define forward computation and activation functions"""
         # original data shape: [sequency/window_size, batch_size, channel]
-        encoded_data = self.encoder(data)
+        encoded_data = checkpoint(self.encoder, data)
+        # encoded_data = self.encoder(data)
         # isnan = torch.isnan(encoded_data)
 
         # conv_input shape: [batch_size, channel, sequency/window_size]
-        conv1_input = torch.transpose(torch.transpose(encoded_data, -2, -3), -2, -1)
-        data = F.relu(self.conv1(conv1_input))
+        encoded_data = torch.transpose(torch.transpose(encoded_data, -2, -3), -2, -1)
+        data = F.relu(self.conv1(encoded_data))
         data = F.relu(self.conv2(data))
         data = self.fc(data.view(data.shape[0], -1))
         return data

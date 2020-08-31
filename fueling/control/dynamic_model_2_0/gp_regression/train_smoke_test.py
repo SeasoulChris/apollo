@@ -96,7 +96,7 @@ valid_dataset = DynamicModelDataset(
     validation_data_path, is_train=False, factor_file=training_data_path)
 # reduce batch size when memory is not enough len(valid_dataset.datasets)
 valid_loader = DataLoader(
-    valid_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=36)
+    valid_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=36, drop_last=True)
 
 
 # encoder
