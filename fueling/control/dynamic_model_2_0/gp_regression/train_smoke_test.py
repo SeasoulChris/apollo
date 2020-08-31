@@ -28,10 +28,9 @@ import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_util
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 train_model = True
-test_type = "full_test"
+test_type = "smoke_test"
 platform_dir = '/fuel/fueling/control/dynamic_model_2_0/testdata'
 econder_type = "Transformer"
-# econder_type = "Eoncoder"
 # CUDA setup:
 if (torch.cuda.is_available()):
     print("Using CUDA to speed up training.")
@@ -72,11 +71,6 @@ train_dataset = DynamicModelDataset(
 train_loader = DataLoader(train_dataset, batch_size=config["batch_size"],
                           shuffle=True, num_workers=36, drop_last=True)
 total_train_number = len(train_loader.dataset)
-# train_y = train_dataset[0][1].unsqueeze(0)
-# logging.info(train_y.shape)
-# for i in range(1, total_train_number):
-#     train_y = torch.cat((train_y, train_dataset[i][1].unsqueeze(0)))
-# logging.info(train_y.shape)
 
 print('train data set is ready')
 # inducing points
@@ -114,11 +108,6 @@ model, likelihood, optimizer, loss_fn = train_utils.init_train(
 if use_cuda:
     model = model.cuda()
     likelihood = likelihood.cuda()
-
-# if torch.cuda.device_count() > 1:
-#     print("Let's use", torch.cuda.device_count(), "GPUs!")
-#     model = torch.nn.DataParallel(model)
-#     model.to(device)
 
 train_loss_plot = os.path.join(validation_data_path, f'{timestr}', 'train_loss.png')
 if train_model:
@@ -171,9 +160,6 @@ ax.add_collection(pc)
 # ground truth (dx, dy)
 ax.plot(y[:, 0], y[:, 1],
         'o', color='blue', label='Ground truth')
-# # # training labels
-# ax.plot(train_y[:, 0], train_y[:, 1],
-#         'kx', label='Training ground truth')
 # predicted mean value
 ax.plot(mean[:, 0].cpu(), mean[:, 1].cpu(), 's', color='r', label='Predicted mean')
 ax.legend(fontsize=12, frameon=False)
