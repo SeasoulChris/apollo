@@ -23,6 +23,7 @@ class JobProcessor(object):
         SaasJobArg.VEHICLE_CALIBRATION: jobs.VehicleCalibration,
         SaasJobArg.VIRTUAL_LANE_GENERATION: jobs.VirtualLaneGeneration,
         SaasJobArg.PREDICTION_MODEL_TRAINING: jobs.PredictionModelTraining,
+        SaasJobArg.PERCEPTION_POINTPILLARS_TRAINING: jobs.PerceptionPointPillarsModelTraining,
     }
 
     def __init__(self, job_arg):

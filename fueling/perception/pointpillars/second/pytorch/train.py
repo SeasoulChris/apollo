@@ -3,7 +3,7 @@ from pathlib import Path
 import pickle
 import time
 import re
-
+import shutil
 import numpy as np
 import torch
 from google.protobuf import text_format
@@ -152,8 +152,8 @@ def train(config_path,
 
     model_dir = Path(model_dir)
     if not resume and model_dir.exists():
-        print("model dir exists,net will resume from the dir")
-        resume = True
+        print("model dir exists and not resume, net will delete the dir")
+        shutil.rmtree(str(model_dir))
 
     model_dir.mkdir(parents=True, exist_ok=True)
 

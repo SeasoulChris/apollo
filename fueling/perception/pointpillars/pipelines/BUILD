@@ -46,3 +46,14 @@ py_binary(
         ":pointpillars_training_pipeline",
     ],
 )
+
+py_binary(
+    name = "pointpillars_eval_pipeline",
+    srcs = [
+        "pointpillars_eval_pipeline.py",
+    ],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/perception/pointpillars/second/pytorch:train",
+    ],
+)

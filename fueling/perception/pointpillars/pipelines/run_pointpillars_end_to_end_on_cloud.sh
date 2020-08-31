@@ -10,7 +10,7 @@ SAVE_ONNX_PATH="/mnt/bos/modules/perception/pointpillars/onnx/"
 bazel run //fueling/perception/pointpillars/pipelines:pointpillars_end_to_end_pipeline  -- \
 --cloud \
 --gpu=1 \
---data_path=$DATA_PATH \
+--input_data_path=$DATA_PATH \
 --config_path=$CONFIG_PATH \
 --model_dir=$MODEL_DIR \
 --pretrained_path=$PRETRAINED_PATH \

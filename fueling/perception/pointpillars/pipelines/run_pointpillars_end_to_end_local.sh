@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 bazel run //fueling/perception/pointpillars/pipelines:create_data_pipeline  -- \
---data_path=/data/perception_data/nuscenes_data/mini/test
+--input_data_path=/data/perception_data/nuscenes_data/mini/test
 
 bazel run //fueling/perception/pointpillars/pipelines:pointpillars_training_pipeline  -- \
 --config_path=/fuel/fueling/perception/pointpillars/second/configs/nuscenes/all.pp.mhead.config \

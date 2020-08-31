@@ -8,7 +8,7 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.perception.pointpillars.second.create_data import nuscenes_data_prep
 import fueling.common.logging as logging
 
-flags.DEFINE_string('data_path', '/mnt/bos/modules/perception/pointpillars/data/',
+flags.DEFINE_string('input_data_path', '/mnt/bos/modules/perception/pointpillars/data/',
                     'training data path')
 
 
@@ -25,7 +25,7 @@ class CreateDataNuscenes(BasePipeline):
         """Run create data task"""
         cv.setNumThreads(0)
 
-        root_path = self.FLAGS.get('data_path')
+        root_path = self.FLAGS.get('input_data_path')
         version = "v1.0-mini"
         max_sweeps = 10
         dataset_name = "NuScenesDataset"

@@ -16,6 +16,7 @@ message SaasJobArg {
     OPEN_SPACE_PLANNER_PROFILING = 6;
     PREDICTION_MODEL_TRAINING = 7;
     DYNAMIC_MODELING = 8;
+    PERCEPTION_POINTPILLARS_TRAINING = 9;
   }
   optional JobType job_type = 1;
 

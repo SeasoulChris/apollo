@@ -113,3 +113,16 @@ class PredictionModelTraining(BaseJob):
             'input_path': job_arg.flags.get("input_data_path"),
         }
         return (entrypoint, client_flags, job_flags)
+
+
+class PerceptionPointPillarsModelTraining(BaseJob):
+    def parse_arg(self, job_arg):
+        entrypoint = 'fueling/perception/pointpillars/pipelines/pointpillars_end_to_end_pipeline.py'
+        client_flags = {
+            'workers': 1, 'gpu': 1, 'memory': 90,
+            'partner_storage_writable': True,
+        }
+        job_flags = {
+            'input_data_path': job_arg.flags.get("input_data_path"),
+        }
+        return (entrypoint, client_flags, job_flags)
