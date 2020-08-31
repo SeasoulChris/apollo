@@ -116,8 +116,8 @@ def train_with_cross_validation(num_epochs, train_loader, validation_loader, mod
         if i == 10:
             gpytorch.settings.tridiagonal_jitter(1e-4)
         loss_dict["train_loss_all"].append(train_loss)
-        loss_dict["validation_mean_loss_all"].append(validation_mean_loss)
-        loss_dict["validation_mean_accuracy_all"].append(validation_mean_accuracy)
+        loss_dict["validation_mean_loss_all"].append(validation_mean_loss.item())
+        loss_dict["validation_mean_accuracy_all"].append(validation_mean_accuracy.item())
     plot_loss(loss_dict, fig_file_path)
     return model, likelihood
 

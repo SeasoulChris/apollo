@@ -11,7 +11,8 @@ from sklearn.metrics import mean_squared_error
 import gpytorch
 import numpy as np
 import torch
-
+torch.cuda.empty_cache()
+print(torch.cuda.memory_summary(device=None, abbreviated=False))
 from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config
 from fueling.control.dynamic_model_2_0.conf.model_conf import smoke_test_training_config
 from fueling.control.dynamic_model_2_0.conf.model_conf import training_config
@@ -24,11 +25,13 @@ from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_tor
 import fueling.common.logging as logging
 import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_utils
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 train_model = True
-test_type = "smoke_test"
+test_type = "full_test"
 platform_dir = '/fuel/fueling/control/dynamic_model_2_0/testdata'
 econder_type = "Transformer"
+# econder_type = "Eoncoder"
 # CUDA setup:
 if (torch.cuda.is_available()):
     print("Using CUDA to speed up training.")
@@ -60,19 +63,22 @@ if not os.path.exists(result_folder):
 offline_model_path = os.path.join(result_folder, 'gp_model.pth')
 online_model_path = os.path.join(result_folder, 'gp_model.pt')
 
+print('finished initialization')
+
 
 # setup data loader
-train_dataset = DynamicModelDataset(training_data_path)
+train_dataset = DynamicModelDataset(
+    training_data_path, is_train=True, factor_file=training_data_path)
 train_loader = DataLoader(train_dataset, batch_size=config["batch_size"],
-                          shuffle=True, num_workers=4, drop_last=True)
+                          shuffle=True, num_workers=36, drop_last=True)
 total_train_number = len(train_loader.dataset)
-train_y = train_dataset[0][1].unsqueeze(0)
-logging.info(train_y.shape)
-for i in range(1, total_train_number):
-    train_y = torch.cat((train_y, train_dataset[i][1].unsqueeze(0)))
-logging.info(train_y.shape)
+# train_y = train_dataset[0][1].unsqueeze(0)
+# logging.info(train_y.shape)
+# for i in range(1, total_train_number):
+#     train_y = torch.cat((train_y, train_dataset[i][1].unsqueeze(0)))
+# logging.info(train_y.shape)
 
-
+print('train data set is ready')
 # inducing points
 step_size = int(max(config["batch_size"] / config["num_inducing_point"], 1))
 inducing_point_num = torch.arange(0, config["batch_size"], step=step_size)
@@ -86,9 +92,11 @@ logging.info(inducing_points.shape)
 
 
 # validate loader
-valid_dataset = DynamicModelDataset(validation_data_path)
+valid_dataset = DynamicModelDataset(
+    validation_data_path, is_train=False, factor_file=training_data_path)
 # reduce batch size when memory is not enough len(valid_dataset.datasets)
-valid_loader = DataLoader(valid_dataset, batch_size=1024, shuffle=True, num_workers=4)
+valid_loader = DataLoader(
+    valid_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=36)
 
 
 # encoder
@@ -106,6 +114,11 @@ model, likelihood, optimizer, loss_fn = train_utils.init_train(
 if use_cuda:
     model = model.cuda()
     likelihood = likelihood.cuda()
+
+# if torch.cuda.device_count() > 1:
+#     print("Let's use", torch.cuda.device_count(), "GPUs!")
+#     model = torch.nn.DataParallel(model)
+#     model.to(device)
 
 train_loss_plot = os.path.join(validation_data_path, f'{timestr}', 'train_loss.png')
 if train_model:
@@ -158,9 +171,9 @@ ax.add_collection(pc)
 # ground truth (dx, dy)
 ax.plot(y[:, 0], y[:, 1],
         'o', color='blue', label='Ground truth')
-# # training labels
-ax.plot(train_y[:, 0], train_y[:, 1],
-        'kx', label='Training ground truth')
+# # # training labels
+# ax.plot(train_y[:, 0], train_y[:, 1],
+#         'kx', label='Training ground truth')
 # predicted mean value
 ax.plot(mean[:, 0].cpu(), mean[:, 1].cpu(), 's', color='r', label='Predicted mean')
 ax.legend(fontsize=12, frameon=False)
