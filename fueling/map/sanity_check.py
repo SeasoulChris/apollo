@@ -6,6 +6,7 @@ import os
 from cyber.python.cyber_py3.record import RecordReader
 
 from fueling.common.job_utils import JobUtils
+import fueling.common.context_utils as context_utils
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -57,19 +58,23 @@ def sanity_check(input_folder, output_folder, job_owner, job_id, email_receivers
     err_msg = None
     if not len(list_records(input_folder)):
         err_msg = "One or more files are missing in %s" % input_folder
-        JobUtils(job_id).save_job_failure_code('E301')
+        if context_utils.is_cloud():
+            JobUtils(job_id).save_job_failure_code('E301')
     elif is_oversize_file(input_folder):
         err_msg = "The record file is oversize!"
-        JobUtils(job_id).save_job_failure_code('E300')
+        if context_utils.is_cloud():
+            JobUtils(job_id).save_job_failure_code('E300')
     elif parse_error(input_folder, output_folder):
         err_msg = "The input data path must be different from the output data path!"
-        JobUtils(job_id).save_job_failure_code('E307')
+        if context_utils.is_cloud():
+            JobUtils(job_id).save_job_failure_code('E307')
     elif missing_message_data(input_folder):
         err_msg = "Messages are missing in records of %s" % input_folder
-        JobUtils(job_id).save_job_failure_code('E302')
+        if context_utils.is_cloud():
+            JobUtils(job_id).save_job_failure_code('E302')
     else:
         logging.info("%s Passed sanity check." % input_folder)
-        if email_receivers:
+        if context_utils.is_cloud() and email_receivers:
             title = 'Virtual-lane-generation data sanity check passed for {}'.format(job_owner)
             content = 'job_id={} input_folder={} output_folder={}\n' \
                 'We are processing your job now. Please expect another email with results.'.format(
@@ -77,8 +82,8 @@ def sanity_check(input_folder, output_folder, job_owner, job_id, email_receivers
             email_utils.send_email_info(title, content, email_receivers)
         return True
 
-    if email_receivers:
-        title = 'Error occurred during Virtual-lane-generatio data sanity check for {}'.format(
+    if context_utils.is_cloud() and email_receivers:
+        title = 'Error occurred during Virtual-lane-generation data sanity check for {}'.format(
             job_owner)
         content = 'job_id={} input_folder={}\n{}'.format(job_id, input_folder, cgi.escape(err_msg))
         email_utils.send_email_error(title, content, email_receivers)

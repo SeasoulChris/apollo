@@ -6,6 +6,7 @@ py_library(
     name = "sanity_check",
     srcs = ["sanity_check.py"],
     deps = [
+        "//fueling/common:context_utils",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:job_utils",
@@ -21,6 +22,7 @@ py_library(
     deps = [
         ":sanity_check",
         "//fueling/common:base_pipeline",
+        "//fueling/common:context_utils",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:job_utils",
@@ -46,6 +48,7 @@ py_library(
     srcs = ["generate_local_map.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:context_utils",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:job_utils",
@@ -68,6 +71,7 @@ py_library(
     srcs = ["generate_sim_routing_map.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:context_utils",
         "//fueling/common:job_utils",
     ],
 )

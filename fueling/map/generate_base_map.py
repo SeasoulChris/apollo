@@ -20,6 +20,7 @@ from modules.map.proto import map_road_pb2
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
 from fueling.map.sanity_check import sanity_check
+import fueling.common.context_utils as context_utils
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -38,13 +39,11 @@ class MapGenSingleLine(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        dir_prefix = 'testdata/virtual_lane'
+        dir_prefix = '/fuel/testdata/virtual_lane'
         src_dir = self.our_storage().abs_path(dir_prefix)
         dst_prefix = os.path.join(src_dir, 'result')
         self.lane_width = 3.3
         self.extra_roi_extension = 1.0
-        job_id = self.FLAGS.get('job_id')
-        logging.info("job_id: %s" % job_id)
 
         if not os.path.exists(dst_prefix):
             logging.warning('target_path: {} not exists'.format(dst_prefix))
@@ -54,8 +53,8 @@ class MapGenSingleLine(BasePipeline):
 
         logging.info("source_prefix: {}".format(src_dir))
         # RDD(record_path)
-        # todo_records = self.to_rdd([src_dir])
-        # self.run_internal(todo_records, src_dir, dst_prefix)
+        todo_records = self.to_rdd([src_dir])
+        self.run_internal(todo_records, src_dir, dst_prefix)
 
         path = os.path.join(dst_prefix, 'base_map.txt')
         if not os.path.exists(path):
@@ -63,8 +62,8 @@ class MapGenSingleLine(BasePipeline):
         logging.info('base_map.txt generated: Done, Test')
 
     def run(self):
-        src_prefix = self.FLAGS.get('input_data_path') or 'test/virtual_lane/data'
-        dst_prefix = self.FLAGS.get('output_data_path') or 'test/virtual_lane/result'
+        src_prefix = self.FLAGS.get('input_data_path') or '/fuel/testdata/virtual_lane'
+        dst_prefix = self.FLAGS.get('output_data_path') or '/fuel/testdata/virtual_lane/result'
 
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
@@ -89,8 +88,9 @@ class MapGenSingleLine(BasePipeline):
 
         logging.info("source_prefix: {}".format(source_dir))
 
-        JobUtils(job_id).save_job_input_data_size(source_dir)
-        JobUtils(job_id).save_job_sub_type('')
+        if context_utils.is_cloud():
+            JobUtils(job_id).save_job_input_data_size(source_dir)
+            JobUtils(job_id).save_job_sub_type('')
         receivers = email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
         if os.environ.get('PARTNER_EMAIL'):
             receivers.append(os.environ.get('PARTNER_EMAIL'))
@@ -102,7 +102,8 @@ class MapGenSingleLine(BasePipeline):
         redis_value = {'begin_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                        'job_size': job_size,
                        'job_status': 'running'}
-        redis_utils.redis_extend_dict(redis_key, redis_value)
+        if context_utils.is_cloud():
+            redis_utils.redis_extend_dict(redis_key, redis_value)
 
         # RDD(record_path)
         todo_records = self.to_rdd([source_dir])
@@ -114,8 +115,9 @@ class MapGenSingleLine(BasePipeline):
             logging.warning('base_map.txt: {} not genterated'.format(path))
 
         logging.info('base_map.txt generated: Done, PROD')
-        JobUtils(job_id).save_job_progress(20)
-        JobUtils(job_id).save_job_sub_type('base_map')
+        if context_utils.is_cloud():
+            JobUtils(job_id).save_job_progress(20)
+            JobUtils(job_id).save_job_sub_type('base_map')
 
     def run_internal(self, todo_records, src_prefix, dst_prefix):
         """Run the pipeline with given arguments."""
@@ -143,7 +145,8 @@ class MapGenSingleLine(BasePipeline):
                 points.append((pos.x, pos.y))
                 if(i == 0):
                     zone_id = self.FLAGS.get('zone_id')
-                    JobUtils(job_id).save_job_location(pos.x, pos.y, zone_id)
+                    if context_utils.is_cloud():
+                        JobUtils(job_id).save_job_location(pos.x, pos.y, zone_id)
                     i += 1
 
         logging.info('Success to read localization pose points {}'.format(len(points)))
