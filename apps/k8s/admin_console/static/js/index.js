@@ -264,10 +264,11 @@ $(document).ready(function () {
         account_data["verhicle_sn"] = button.data("verhicle_sn");
         account_data["com_name"] = button.data("com_name");
         account_data["com_email"] = button.data("com_email");
-        account_data["bos_bucker_name"] = button.data("bos_bucker_name");
+        account_data["bos_bucket_name"] = button.data("bos_bucket_name");
         account_data["bos_region"] = button.data("bos_region");
         account_data["account_status"] = button.data("account_status");
         account_data["account_id"] = button.data("account_id");
+        account_data["purpose"] = button.data("purpose")
         account_data["action"] = status_action[account_data["label"]];
         first_status = button.data("first_status");
 
@@ -282,8 +283,9 @@ $(document).ready(function () {
         modal.find('.verhicle-sn').text("车辆信息:" + account_data["verhicle_sn"]);
         modal.find('.com-name').text("公司名字:" + account_data["com_name"]);
         modal.find('.com-email').text("公司邮箱:" + account_data["com_email"]);
-        modal.find('.bos-name').text("BOS名字:" + account_data["bos_bucker_name"]);
+        modal.find('.bos-name').text("BOS名字:" + account_data["bos_bucket_name"]);
         modal.find('.bos-region').text("BOS区域:" + region_filed[account_data["bos_region"]]);
+        modal.find('.purpose').text("申请目的:" + account_data["purpose"]);
         modal.find('.account-status').text("账号状态:" + showServiceStatus(account_data["account_status"]));
         modal.find('.btn-account-action').text(str_label);
     });

@@ -50,6 +50,7 @@
                         <span class="com-email" style="display: block">公司邮箱</span>
                         <span class="bos-name" style="display: block">BOS名字</span>
                         <span class="bos-region" style="display: block">BOS区域</span>
+                        <span class="purpose" style="display: block">申请目的</span>
                         <span class="account-status" style="display: block">账号状态</span>
                     </p>
                     <p style="color: rgb(175, 175, 175)" class="comment-title"></p>
@@ -154,18 +155,20 @@
                 <a style="width: 100%" id="button-reject-{{ account._id }}" class="account-modal" data-toggle="modal"
                    data-target="#accountModal" data-label="{{ action }}" data-verhicle_sn="{{ account.vehicle_sn }}"
                    data-com_name="{{ account.com_name }}" data-com_email="{{ account.com_email }}"
-                   data-bos_bucker_name="{{ account.bos_bucker_name }}" data-bos_region="{{ account.bos_region }}"
+                   data-bos_bucket_name="{{ account.bos_bucket_name }}" data-bos_region="{{ account.bos_region }}"
                    data-account_status="{{ account.status }}" data-account_id="{{ account._id }}"
-                   data-first_status="{{ account.status }}" data-account-services="{{account.services}}">
+                   data-first_status="{{ account.status }}" data-account-services="{{account.services}}"
+                   data-purpose="{{ account.purpose }}">
                     {{ action | show_account_action }}
                 </a>
                 {% else %}
                 <a style="width: 100%" id="button-action-{{ account._id }}" class="account-modal" data-toggle="modal"
                    data-target="#accountModal" data-label="{{ action }}" data-verhicle_sn="{{ account.vehicle_sn }}"
                    data-com_name="{{ account.com_name }}" data-com_email="{{ account.com_email }}"
-                   data-bos_bucker_name="{{ account.bos_bucker_name }}" data-bos_region="{{ account.bos_region }}"
+                   data-bos_bucket_name="{{ account.bos_bucket_name }}" data-bos_region="{{ account.bos_region }}"
                    data-account_status="{{ account.status }}" data-account_id="{{ account._id }}"
-                   data-first_status="{{ account.status }}" data-account-services="{{account.services}}">
+                   data-first_status="{{ account.status }}" data-account-services="{{account.services}}"
+                   data-purpose="{{ account.purpose }}">
                     {{ action | show_account_action }}
                 </a>
                 {% endif %}

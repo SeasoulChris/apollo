@@ -41,11 +41,11 @@ class AccountUtils(object):
                                      'bos_sk': bos_sk}})
         logging.info(f"upadate_account_info: {account_id}")
 
-    def upadate_account_status(self, account_id, status):
+    def update_account_status(self, account_id, status):
         """update account info"""
         self.db.update_one({'_id': ObjectId(account_id)},
                            {'$set': {'status': status}})
-        logging.info(f"upadate_account_status: {status}")
+        logging.info(f"update_account_status: {status}")
 
     def save_account_quota(self, account_id, quota):
         """save account quota"""
