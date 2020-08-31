@@ -121,6 +121,7 @@ class BosDataset(Dataset):
         self.file_list_dir = file_list_dir
         self.datasets = []
         self.get_datasets()
+        self.file_list = []
         if is_train and (not param_file):
             # generate standardization factors
             self.input_mean, self.input_std = get_standardization_factors(self.datasets)
@@ -143,7 +144,8 @@ class BosDataset(Dataset):
                 # loop over data list
                 for cur_data_file in data_list:
                     logging.info(cur_data_file)
-                    self.extract_data_from_file(cur_data_file)
+                    self.file_list.append(cur_data_file)
+                    # self.extract_data_from_file(cur_data_file)
 
     def extract_data_from_file(self, h5_file):
         """ run in bos; assume there is no NAN files"""
@@ -157,6 +159,7 @@ class BosDataset(Dataset):
         return len(self.datasets)
 
     def __getitem__(self, idx):
+        self.extract_data_from_file(self.file_list[idx])
         standardized_input = (self.datasets[idx][0] - self.input_mean) / self.input_std
         return (torch.from_numpy(standardized_input).float(),
                 torch.from_numpy(self.datasets[idx][1]).float())
@@ -174,6 +177,7 @@ class DynamicModelDataset(Dataset):
         self.data_dir = data_dir
         self.is_normalize = is_normalize
         self.is_standardize = is_standardize
+        self.file_list = []
 
         if not model_dir:
             model_dir = '/fuel/fueling/control/dynamic_model_2_0/testdata/mlp_model/forward'
@@ -261,27 +265,19 @@ class DynamicModelDataset(Dataset):
 
     def get_datasets(self):
         """ when input data for DM1.0 is not normalized """
-        self.datasets = []
         h5_files = file_utils.list_files_with_suffix(self.data_dir, '.h5')
         for idx, h5_file in enumerate(h5_files):
             logging.debug(f'h5_file: {h5_file}')
-            with h5py.File(h5_file, 'r') as model_norms_file:
-                # Get input data
-                input_segment = np.array(model_norms_file.get('input_segment'))
-                if np.isnan(np.sum(input_segment)):
-                    raise Exception(f'file {h5_file} contains NAN data in input segment')
-                output_segment = np.array(model_norms_file.get('output_segment'))
-                if np.isnan(np.sum(output_segment)):
-                    raise Exception(f'file {h5_file} contains NAN data in output segment')
-                self.datasets.append((input_segment, output_segment))
+            self.file_list.append(h5_file)
 
     def __len__(self):
-        return len(self.datasets)
+        return len(self.file_list)
 
     def __getitem__(self, idx):
-        processed_inputs = self.pre_process(self.datasets[idx][0])
+        datasets = extract_data_from_file(self.file_list[idx])
+        processed_inputs = self.pre_process(datasets[0])
         return (torch.from_numpy(processed_inputs).float(),
-                torch.from_numpy(self.datasets[idx][1]).float())
+                torch.from_numpy(datasets[1]).float())
 
     def get_len(self):
         return self.__len__()
