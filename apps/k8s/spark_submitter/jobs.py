@@ -58,7 +58,7 @@ class VehicleCalibration(BaseJob):
 
 class DynamicModeling(BaseJob):
     def parse_arg(self, job_arg):
-        entrypoint = 'fueling/control/calibration_table/dynamic_model.py'
+        entrypoint = 'fueling/control/dynamic_model/dynamic_model.py'
         client_flags = {
             'workers': 6, 'cpu': 4, 'memory': 16,
             'partner_storage_writable': True,
