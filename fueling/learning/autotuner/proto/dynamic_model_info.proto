@@ -9,4 +9,5 @@ enum DynamicModel {
   INTELLI_COOLHIGH = 3;
   ECHO_LINCOLN = 4;
   CASCADED_MODEL = 5;
+  OWN_MODEL = 6;
 }

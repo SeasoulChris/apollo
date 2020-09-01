@@ -18,7 +18,6 @@ py_library(
     srcs = ["sim_client.py"],
     deps = [
         "//fueling/common:logging",
-        "//fueling/learning/autotuner/proto:git_info_py_pb2",
         "//fueling/learning/autotuner/proto:sim_service_py_pb2",
         "//fueling/learning/autotuner/proto:sim_service_py_pb2_grpc",
     ],

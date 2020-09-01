@@ -8,5 +8,6 @@ py_binary(
     deps = [
         "//fueling/learning/autotuner/client:cost_computation_client",
         "//fueling/learning/autotuner/proto:dynamic_model_info_py_pb2",
+        "//fueling/learning/autotuner/proto:git_info_py_pb2",
     ],
 )

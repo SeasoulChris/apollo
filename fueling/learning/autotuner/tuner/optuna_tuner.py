@@ -116,7 +116,7 @@ class OptunaBaseTuner():
 
         self.cost_client = CostComputationClient(
             flags.FLAGS.cost_computation_service_url,
-            config.git_info.commit_id,
+            config.git_info,
             list(config.scenarios.id),
             config.dynamic_model,
         )

@@ -9,7 +9,7 @@ import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_ser
 import fueling.learning.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
 import fueling.common.logging as logging
 
-MAX_RUNNING_ROLE_LENGTH = 18
+MAX_RUNNING_ROLE_LENGTH = 12
 MAX_RETRIES = 3
 
 KEEP_ALIVE_TIME_IN_SEC = 5 * 60
@@ -27,7 +27,7 @@ class CostComputationClient(object):
     """The Python implementation of the Cost Computation GRPC client."""
 
     def __init__(self, channel_url="localhost:50052",
-                 commit_id=None, scenario_ids=None,
+                 git_info=None, scenario_ids=None,
                  dynamic_model=None,
                  running_role_postfix=None):
         self.service_token = None
@@ -36,8 +36,8 @@ class CostComputationClient(object):
         self.running_role_postfix = running_role_postfix
         self.first_cost_computation = True
 
-        if commit_id and scenario_ids and isinstance(dynamic_model, int):
-            self.initialize(commit_id, scenario_ids, dynamic_model)
+        if git_info and scenario_ids and isinstance(dynamic_model, int):
+            self.initialize(git_info, scenario_ids, dynamic_model)
         else:
             logging.info("Missing necessary inputs to initialize the Client")
 
@@ -75,7 +75,7 @@ class CostComputationClient(object):
     def is_initialized(self):
         return self.service_token is not None
 
-    def construct_init_request(self, commit_id, scenario_ids, dynamic_model, running_role):
+    def construct_init_request(self, git_info, scenario_ids, dynamic_model, running_role):
         # validate inputs
         if not isinstance(scenario_ids, list):
             raise TypeError(
@@ -86,11 +86,10 @@ class CostComputationClient(object):
 
         # construct request
         request = cost_service_pb2.InitRequest()
-        request.git_info.commit_id = commit_id
+        request.git_info.CopyFrom(git_info)
         request.scenario_id.extend(scenario_ids)
         request.dynamic_model = dynamic_model
         request.running_role = running_role
-
         return request
 
     def construct_compute_request(self, configs, cost_conf_file):
@@ -161,12 +160,12 @@ class CostComputationClient(object):
 
         self.service_token = service_token
 
-    def initialize(self, commit_id, scenario_ids, dynamic_model):
+    def initialize(self, git_info, scenario_ids, dynamic_model):
         if self.is_initialized():
             logging.info(f"Service {self.service_token} has been initialized")
             return
 
-        logging.info(f"Initializing service for commit {commit_id} with training scenarios "
+        logging.info(f"Initializing service for commit {git_info} with training scenarios "
                      f"{scenario_ids} ...")
 
         running_role = getpass.getuser()
@@ -174,7 +173,7 @@ class CostComputationClient(object):
             running_role += f"-{self.running_role_postfix}"
 
         request = self.construct_init_request(
-            commit_id, scenario_ids, dynamic_model, running_role[:MAX_RUNNING_ROLE_LENGTH])
+            git_info, scenario_ids, dynamic_model, running_role[:MAX_RUNNING_ROLE_LENGTH])
         response = self.send_request_with_retry('Initialize', request)
         self.service_token = response.token
         logging.info(f"Service {self.service_token} initialized ")

@@ -2,6 +2,7 @@ import time
 
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.proto.dynamic_model_info_pb2 import DynamicModel
+from fueling.learning.autotuner.proto.git_info_pb2 import GitInfo
 
 CHANNEL_URL = "localhost:50052"
 
@@ -9,13 +10,16 @@ CHANNEL_URL = "localhost:50052"
 # CHANNEL_URL="costservice:50052"
 
 # uncomment me if testing for az-staging
-# CHANNEL_URL="40.77.110.196:50052"
+# CHANNEL_URL="20.190.24.195:50052"
+
+# uncomment me if testing for bce-staging
+# CHANNEL_URL="180.76.157.176:50052"
 
 # uncomment me if testing for bce-platform
 # CHANNEL_URL="180.76.242.157:50052"
 
 # uncomment me if testing for bce-debug
-CHANNEL_URL = "180.76.111.129:50052"
+# CHANNEL_URL = "180.76.111.129:50052"
 
 # settings
 commit_id = "09ba18ada1aad062e0ffc3ea6f02de177895ed34"
@@ -44,7 +48,7 @@ client = CostComputationClient(CHANNEL_URL)
 try:
     tic1 = time.perf_counter()
 
-    client.initialize(commit_id, scenario_ids, dynamic_model)
+    client.initialize(git_info, scenario_ids, dynamic_model)
     print(f"Initialization time: {time.perf_counter() - tic1:0.4f} seconds")
     """
     client.set_token("tuner-8f6b804fc84f495280d27e6696330db2")

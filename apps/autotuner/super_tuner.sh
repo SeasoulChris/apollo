@@ -9,7 +9,7 @@ function print_usage() {
 }
 
 function delete_worker() {
-  kubectl delete job.batch/$USER-optuna-worker
+  kubectl delete job.batch/$USER-optuna-worker || true
 }
 
 function run() {
