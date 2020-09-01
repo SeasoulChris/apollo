@@ -6,6 +6,7 @@ py_library(
     name = "train",
     srcs = ["train.py"],
     deps = [
+        "//fueling/common:job_utils",
         "//fueling/perception/pointpillars/second/builder:target_assigner_builder",
         "//fueling/perception/pointpillars/second/builder:voxel_builder",
         "//fueling/perception/pointpillars/second/core:box_np_ops",
@@ -21,7 +22,6 @@ py_library(
         "//fueling/perception/pointpillars/torchplus/train:checkpoint",
         "//fueling/perception/pointpillars/torchplus/train:common",
         "//fueling/perception/pointpillars/torchplus/train:optim",
-        "//fueling/common:job_utils",
     ],
 )
 

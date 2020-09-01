@@ -32,8 +32,8 @@ py_binary(
         "pointpillars_export_onnx_pipeline.py",
     ],
     deps = [
-        "//fueling/common:job_utils",
         "//fueling/common:base_pipeline",
+        "//fueling/common:job_utils",
         "//fueling/perception/pointpillars/second/pytorch:trans_onnx",
     ],
 )
