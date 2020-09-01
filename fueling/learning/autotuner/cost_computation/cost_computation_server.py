@@ -90,7 +90,8 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         context.add_callback(on_rpc_done)
 
         # Save config to a local file
-        service_token = f"tuner-{request.running_role}-{time.strftime('%y%m%d%H%M')}{uuid.uuid4().hex}"
+        service_token = f"tuner-{request.running_role}-" \
+            f"{time.strftime('%y%m%d%H%M')}{uuid.uuid4().hex}"
         tmp_dir = self.get_service_dir(service_token)
         file_utils.makedirs(tmp_dir)
         proto_utils.write_pb_to_text_file(request, f"{tmp_dir}/init_request.pb.txt")
