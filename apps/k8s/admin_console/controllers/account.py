@@ -151,6 +151,9 @@ def get_job_used(objs):
             for svc in job_type_conf:
                 if svc not in current_services:
                     services.append({"job_type": svc, "status": "Disabled"})
+            for svc in services:
+                if svc["job_type"] not in job_type_conf:
+                    services.remove(svc)
             services.sort(key=lambda x: x["job_type"])
             sum_counts = 0
             for service in services:

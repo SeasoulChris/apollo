@@ -18,14 +18,14 @@ class Config(object):
     # Job config
     JOB_TYPE = {"A": "All", "VC": "vehicle_calibration",
                 "SC": "sensor_calibration", "VLG": "virtual_lane_generation",
-                "CP": "control_profiling", "PP": "point_pillars",
+                "CP": "control_profiling", "PLMT": "perception_lidar_model_training",
                 "OSPP": "open_space_planner_profiling", "PMT": "prediction_model_training",
-                "CAT": "control_auto_tuning", "DMV": "dynamic_model_v1"}
+                "CAT": "control_auto_tuning", "DM": "dynamic_model"}
     SHOW_JOB_TYPE = {"A": "所有", "VC": "Vehicle Calibration", "SC": "Sensor Calibration",
                      "VLG": "Virtual Lane Generation", "CP": "Control Profiling",
-                     "PP": "Point Pillars",
+                     "PLMT": "Perception Lidar Model Training",
                      "OSPP": "Open Space Planner Profiling", "PMT": "Prediction Model Training",
-                     "CAT": "Control Auto Tuning", "DMV": "Dynamic Model V1"}
+                     "CAT": "Control Auto Tuning", "DM": "Dynamic Model"}
     TIME_FIELD = {"All": 0, "7d": 7, "30d": 30, "1y": 365}
     SHOW_TIME_FIELD = {"All": "所有", "7d": "过去7天", "30d": "过去30天", "1y": "1年前"}
     AGGREGATED_FIELD = {"W": "周", "M": "月", "Y": "年"}
@@ -107,4 +107,8 @@ class Config(object):
         "Reject": "驳回",
         "Edit": "编辑",
         "Disable": "停用"
+    }
+
+    ADMIN_AUTH_DIGEST = {
+        "admin_console": "admin_console:digest"
     }
