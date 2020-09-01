@@ -17,7 +17,7 @@ class BaseStorage(object):
         return os.path.join(self.mnt_path, path)
 
     def relative_path(self, path):
-        """Remove mnt_path it is abs_path."""
+        """Remove mnt_path from abs_path."""
         if path.startswith(self.mnt_path):
             path = path[len(self.mnt_path) + 1:]
         return path
