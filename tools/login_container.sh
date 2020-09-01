@@ -7,6 +7,10 @@ CONTAINER="fuel_${USER}"
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 source ./tools/docker_version.sh
 
+if [ "$#" -eq 1 ] && [ $1 == 'to_onnx' ]; then
+  IMAGE=$IMAGE_ONNX
+fi
+
 # Decide to use GPU or not.
 DOCKER_RUN="docker run"
 if [ -z "$(which nvidia-smi)" ]; then
