@@ -73,7 +73,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
     def Initialize(self, request, context):
         if not request.git_info.commit_id:
-            return CostComputation.create_init_response(1, "Commit ID not specified.")
+            return CostComputation.create_init_response(1, "git info not specified.")
         if not request.scenario_id:
             return CostComputation.create_init_response(1, "Scenario(s) not specified.")
         tic_start = time.perf_counter()
@@ -90,7 +90,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         context.add_callback(on_rpc_done)
 
         # Save config to a local file
-        service_token = f"tuner-{request.running_role}-{uuid.uuid4().hex}"
+        service_token = f"tuner-{request.running_role}-{time.strftime('%y%m%d%H%M')}{uuid.uuid4().hex}"
         tmp_dir = self.get_service_dir(service_token)
         file_utils.makedirs(tmp_dir)
         proto_utils.write_pb_to_text_file(request, f"{tmp_dir}/init_request.pb.txt")
