@@ -219,6 +219,7 @@ def autolabel(modelfile=None, imagelist=None):
         output_file = output_file.replace('.jpg', '.txt')
         output_file = output_file.replace('.jpeg', '.txt')
         output_file = output_file.replace('.bmp', '.txt')
+        output_file = output_file.replace('compressed', '.txt')
         f = open(output_file, "w")
         for box in boxes[0]:
             print(box)

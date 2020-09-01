@@ -9,7 +9,6 @@ Example:
     --record_folder=public-test/2020/2020-08-24/2020-08-24-14-30-55
 """
 import time
-import os
 
 # Apollo packages
 # from modules.drivers.proto.sensor_image_pb2 import Image
@@ -17,10 +16,11 @@ import os
 
 # Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.base_pipeline import SequentialPipeline
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.common.file_utils as file_utils
-# import fueling.perception.decode_video as decode_video
+from fueling.perception.decode_video import DecodeVideoPipeline
 
 # third-party packages
 from PIL import Image
@@ -36,13 +36,16 @@ class RecordImageParser(BasePipeline):
 
     def run(self):
         time_start = time.time()
-        workers = int(os.environ.get('APOLLO_EXECUTORS', 1))
-        logging.info("workers", workers)
+
         # local test only
-        # self.parse('/fuel/fueling/perception/emergency_detection/pipeline/20200824143055.record.00006')
+        # self.parse(
+        #     '/fuel/fueling/perception/emergency_detection/pipeline/20200824143055.record.00006',
+        #     ''
+        # )
 
         # cloud only
         record_dir = flags.FLAGS.record_folder
+
         date_subfolder = record_dir.split("/")[3]
         file_utils.makedirs(self.our_storage().abs_path('{}/{}/images'.format(
             bos_original_address,
@@ -57,39 +60,75 @@ class RecordImageParser(BasePipeline):
             date_subfolder
         )))
 
+        file_utils.makedirs(self.our_storage().abs_path('{}/{}/images'.format(
+            bos_processed_address,
+            date_subfolder
+        )))
+
+        file_utils.makedirs(self.our_storage().abs_path('{}/{}/images_from_video'.format(
+            bos_processed_address,
+            date_subfolder
+        )))
+
+        # Write record file names to a txt file
+        record_list = self.our_storage().list_files(record_dir)
+        record_list_filtered = list(filter(record_utils.is_record_file, record_list))
+        f = open(
+            self.our_storage().abs_path(
+                'modules/streaming/records/{}'.format(record_dir.split("/")[3])
+            ),
+            'w'
+        )
+        for record in record_list_filtered:
+            f.write(record + '\n')
+        logging.info("record file name txt written!")
+        f.close()
+
         self.to_rdd(
-            self.our_storage().list_files(
-                record_dir
-            )
+            record_list
         ).filter(
             record_utils.is_record_file
         ).foreach(
-            lambda instance: self.parse(
+            lambda instance: self.parseImage(
                 instance,
                 date_subfolder
             )
         )
 
-        logging.info(F'Image pasring complete in {time.time() - time_start} seconds.')
+        # Add checking logic to prevent DecodeVideo starting before serialize_record is done
+        serialize_finished_count = 0
+        while serialize_finished_count < len(record_list_filtered):
+            serialize_finished_count = 0
+            for record in record_list_filtered:
+                if '/mnt/bos/modules/streaming/data/{}/{}/COMPLETE'.format(
+                    record_dir, record.split('/')[7]) in self.our_storage().list_files(
+                        'modules/streaming/data/{}/{}'.format(record_dir, record.split('/')[7])):
+                    serialize_finished_count += 1
+                    logging.info(
+                        "@@@Found a COMPLETE file, now {} COMPLETE files".format(
+                            str(serialize_finished_count)
+                        )
+                    )
 
-    def parse(self, record, date_subfolder):
+        logging.info(
+            F'Image pasring complete in {time.time() - time_start} seconds. Video decode starts.'
+        )
+
+    def parseImage(self, record, date_subfolder):
         record_index = record.split('.')[2]
         f12_i_count, f6_i_count, r6_i_count = 0, 0, 0
         # f12_count f6_count, r6_count,  = 0, 0, 0
         # f12_v_count, f6_v_count, r6_v_count = 0, 0, 0
         reader = record_utils.read_record([
             record_utils.FRONT_12mm_CHANNEL,
-            record_utils.FRONT_12mm_VIDEO_CHANNEL,
             record_utils.FRONT_12mm_IMAGE_CHANNEL,
             record_utils.FRONT_6mm_CHANNEL,
-            record_utils.FRONT_6mm_VIDEO_CHANNEL,
             record_utils.FRONT_6mm_IMAGE_CHANNEL,
             record_utils.REAR_6mm_CHANNEL,
-            record_utils.REAR_6mm_VIDEO_CHANNEL,
             record_utils.REAR_6mm_IMAGE_CHANNEL
         ])
-
         for msg in reader(record):
+
             if msg.topic == record_utils.FRONT_12mm_IMAGE_CHANNEL:
                 front_12mm_image = record_utils.message_to_proto(msg)
                 logging.info("Processing image: front 12 mm image...")
@@ -101,7 +140,7 @@ class RecordImageParser(BasePipeline):
                     )
                     im.save(
                         self.our_storage().abs_path("{}/{}/images/{}_f12i_{}.jpg".format(
-                            bos_original_address,
+                            bos_processed_address,
                             date_subfolder,
                             record_index,
                             f12_i_count
@@ -123,7 +162,7 @@ class RecordImageParser(BasePipeline):
                     )
                     im.save(
                         self.our_storage().abs_path("{}/{}/images/{}_f6i_{}.jpg".format(
-                            bos_original_address,
+                            bos_processed_address,
                             date_subfolder,
                             record_index,
                             f6_i_count
@@ -145,7 +184,7 @@ class RecordImageParser(BasePipeline):
                     )
                     im.save(
                         self.our_storage().abs_path("{}/{}/images/{}_r6i_{}.jpg".format(
-                            bos_original_address,
+                            bos_processed_address,
                             date_subfolder,
                             record_index,
                             r6_i_count
@@ -158,4 +197,7 @@ class RecordImageParser(BasePipeline):
 
 
 if __name__ == '__main__':
-    RecordImageParser().main()
+    SequentialPipeline([
+        RecordImageParser(),
+        DecodeVideoPipeline()
+    ]).main()
