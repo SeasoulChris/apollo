@@ -22,10 +22,21 @@ CHANNEL_URL = "localhost:50052"
 # CHANNEL_URL = "180.76.111.129:50052"
 
 # settings
-commit_id = "09ba18ada1aad062e0ffc3ea6f02de177895ed34"
+dynamic_model = DynamicModel.ECHO_LINCOLN
+git_info = GitInfo(
+    repo="https://github.com/ApolloAuto/apollo.git",
+    commit_id="09ba18ada1aad062e0ffc3ea6f02de177895ed34"
+)
+
+# uncomment me for OWN_MODEL test
+# dynamic_model = DynamicModel.OWN_MODEL
+# git_info = GitInfo(
+#    repo="https://github.com/vlin17/apollo.git",
+#    commit_id="ff0756f99998c1ac373a8b4e6b8853fc9765ae4d"
+# )
+
 scenario_ids = [11014, 11015, 11016, 11017, 11018, 11019, 11020, 30019,
                 30020, 30021, 30022, 30023, 30024, 30025]
-dynamic_model = DynamicModel.ECHO_LINCOLN
 configs = {  # map of config_id to path_to_config pairs
     "config_id1": {
         "/apollo/modules/control/conf/config_test1": "config1_pb2",
