@@ -19,6 +19,7 @@ from fueling.perception.pointpillars.second.pytorch.builder import (
     lr_scheduler_builder, optimizer_builder, second_builder)
 from fueling.perception.pointpillars.second.utils.log_tool import SimpleModelLog
 from fueling.perception.pointpillars.second.utils.progress_bar import ProgressBar
+from fueling.common.job_utils import JobUtils
 import psutil
 
 
@@ -132,6 +133,7 @@ def filter_param_dict(state_dict: dict, include: str = None, exclude: str = None
 
 def train(config_path,
           model_dir,
+          job_id,
           result_path=None,
           create_folder=False,
           display_step=50,
@@ -419,6 +421,8 @@ def train(config_path,
                 step += 1
                 if step >= total_step:
                     break
+            job_progress_num = int(80 * step / total_step) + 10
+            JobUtils(job_id).save_job_progress(job_progress_num)
             if step >= total_step:
                 break
     except Exception as e:

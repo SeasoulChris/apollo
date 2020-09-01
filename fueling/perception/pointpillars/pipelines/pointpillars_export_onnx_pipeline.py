@@ -6,6 +6,7 @@ from absl import flags
 from fueling.common.base_pipeline import BasePipeline
 from fueling.perception.pointpillars.second.pytorch.trans_onnx import trans_onnx
 import fueling.common.logging as logging
+from fueling.common.job_utils import JobUtils
 
 flags.DEFINE_string('config_path',
                     '/mnt/bos/modules/perception/pointpillars/config/all.pp.mhead.config',
@@ -31,11 +32,13 @@ class PointPillarsExportOnnx(BasePipeline):
     def export_onnx(self, instance_id):
         """Run export onnx task"""
 
+        job_id = self.FLAGS.get('job_id')
         config_path = self.FLAGS.get('config_path')
         model_path = self.FLAGS.get('model_path')
         save_onnx_path = self.FLAGS.get('save_onnx_path')
 
         trans_onnx(config_path, model_path, save_onnx_path)
+        JobUtils(job_id).save_job_progress(100)
 
 
 if __name__ == '__main__':

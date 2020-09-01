@@ -10,6 +10,7 @@ import cv2 as cv
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 from fueling.perception.pointpillars.second.pytorch.train import train
+from fueling.common.job_utils import JobUtils
 
 flags.DEFINE_string('config_path',
                     '/mnt/bos/modules/perception/pointpillars/config/all.pp.mhead.config',
@@ -46,11 +47,13 @@ class PointPillarsTraining(BasePipeline):
         logging.info('cuda version: {}'.format(torch.version.cuda))
         logging.info('gpu device count: {}'.format(torch.cuda.device_count()))
 
+        job_id = self.FLAGS.get('job_id')
         config_path = self.FLAGS.get('config_path')
         model_dir = self.FLAGS.get('model_dir')
         pretrained_path = self.FLAGS.get('pretrained_path')
 
-        train(config_path, model_dir, pretrained_path=pretrained_path)
+        train(config_path, model_dir, job_id, pretrained_path=pretrained_path)
+        JobUtils(job_id).save_job_progress(90)
 
 
 if __name__ == '__main__':

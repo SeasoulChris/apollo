@@ -21,6 +21,7 @@ py_library(
         "//fueling/perception/pointpillars/torchplus/train:checkpoint",
         "//fueling/perception/pointpillars/torchplus/train:common",
         "//fueling/perception/pointpillars/torchplus/train:optim",
+        "//fueling/common:job_utils",
     ],
 )
 
