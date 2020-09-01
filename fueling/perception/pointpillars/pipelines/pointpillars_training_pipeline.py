@@ -11,9 +11,16 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 from fueling.perception.pointpillars.second.pytorch.train import train
 
-flags.DEFINE_string('config_path', None, 'training config file')
-flags.DEFINE_string('pretrained_path', None, 'finetune pertrained model path')
-flags.DEFINE_string('model_dir', None, 'training models saved dir')
+flags.DEFINE_string('config_path',
+                    '/mnt/bos/modules/perception/pointpillars/config/all.pp.mhead.config',
+                    'training config file')
+flags.DEFINE_string('pretrained_path',
+                    '/mnt/bos/modules/perception/pointpillars/'
+                    'pretrained_model/voxelnet-58650.tckpt',
+                    'finetune pertrained model path')
+flags.DEFINE_string('model_dir',
+                    '/mnt/bos/modules/perception/pointpillars/models/',
+                    'training models saved dir')
 
 
 class PointPillarsTraining(BasePipeline):

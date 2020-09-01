@@ -8,7 +8,7 @@ from fueling.perception.pointpillars.second.pytorch.trans_onnx import trans_onnx
 import fueling.common.logging as logging
 
 flags.DEFINE_string('config_path',
-                    '/mnt/bos/modules/perception/pointpillars/data/all.pp.mhead.config',
+                    '/mnt/bos/modules/perception/pointpillars/config/all.pp.mhead.config',
                     'training config path')
 flags.DEFINE_string('model_path',
                     '/mnt/bos/modules/perception/pointpillars/model/voxelnet-58650.tckpt',
