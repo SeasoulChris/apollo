@@ -29,5 +29,19 @@ spec:
         envFrom:
           - secretRef:
               name: bos-secret
+        readinessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:50052", "-connect-timeout=5s", "-rpc-timeout=3s"]
+          initialDelaySeconds: 90
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 5
+        livenessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:50052", "-connect-timeout=5s", "-rpc-timeout=3s"]
+          initialDelaySeconds: 120
+          periodSeconds: 60
+          timeoutSeconds: 5
+          failureThreshold: 5
       imagePullSecrets:
       - name: regsecret

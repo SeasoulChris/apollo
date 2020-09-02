@@ -74,8 +74,9 @@ function main() {
       SIM_SERVICE_URL="simservice:50051"
       ;;
     bce-staging)
-      SUBMIT_SPARK_JOB_TO_K8S="false"
+      SUBMIT_SPARK_JOB_TO_K8S="true"
       SIM_SERVICE_URL="simservice:50051"
+      ADDITIONAL_FLAGS="--spark_submitter_service_url=http://spark-submitter-service.default.svc.cluster.local:8000"
       ;;
     bce-debug)
       SUBMIT_SPARK_JOB_TO_K8S="true"
