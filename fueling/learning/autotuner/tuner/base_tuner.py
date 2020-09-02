@@ -1,5 +1,4 @@
 from collections import namedtuple
-from datetime import datetime
 import glob
 import json
 import os
@@ -13,6 +12,7 @@ from absl import flags
 import google.protobuf.text_format as text_format
 import numpy as np
 
+from fueling.common.base_pipeline import BasePipeline
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
 import fueling.common.email_utils as email_utils
@@ -21,11 +21,6 @@ import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
 
-flags.DEFINE_string(
-    "tuner_param_config_filename",
-    "",
-    "File path to tuner parameter config."
-)
 flags.DEFINE_string(
     "cost_computation_service_url",
     "localhost:50052",
@@ -48,16 +43,27 @@ flags.DEFINE_string(
 )
 
 
-class BaseTuner():
+class BaseTuner(BasePipeline):
     """Basic functionality for NLP."""
 
     def __init__(self, UserConfClassDict):
+        # Initialize the autotuner target module configuration
+        self.conf_class = UserConfClassDict
+
+    def initialize(self):
         tic_start = time.perf_counter()
         logging.info("Init Optimization Tuner.")
 
-        self.tuner_param_config_pb, self.algorithm_conf_pb = self.read_configs(UserConfClassDict)
+        # Initialize the online service information
+        self.job_owner = self.FLAGS.get('job_owner')
+        self.job_id = self.FLAGS.get('job_id')
+        self.job_email = os.environ.get('PARTNER_EMAIL', '')
+        self.object_storage = self.partner_storage() or self.our_storage()
 
-        # Bounded region or desired constant value of parameter space
+        # Upload the autotuner parameter configuration / target module configuration
+        self.tuner_param_config_pb, self.algorithm_conf_pb = self.read_configs(self.conf_class)
+
+        # Set up bounded region or desired constant value of parameter space
         self.pbounds = {}
         self.pconstants = {}
         tuner_parameters = self.tuner_param_config_pb.tuner_parameters
@@ -70,28 +76,27 @@ class BaseTuner():
             else:
                 self.pconstants.update({parameter.parameter_name: parameter.constant})
 
+        # Set up autotuner optimization process parameters
         self.n_iter = tuner_parameters.n_iter
-
         self.init_points = tuner_parameters.init_points_1D ** (len(self.pbounds))
         self.init_params = self.initial_points(tuner_parameters.init_points_1D)
-
         self.opt_max = tuner_parameters.opt_max
 
         self.init_cost_client()
 
+        # Set up autotuner results storage parameters
         self.tuner_storage_dir = (
             flags.FLAGS.tuner_storage_dir if os.path.isdir(flags.FLAGS.tuner_storage_dir)
             else '/fuel/testdata/autotuner'
         )
+        self.visual_storage_dir = self.get_saving_path()
 
-        self.timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-
+        # Set up autotuner results report parameters
         self.iteration_records = {}
         self.best_cost = 0.0
         self.best_params = {}
         self.optimize_time = 0.0
         self.time_efficiency = 0.0
-        self.visual_storage_dir = self.get_saving_path()
 
         print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
 
@@ -100,7 +105,7 @@ class BaseTuner():
         logging.info(f"Timer: initialize_tuner - {time.perf_counter() - tic_start: 0.04f} sec")
 
     def read_configs(self, UserConfClassDict):
-        tuner_config_filename = flags.FLAGS.tuner_param_config_filename
+        tuner_config_filename = self.object_storage.abs_path(self.FLAGS.get('input_data_path'))
         if not file_utils.file_exists(tuner_config_filename):
             raise Exception(f"No such config file found: {tuner_config_filename}")
 
@@ -250,7 +255,7 @@ class BaseTuner():
         return point
 
     def get_saving_path(self):
-        return os.path.join(self.tuner_storage_dir, self.timestamp)
+        return os.path.join(self.tuner_storage_dir, self.job_owner, self.job_id)
 
     def get_result(self):
         logging.info(f"Result after: {self.n_iter + self.init_points} steps are {self.best_cost} "
@@ -296,38 +301,37 @@ class BaseTuner():
             logging.info("Complete results summarized and released by email")
         logging.info(f"Timer: save_result  - {time.perf_counter() - tic_start: 0.04f} sec")
 
-    def summarize_task(self, tuner_results_path, job_email='', error_msg=''):
+    def summarize_task(self, tuner_results_path, error_msg=''):
         """Make summaries to specified task"""
         SummaryTuple = namedtuple(
-            'Summary', [
-                'Tuner_Config', 'Best_Target', 'Best_Params', 'Optimize_Time', 'Time_Efficiency'])
-        title = 'Control Parameter Autotune Results'
+            'Summary', ['Tuner_Config', 'Best_Target', 'Best_Params', 'Optimize_Time',
+                        'Time_Efficiency'])
+        title = f'Control Parameter Autotune Results for {self.job_owner}'
         receivers = email_utils.DATA_TEAM + \
             email_utils.CONTROL_TEAM + email_utils.SIMULATION_TEAM
-        receivers = []
-        receivers.append(job_email)
+        receivers.append(self.job_email)
         if tuner_results_path:
             email_content = []
             attachments = []
-            # Initialize the attached files in reprot email
+            # Initialize the attached files in report email
             target_file = glob.glob(os.path.join(
                 tuner_results_path, '*tuner_results.txt'))
             target_conf = glob.glob(os.path.join(
                 tuner_results_path, '*tuner_parameters.txt'))
-            # Fill out the results summary in reprot email
+            # Fill out the results summary in report email
             email_content.append(SummaryTuple(
-                Tuner_Config=flags.FLAGS.tuner_param_config_filename,
+                Tuner_Config=self.FLAGS.get('input_data_path'),
                 Best_Target=self.tuner_results['best_target'],
                 Best_Params=self.tuner_results['best_params'],
                 Optimize_Time=self.tuner_results['optimize_time'],
                 Time_Efficiency=self.tuner_results['time_efficiency']))
-            # Attach the result files in reprot email
+            # Attach the result files in report email
             if target_file and target_conf:
                 output_filename = os.path.join(
                     tuner_results_path,
-                    f'control_autotune_{self.timestamp}.tar.gz')
+                    f'control_autotune_{self.job_id}.tar.gz')
                 tar = tarfile.open(output_filename, 'w:gz')
-                task_name = f'control_autotune_{self.timestamp}'
+                task_name = f'control_autotune_{self.job_id}'
                 file_name = os.path.basename(target_file[0])
                 conf_name = os.path.basename(target_conf[0])
                 tar.add(target_file[0], arcname=F'{task_name}_{file_name}')
@@ -347,6 +351,7 @@ class BaseTuner():
 
     def run(self):
         try:
+            self.initialize()
             self.optimize()
             self.get_result()
         except Exception as error:

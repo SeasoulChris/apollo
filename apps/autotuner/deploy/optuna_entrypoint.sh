@@ -55,7 +55,7 @@ function start_service() {
   bazel run //fueling/learning/autotuner/tuner:optuna_super_tuner -- \
     --running_role_postfix=$ROLE \
     --cost_computation_service_url=$COST_SERVICE_URL \
-    --tuner_param_config_filename=$CONFIG_FILE \
+    --input_data_path=$CONFIG_FILE \
     --tuner_storage_dir=$OUT_DIR \
     --study_storage_url=$STUDY_STORAGE_URL \
     --study_name=$STUDY_NAME \
@@ -87,7 +87,7 @@ function main() {
       print_usage
       ;;
   esac
-  
+
   mount_bos
   start_service
 }

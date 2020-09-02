@@ -53,6 +53,8 @@ py_library(
         ":jobs",
         ":saas_job_arg_py_pb2",
         "//fueling/control/calibration_table:vehicle_calibration",
+        "//fueling/control/dynamic_model",
+        "//fueling/learning/autotuner/tuner:optuna_optimization_tuner",
         "//fueling/map:generate_maps",
         "//fueling/perception/sensor_calibration:calibration_multi_sensors",
         "//fueling/prediction:prediction_end_to_end",

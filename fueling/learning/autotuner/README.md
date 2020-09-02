@@ -24,7 +24,7 @@
 
 For the Bayesian/Optuna Optimization Tuner, the parameter setting and running process are executed following the steps:
 
-1. Setup the tuner parameters in the XXX_tuner_param_config.pb.txt for the corresponding module, for example, **fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt** file as follows:
+1. Setup the tuner parameters in the XXX_tuner_param_config.pb.txt for the corresponding module, for example, **/fuel/fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt** file as follows:
 
    ```text
    n_iter: 25           # total iteration = init_points_1D * Parameter_Number + n_iter
@@ -53,7 +53,7 @@ For the Bayesian/Optuna Optimization Tuner, the parameter setting and running pr
 
    ```bash
    # Run at the updated BCE environment.
-   bazel run //fueling/learning/autotuner/tuner:bayesian_optimization_tuner --  --cost_computation_service_url=180.76.242.157:50052 --tuner_param_config_filename=fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt
+   bazel run //fueling/learning/autotuner/tuner:bayesian_optimization_tuner --  --cost_computation_service_url=180.76.242.157:50052 --input_data_path=/fuel/fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt
    ```
 
    similarly, you can run lon_controller tuner and lat_controller tuner with different configs
@@ -62,7 +62,7 @@ For the Bayesian/Optuna Optimization Tuner, the parameter setting and running pr
 
    ```bash
    # Run at the updated BCE environment.
-   bazel run //fueling/learning/autotuner/tuner:optuna_optimization_tuner -- --cost_computation_service_url=180.76.242.157:50052 --tuner_param_config_filename=fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt
+   bazel run //fueling/learning/autotuner/tuner:optuna_optimization_tuner -- --cost_computation_service_url=180.76.242.157:50052 --input_data_path=/fuel/fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt
    ```
 
    1. **Run optuna based optimization via cluster:**

@@ -150,7 +150,6 @@ if __name__ == "__main__":
     tic_start = time.perf_counter()
 
     flags.FLAGS(sys.argv)
-    tuner = OptunaOptimizationTuner()
-    tuner.run()
+    OptunaOptimizationTuner().main()
 
     logging.info(f"Timer: overall optuna tuning  - {time.perf_counter() - tic_start: 0.04f} sec")

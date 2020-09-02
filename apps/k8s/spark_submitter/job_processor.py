@@ -19,6 +19,7 @@ class JobProcessor(object):
         SaasJobArg.CONTROL_PROFILING: jobs.ControlProfiling,
         SaasJobArg.OPEN_SPACE_PLANNER_PROFILING: jobs.OpenSpacePlannerProfiling,
         SaasJobArg.DYNAMIC_MODELING: jobs.DynamicModeling,
+        SaasJobArg.CONTROL_AUTO_TUNING: jobs.ControlAutoTuning,
         SaasJobArg.SENSOR_CALIBRATION: jobs.SensorCalibration,
         SaasJobArg.VEHICLE_CALIBRATION: jobs.VehicleCalibration,
         SaasJobArg.VIRTUAL_LANE_GENERATION: jobs.VirtualLaneGeneration,

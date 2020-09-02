@@ -70,6 +70,18 @@ class DynamicModeling(BaseJob):
         return (entrypoint, client_flags, job_flags)
 
 
+class ControlAutoTuning(BaseJob):
+    def parse_arg(self, job_arg):
+        entrypoint = 'fueling/learning/autotuner/tuner/optuna_optimization_tuner.py'
+        client_flags = {
+            'workers': 1, 'cpu': 1, 'memory': 10,
+        }
+        job_flags = {
+            'input_data_path': job_arg.flags.get("input_data_path"),
+        }
+        return (entrypoint, client_flags, job_flags)
+
+
 class SensorCalibration(BaseJob):
     def parse_arg(self, job_arg):
         entrypoint = 'fueling/perception/sensor_calibration/calibration_multi_sensors.py'

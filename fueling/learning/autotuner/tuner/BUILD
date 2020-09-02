@@ -3,7 +3,7 @@ load("@default_deps//:requirements.bzl", "requirement")
 
 package(default_visibility = ["//visibility:public"])
 
-py_binary(
+py_library(
     name = "optuna_tuner",
     srcs = ["optuna_tuner.py"],
     data = [
@@ -26,7 +26,7 @@ py_binary(
     ],
 )
 
-py_binary(
+py_library(
     name = "bayesian_optimization_visual_utils",
     srcs = ["bayesian_optimization_visual_utils.py"],
 )
@@ -38,6 +38,7 @@ py_library(
         "//fueling/learning/autotuner/config",
     ],
     deps = [
+        "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:logging",
@@ -49,9 +50,6 @@ py_library(
 py_binary(
     name = "bayesian_optimization_tuner",
     srcs = ["bayesian_optimization_tuner.py"],
-    data = [
-        "//fueling/learning/autotuner/config",
-    ],
     deps = [
         ":base_tuner",
         ":bayesian_optimization_visual_utils",
@@ -65,15 +63,15 @@ py_binary(
         "@apollo//modules/control/proto:mpc_controller_conf_py_pb2",
         "@apollo//modules/control/proto:mrac_conf_py_pb2",
         "@apollo//modules/control/proto:pid_conf_py_pb2",
+        "@apollo//modules/planning/proto:planner_open_space_config_py_pb2",
+        "@apollo//modules/planning/proto:task_config_py_pb2",
+        "@apollo//modules/planning/proto/math:fem_pos_deviation_smoother_config_py_pb2",
     ],
 )
 
 py_binary(
     name = "optuna_optimization_tuner",
     srcs = ["optuna_optimization_tuner.py"],
-    data = [
-        "//fueling/learning/autotuner/config",
-    ],
     deps = [
         ":base_tuner",
         "//fueling/common:logging",
@@ -87,10 +85,12 @@ py_binary(
         "@apollo//modules/control/proto:mrac_conf_py_pb2",
         "@apollo//modules/control/proto:pid_conf_py_pb2",
         "@apollo//modules/planning/proto:planner_open_space_config_py_pb2",
+        "@apollo//modules/planning/proto:task_config_py_pb2",
+        "@apollo//modules/planning/proto/math:fem_pos_deviation_smoother_config_py_pb2",
     ],
 )
 
-py_binary(
+py_library(
     name = "optuna_super_tuner",
     srcs = ["optuna_super_tuner.py"],
     deps = [
