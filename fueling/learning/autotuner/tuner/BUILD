@@ -75,6 +75,7 @@ py_binary(
     srcs = ["optuna_optimization_tuner.py"],
     deps = [
         ":base_tuner",
+        "//fueling/learning/autotuner/common:sanity_check",
         "//fueling/learning/autotuner/proto:tuner_param_config_py_pb2",
         "@apollo//modules/control/proto:control_conf_py_pb2",
         "@apollo//modules/control/proto:gain_scheduler_conf_py_pb2",

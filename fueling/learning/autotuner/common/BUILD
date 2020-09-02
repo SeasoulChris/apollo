@@ -9,3 +9,16 @@ py_library(
         "//fueling/common:logging",
     ],
 )
+
+py_library(
+    name = "sanity_check",
+    srcs = ["sanity_check.py"],
+    deps = [
+        "//fueling/common:file_utils",
+        "//fueling/common:job_utils",
+        "//fueling/common:logging",
+        "//fueling/common:proto_utils",
+        "//fueling/learning/autotuner/proto:dynamic_model_info_py_pb2",
+        "//fueling/learning/autotuner/proto:tuner_param_config_py_pb2",
+    ],
+)

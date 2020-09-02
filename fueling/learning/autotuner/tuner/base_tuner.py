@@ -15,6 +15,7 @@ import numpy as np
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
+from fueling.learning.autotuner.common.sanity_check import AutotunerSanityCheck
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
 import fueling.common.context_utils as context_utils
 import fueling.common.email_utils as email_utils
@@ -61,6 +62,13 @@ class BaseTuner(BasePipeline):
         self.job_id = self.FLAGS.get('job_id')
         self.job_email = os.environ.get('PARTNER_EMAIL', '')
         self.object_storage = self.partner_storage() or self.our_storage()
+        self.tuner_config_filename = self.object_storage.abs_path(self.FLAGS.get('input_data_path'))
+
+        # Sanity check
+        if self.job_id and not AutotunerSanityCheck(
+                context_utils.is_local(), self.job_id, self.tuner_config_filename).check():
+            raise Exception("Sanity check failed.")
+        logging.info('Sanity check passed.')
 
         # Upload the autotuner parameter configuration / target module configuration
         self.tuner_param_config_pb, self.algorithm_conf_pb = self.read_configs(self.conf_class)
@@ -107,14 +115,13 @@ class BaseTuner(BasePipeline):
         logging.info(f"Timer: initialize_tuner - {time.perf_counter() - tic_start: 0.04f} sec")
 
     def read_configs(self, UserConfClassDict):
-        tuner_config_filename = self.object_storage.abs_path(self.FLAGS.get('input_data_path'))
-        if not file_utils.file_exists(tuner_config_filename):
-            raise Exception(f"No such config file found: {tuner_config_filename}")
+        if not file_utils.file_exists(self.tuner_config_filename):
+            raise Exception(f"No such config file found: {self.tuner_config_filename}")
 
         # Read and parse config from a pb file
         tuner_conf = TunerConfigs()
         try:
-            proto_utils.get_pb_from_text_file(tuner_config_filename, tuner_conf)
+            proto_utils.get_pb_from_text_file(self.tuner_config_filename, tuner_conf)
             logging.debug(f"Parsed autotune config files {tuner_conf}")
 
         except Exception as error:
@@ -250,7 +257,7 @@ class BaseTuner(BasePipeline):
                 param_value = point[param_name]
                 point[param_name] = param_value + param_delta * delta_sign
                 iter = 0
-                logging.info(f"The config prameter {param_name} is adjusted from {param_value} "
+                logging.info(f"The config parameter {param_name} is adjusted from {param_value} "
                              f"to {point[param_name]} to fix the repeated config samples")
             else:
                 iter += 1

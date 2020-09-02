@@ -31,7 +31,10 @@ class Config(object):
     AGGREGATED_FIELD = {"W": "周", "M": "月", "Y": "年"}
     AGGREGATED_BY = {"W": "week", "M": "month", "Y": "year"}
     BLACK_LIST = ["CH0000000", "CH0000001", "CH0000002", "CH0000003", "None"]
-    FAILURE_CAUSE = {"E300": "数据包超过大小限制！请按照使用文档要求上传小于5G的数据包。",
+    FAILURE_CAUSE = {"E100": "配置文件无法解析，配置文件解析有误。",
+                     "E101": "查配置文件缺少相关参数: XXX。",
+                     "E102": "查配置文件参数错误：XXX。",
+                     "E300": "数据包超过大小限制！请按照使用文档要求上传小于5G的数据包。",
                      "E301": "找不到所需要的输入文件！请按照使用文档检查输入文件的目录结构是否正确以及相应文件是否齐全。",
                      "E302": "数据包中缺少/apollo/localization/pose 消息！请按照使用文档要求录制正确的数据包。",
                      "E303": "输入文件中缺少激光雷达外参文件velodyne16_novatel_extrinsics_example.yaml，"
@@ -51,7 +54,7 @@ class Config(object):
                              "例如：xxx可以是vehicle_param.pd.txt，或者是某个具体的record文件缺失或者找不到。",
                      "E401": "配置文件vehicle_param.pd.txt无法解析，请检查vehicle_param.pd.txt是否是车型配置目录下的文件。",
                      "E402": "请检查vehicle_param.pd.txt是否缺少以下参数和相应数据：vehicle_id、brake_deadzone、"
-                             "thorttle_deadzone、max_acceleration、max_deceleration。",
+                             "throttle_deadzone、max_acceleration、max_deceleration。",
                      "E403": "xxxx record文件内缺失重要channel信息(chassis or localization channel), "
                              "请重新录制数据包",
                      "E500": "请检查提交任务的目录名称是否输入正确，或者输入目录内是否缺少xxx文件。"
