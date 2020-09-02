@@ -87,9 +87,9 @@ class BayesianOptimizationTuner(BaseTuner):
             tic_start = time.perf_counter()
 
             if i < self.init_points:
-                next_point = self.config_sanity_check(self.init_params[i])
+                next_point = self.clean_params_config(self.init_params[i])
             else:
-                next_point = self.config_sanity_check(self.optimizer.suggest(self.utility))
+                next_point = self.clean_params_config(self.optimizer.suggest(self.utility))
             for key in self.pconstants:
                 next_point.update({key: self.pconstants[key]})
 

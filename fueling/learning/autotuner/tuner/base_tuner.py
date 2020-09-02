@@ -237,7 +237,7 @@ class BaseTuner(BasePipeline):
         """Visualize core algorithm"""
         raise Exception("Not implemented!")
 
-    def config_sanity_check(self, point_origin):
+    def clean_params_config(self, point_origin):
         point = point_origin.copy()
         param_name = list(point)[0]
         param_value = point[param_name]
