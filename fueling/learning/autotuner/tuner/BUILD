@@ -39,8 +39,10 @@ py_library(
     ],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:context_utils",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
+        "//fueling/common:job_utils",
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/learning/autotuner/client:cost_computation_client",
@@ -53,7 +55,6 @@ py_binary(
     deps = [
         ":base_tuner",
         ":bayesian_optimization_visual_utils",
-        "//fueling/common:logging",
         "//fueling/learning/autotuner/proto:tuner_param_config_py_pb2",
         "@apollo//modules/control/proto:control_conf_py_pb2",
         "@apollo//modules/control/proto:gain_scheduler_conf_py_pb2",
@@ -74,7 +75,6 @@ py_binary(
     srcs = ["optuna_optimization_tuner.py"],
     deps = [
         ":base_tuner",
-        "//fueling/common:logging",
         "//fueling/learning/autotuner/proto:tuner_param_config_py_pb2",
         "@apollo//modules/control/proto:control_conf_py_pb2",
         "@apollo//modules/control/proto:gain_scheduler_conf_py_pb2",

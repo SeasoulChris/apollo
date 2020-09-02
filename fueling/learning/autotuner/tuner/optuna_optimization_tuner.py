@@ -27,8 +27,10 @@ from modules.planning.proto.task_config_pb2 import PiecewiseJerkSpeedOptimizerCo
 # Configurations from the Autotune Tool
 from fueling.learning.autotuner.tuner.base_tuner import BaseTuner
 
-import fueling.common.logging as logging
+from fueling.common.job_utils import JobUtils
+import fueling.common.context_utils as context_utils
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
 
@@ -75,6 +77,9 @@ class OptunaOptimizationTuner(BaseTuner):
         }
 
         self.optimizer.optimize(self.objective, n_trials=self.n_iter)
+        if context_utils.is_cloud():
+            JobUtils(self.job_id).save_job_progress(90)
+
         self.best_cost = self.optimizer.best_value
         self.best_params = self.optimizer.best_params
         self.optimize_time = time.perf_counter() - tic_start_overall
@@ -100,6 +105,9 @@ class OptunaOptimizationTuner(BaseTuner):
         tic_start = time.perf_counter()
 
         self.iter += 1
+        if context_utils.is_cloud():
+            JobUtils(self.job_id).save_job_progress(
+                10 + 80 / (self.n_iter + self.init_points) * self.iter)
         next_point = {}
         for key in self.pbounds:
             next_point.update(

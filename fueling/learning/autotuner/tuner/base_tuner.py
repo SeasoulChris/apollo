@@ -13,8 +13,10 @@ import google.protobuf.text_format as text_format
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.job_utils import JobUtils
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
+import fueling.common.context_utils as context_utils
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -352,13 +354,20 @@ class BaseTuner(BasePipeline):
     def run(self):
         try:
             self.initialize()
+            if context_utils.is_cloud():
+                JobUtils(self.job_id).save_job_progress(10)
             self.optimize()
-            self.get_result()
+            if context_utils.is_cloud():
+                JobUtils(self.job_id).save_job_progress(95)
         except Exception as error:
             logging.error(error)
         finally:
             self.save_result()
+            if context_utils.is_cloud():
+                JobUtils(self.job_id).save_job_progress(98)
             self.cleanup()
+            if context_utils.is_cloud():
+                JobUtils(self.job_id).save_job_progress(100)
 
     def cleanup(self):
         if self.cost_client:
