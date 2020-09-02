@@ -19,7 +19,6 @@ py_binary(
         "//fueling/common:file_utils",
         "//fueling/data:record_parser",
         "//fueling/perception:decode_video",
-        "@apollo//modules/canbus/proto:chassis_py_pb2",
-        "@apollo//modules/localization/proto:localization_py_pb2",
+        "//fueling/perception/emergency_detection/pipeline:auto_label_pipeline",
     ],
 )

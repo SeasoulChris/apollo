@@ -9,6 +9,7 @@ Example:
     --record_folder=public-test/2020/2020-08-24/2020-08-24-14-30-55
 """
 import time
+import os
 
 # Apollo packages
 # from modules.drivers.proto.sensor_image_pb2 import Image
@@ -21,6 +22,7 @@ import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.common.file_utils as file_utils
 from fueling.perception.decode_video import DecodeVideoPipeline
+from fueling.perception.emergency_detection.pipeline.auto_label_pipeline import AutoLabelPipeline
 
 # third-party packages
 from PIL import Image
@@ -84,17 +86,32 @@ class RecordImageParser(BasePipeline):
         logging.info("record file name txt written!")
         f.close()
 
-        self.to_rdd(
-            record_list
-        ).filter(
-            record_utils.is_record_file
-        ).foreach(
-            lambda instance: self.parseImage(
-                instance,
-                date_subfolder
+        # Check COMPLETE file to prevent repeat parsing
+        if not os.path.exists(
+            self.our_storage().abs_path('{}/{}/images/COMPLETE'.format(
+                bos_processed_address,
+                date_subfolder)
             )
-        )
+        ):
+            self.to_rdd(
+                record_list
+            ).filter(
+                record_utils.is_record_file
+            ).foreach(
+                lambda instance: self.parseImage(
+                    instance,
+                    date_subfolder
+                )
+            )
 
+        f = open(
+            self.our_storage().abs_path(
+                '{}/{}/images/COMPLETE'.format(bos_processed_address, date_subfolder)
+            ),
+            'w'
+        )
+        f.write(F'{time.time() - time_start}' + '\n')
+        f.close()
         # Add checking logic to prevent DecodeVideo starting before serialize_record is done
         serialize_finished_count = 0
         while serialize_finished_count < len(record_list_filtered):
@@ -117,8 +134,7 @@ class RecordImageParser(BasePipeline):
     def parseImage(self, record, date_subfolder):
         record_index = record.split('.')[2]
         f12_i_count, f6_i_count, r6_i_count = 0, 0, 0
-        # f12_count f6_count, r6_count,  = 0, 0, 0
-        # f12_v_count, f6_v_count, r6_v_count = 0, 0, 0
+
         reader = record_utils.read_record([
             record_utils.FRONT_12mm_CHANNEL,
             record_utils.FRONT_12mm_IMAGE_CHANNEL,
@@ -199,5 +215,6 @@ class RecordImageParser(BasePipeline):
 if __name__ == '__main__':
     SequentialPipeline([
         RecordImageParser(),
-        DecodeVideoPipeline()
+        DecodeVideoPipeline(),
+        AutoLabelPipeline()
     ]).main()

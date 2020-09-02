@@ -199,33 +199,34 @@ def autolabel(modelfile=None, imagelist=None):
 
     for img_file in imagelist:
         print('processing ', img_file, '...')
-        img = cv2.imread(img_file)
+        try:
+            img = cv2.imread(img_file)
 
-        # Inference input size is 416*416 does not mean training size is the same
-        # Training size could be 608*608 or even other sizes
-        # Optional inference sizes:
-        #   Hight in {320, 416, 512, 608, ... 320 + 96 * n}
-        #   Width in {320, 416, 512, 608, ... 320 + 96 * m}
-        sized = cv2.resize(img, (width, height))
-        sized = cv2.cvtColor(sized, cv2.COLOR_BGR2RGB)
+            # Inference input size is 416*416 does not mean training size is the same
+            # Training size could be 608*608 or even other sizes
+            # Optional inference sizes:
+            #   Hight in {320, 416, 512, 608, ... 320 + 96 * n}
+            #   Width in {320, 416, 512, 608, ... 320 + 96 * m}
+            sized = cv2.resize(img, (width, height))
+            sized = cv2.cvtColor(sized, cv2.COLOR_BGR2RGB)
 
-        #for i in range(2):  # This 'for' loop is for speed check
-                            # Because the first iteration is usually longer
-        boxes = do_detect(model, sized, 0.4, 0.6, use_cuda)
-        #plot_boxes_cv2(img, boxes[0], img_path.replace('images', 'predictions'), class_names)
+            #for i in range(2):  # This 'for' loop is for speed check
+                                # Because the first iteration is usually longer
+            boxes = do_detect(model, sized, 0.4, 0.6, use_cuda)
+            #plot_boxes_cv2(img, boxes[0], img_path.replace('images', 'predictions'), class_names)
 
-        
-        output_file = img_file.replace('.png', '.txt')
-        output_file = output_file.replace('.jpg', '.txt')
-        output_file = output_file.replace('.jpeg', '.txt')
-        output_file = output_file.replace('.bmp', '.txt')
-        output_file = output_file.replace('compressed', '.txt')
-        f = open(output_file, "w")
-        for box in boxes[0]:
-            print(box)
-            f.write(str(box[6])+' '+str(box[0])+' '+str(box[1])+' '+str(box[2])+' '+str(box[3])+'\n')
-        f.close()
-
+            output_file = img_file.replace('.png', '.txt')
+            output_file = output_file.replace('.jpg', '.txt')
+            output_file = output_file.replace('.jpeg', '.txt')
+            output_file = output_file.replace('.bmp', '.txt')
+            output_file = output_file.replace('compressed', '.txt')
+            f = open(output_file, "w")
+            for box in boxes[0]:
+                print(box)
+                f.write(str(box[6])+' '+str(box[0])+' '+str(box[1])+' '+str(box[2])+' '+str(box[3])+'\n')
+            f.close()
+        except Exception as e:
+            print(e)
 
 if __name__ == "__main__":
     inference_yolov4(is_local=True)

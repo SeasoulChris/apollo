@@ -197,8 +197,8 @@ def decode_videos(message_meta):
     redis_utils.redis_incr(task_key)
 
     # image_dir = os.path.join(target_dir, 'images')
-    updated_image_dir_prfix = '/mnt/bos/modules/perception/emergency_detection/processed'
-    image_dir = '{}/{}/images_from_video'.format(updated_image_dir_prfix, target_dir.split('/')[7])
+    updated_image_dir_prefix = '/mnt/bos/modules/perception/emergency_detection/processed'
+    image_dir = '{}/{}/images_from_video'.format(updated_image_dir_prefix, target_dir.split('/')[7])
     file_utils.makedirs(target_dir)
     file_utils.makedirs(image_dir)
     # Use the first message name in the group as the current group name
