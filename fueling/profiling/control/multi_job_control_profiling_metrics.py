@@ -14,6 +14,7 @@ from absl import flags
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
 from fueling.profiling.common.sanity_check import sanity_check
+import fueling.common.context_utils as context_utils
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -43,9 +44,6 @@ flags.DEFINE_string('ctl_metrics_weighted_score', 'MRAC_SCORE',
 
 flags.DEFINE_boolean('ctl_metrics_save_report', True,
                      'whether to save h5 files')
-
-flags.DEFINE_boolean('ctl_metrics_test_in_local', False,
-                     'if test_in_local, skip call JobUtils and pass the test')
 
 
 class MultiJobControlProfilingMetrics(BasePipeline):
@@ -137,18 +135,18 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             #   Exit with error emails if doesn't pass the sanity check
             sanity_status = sanity_check(origin_dir, job_id,
                                          feature_utils.CONF_FILE, feature_utils.CHANNELS)
-            if not flags.FLAGS.ctl_metrics_test_in_local:
+            if context_utils.is_cloud():
                 JobUtils(job_id).save_job_input_data_size(origin_dir)
             if sanity_status == 'OK':
                 logging.info('Sanity_Check: Passed.')
-                if not flags.FLAGS.ctl_metrics_test_in_local:
+                if context_utils.is_cloud():
                     JobUtils(job_id).save_job_progress(10)
             else:
                 logging.error(sanity_status)
                 summarize_tasks([], origin_dir, target_dir,
                                 job_owner, job_email, sanity_status)
                 logging.info('Control Profiling Metrics: No Results')
-                if not flags.FLAGS.ctl_metrics_test_in_local:
+                if context_utils.is_cloud():
                     JobUtils(job_id).save_job_progress(10)
                 raise Exception("Sanity_check failed!")
 
@@ -187,7 +185,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             # '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),...]
             logging.info(
                 F'target_vehicle_abs_dir: {target_vehicle_abs_dir.collect()}')
-            if not flags.FLAGS.ctl_metrics_test_in_local:
+            if context_utils.is_cloud():
                 JobUtils(job_id).save_job_progress(20)
 
             """Step 4: Copy the vehicle_param conf to vehicle_type folder"""
@@ -228,7 +226,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             # todo_task_dirs:[('Mkz7', '/mnt/bos/modules/control/profiling/multi_job
             #   /Mkz7/2019-05-01/20190501110414'), ...]
             logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
-            if not flags.FLAGS.ctl_metrics_test_in_local:
+            if context_utils.is_cloud():
                 JobUtils(job_id).save_job_progress(30)
 
             # Addtional process only for apollo internal daily-job: skip the processed data
@@ -340,7 +338,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             #   '/mnt/bos/modules/control/profiling/multi_job/Mkz7/2019-05-01/20190501110414'),...]
             logging.info(F'complete_target_task after _reorg_target_dir:'
                          F'{complete_target_task.collect()}')
-            if not flags.FLAGS.ctl_metrics_test_in_local:
+            if context_utils.is_cloud():
                 JobUtils(job_id).save_job_progress(40)
 
             """Step 7: Process data with profiling algorithm"""
@@ -349,7 +347,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             """Step 8: Summarize by scanning the target directory and send out emails"""
             summarize_tasks(complete_target_task.keys().collect(),
                             origin_dir, target_dir, job_owner, job_email)
-            if not flags.FLAGS.ctl_metrics_test_in_local:
+            if context_utils.is_cloud():
                 JobUtils(job_id).save_job_progress(50)
 
         logging.info(
@@ -467,8 +465,10 @@ def summarize_tasks(targets, original_prefix, target_prefix, job_owner, job_emai
         else:
             email_content = 'No grading results: unknown reason.'
         attachments = []
-    email_utils.send_email_info(
-        title, email_content, receivers, attachments)
+    if context_utils.is_cloud():
+        email_utils.send_email_info(title, email_content, receivers, attachments)
+    else:
+        logging.info('Skip the email report under the local test context')
 
 
 if __name__ == '__main__':
