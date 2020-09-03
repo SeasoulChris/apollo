@@ -1,0 +1,74 @@
+git_info {
+  commit_id: "22c3add900fa9589f807909fc37b619447d3da88"
+  repo: "https://github.com/ApolloAuto/apollo.git"
+}
+tuner_parameters {
+  user_tuning_module: CONTROL
+  user_conf_filename: "/apollo/modules/control/conf/control_conf.pb.txt"
+  utility {
+    utility_name: "ucb"
+    kappa: 1.0
+    xi: 1.0
+  }
+  n_iter: 2
+  init_points_1D: 0
+  opt_max: true
+  flag {
+    flag_name: "enable_steer_mrac_control"
+    flag_dir: "lat_controller_conf"
+    enable: true
+  }
+  # Tuning Parameters
+  parameter {
+    parameter_name: "reference_time_constant"
+    parameter_dir: "lat_controller_conf.steer_mrac_conf"
+    min: 0.01
+    max: 0.26
+  }
+  parameter {
+    parameter_name: "adaption_matrix_p"
+    parameter_dir: "lat_controller_conf.steer_mrac_conf"
+    min: 0.0001
+    max: 0.1
+  }
+  # Constant Parameters
+  parameter {
+    parameter_name: "adaption_state_gain"
+    parameter_dir: "lat_controller_conf.steer_mrac_conf"
+    constant: 1.0
+  }
+  parameter {
+    parameter_name: "adaption_desired_gain"
+    parameter_dir: "lat_controller_conf.steer_mrac_conf"
+    constant: 1.0
+  }
+  parameter {
+    parameter_name: "adaption_nonlinear_gain"
+    parameter_dir: "lat_controller_conf.steer_mrac_conf"
+    constant: 1.0
+  }
+  parameter {
+    parameter_name: "clamping_time_constant"
+    parameter_dir: "lat_controller_conf.steer_mrac_conf"
+    constant: 0.01
+  }
+}
+scenarios {
+  # San Mateo (low speed)
+  id: 11014
+  id: 11015
+  id: 11016
+  id: 11017
+  id: 11018
+  id: 11019
+  id: 11020
+  # Gomentum (high speed)
+  # id: 30019
+  # id: 30020
+  # id: 30021
+  # id: 30022
+  # id: 30023
+  # id: 30024
+  # id: 30025
+}
+dynamic_model: ECHO_LINCOLN

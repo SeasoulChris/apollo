@@ -91,6 +91,18 @@ py_binary(
     ],
 )
 
+py_test(
+    name = "optuna_optimization_tuner_test",
+    timeout = "long",
+    srcs = ["optuna_optimization_tuner_test.py"],
+    data = [
+        "//fueling/learning/autotuner/testdata:control_test",
+    ],
+    deps = [
+        "//fueling/learning/autotuner/tuner:optuna_optimization_tuner",
+    ],
+)
+
 py_library(
     name = "optuna_super_tuner",
     srcs = ["optuna_super_tuner.py"],

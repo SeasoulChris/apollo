@@ -56,7 +56,7 @@ function start_service() {
     --running_role_postfix=$ROLE \
     --cost_computation_service_url=$COST_SERVICE_URL \
     --input_data_path=$CONFIG_FILE \
-    --tuner_storage_dir=$OUT_DIR \
+    --output_data_path=$OUT_DIR \
     --study_storage_url=$STUDY_STORAGE_URL \
     --study_name=$STUDY_NAME \
     --n_coworkers=$WORKER_COUNT \

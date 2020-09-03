@@ -29,11 +29,6 @@ flags.DEFINE_string(
     "localhost:50052",
     "URL to access the cost computation service"
 )
-flags.DEFINE_string(
-    "tuner_storage_dir",
-    "/mnt/bos/autotuner",
-    "Tuner storage root directory"
-)
 flags.DEFINE_boolean(
     "tuner_generate_report",
     True,
@@ -95,10 +90,9 @@ class BaseTuner(BasePipeline):
         self.init_cost_client()
 
         # Set up autotuner results storage parameters
-        self.tuner_storage_dir = (
-            flags.FLAGS.tuner_storage_dir if os.path.isdir(flags.FLAGS.tuner_storage_dir)
-            else '/fuel/testdata/autotuner'
-        )
+        self.tuner_storage_dir = self.object_storage.abs_path(
+            self.FLAGS.get('output_data_path')
+            or ('autotuner' if context_utils.is_cloud() else '/fuel/testdata/autotuner'))
         self.visual_storage_dir = self.get_saving_path()
 
         # Set up autotuner results report parameters
@@ -286,14 +280,14 @@ class BaseTuner(BasePipeline):
             tuner_json.write(json.dumps(self.tuner_results))
         # (2) tuner_results.txt file for online service
         with open(os.path.join(saving_path, "tuner_results.txt"), 'w') as tuner_txt:
-            tuner_txt.write('Control Parameters Auto-Tune Results: \n')
+            tuner_txt.write('Control Parameters Auto-Tune Results:\n')
             for key in self.tuner_results.keys():
                 if isinstance(self.tuner_results[key], dict):
-                    tuner_txt.write(f'\n{key}: \n')
+                    tuner_txt.write(f'\n{key}:\n')
                     for subkey in self.tuner_results[key].keys():
-                        tuner_txt.write(f'\t{subkey}: \t{self.tuner_results[key][subkey]} \n')
+                        tuner_txt.write(f'\t{subkey}:\t{self.tuner_results[key][subkey]}\n')
                 else:
-                    tuner_txt.write(f'\n{key}: \t{self.tuner_results[key]} \n')
+                    tuner_txt.write(f'\n{key}:\t{self.tuner_results[key]}\n')
         # (3) tuner_parameters.txt file for online service
         with open(os.path.join(saving_path, "tuner_parameters.txt"), 'w') as param_txt:
             param_txt.write(f'{self.tuner_param_config_pb.tuner_parameters}')
@@ -305,9 +299,11 @@ class BaseTuner(BasePipeline):
                     visual_file, os.path.join(
                         saving_path, os.path.basename(visual_file)))
         logging.info(f"Complete results saved at {saving_path}")
-        if flags.FLAGS.tuner_generate_report:
+        if context_utils.is_cloud() and flags.FLAGS.tuner_generate_report:
             self.summarize_task(saving_path)
             logging.info("Complete results summarized and released by email")
+        elif saving_path:
+            file_utils.touch(os.path.join(saving_path, 'COMPLETE'))
         logging.info(f"Timer: save_result  - {time.perf_counter() - tic_start: 0.04f} sec")
 
     def summarize_task(self, tuner_results_path, error_msg=''):
