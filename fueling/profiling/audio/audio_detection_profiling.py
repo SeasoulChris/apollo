@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import math
+
 from modules.audio.proto import audio_pb2, audio_common_pb2, audio_event_pb2
 
 from fueling.common.file_utils import list_files
@@ -18,6 +20,8 @@ class AudioDetectionProfiling(object):
         self.siren_is_on_wrong_count = 0
         self.moving_correct_count = 0
         self.moving_wrong_count = 0
+        self.direction_correct_count = 0
+        self.direction_wrong_count = 0
 
     def ProcessAudioEventMessage(self, audio_event):
         if audio_event.siren_is_on.Initialized():
@@ -26,6 +30,17 @@ class AudioDetectionProfiling(object):
             self.status_moving = audio_event.moving_result
         if audio_event.audio_direction != audio_common_pb2.UKNOWN_DIRECTION:
             self.status_direction = audio_event.audio_direction
+
+    def DegreeToDirection(self, degree):
+        if -0.25 * math.pi <= degree and degree < 0.25 * math.pi:
+            return audio_common_pb2.FRONT
+        if 0.25 * math.pi <= degree and degree < 0.75 * math.pi:
+            return audio_common_pb2.LEFT
+        if 0.75 * math.pi <= degree or degree < -0.75 * math.pi:
+            return audio_common_pb2.BACK
+        if -0.75 * math.pi <= degree or degree < -0.25 * math.pi:
+            return audio_common_pb2.RIGHT
+        return audio_common_pb2.UKNOWN_DIRECTION
 
     def ProcessAudioDetectionMessage(self, audio_detection):
         if self.status_siren_is_on:
@@ -39,8 +54,11 @@ class AudioDetectionProfiling(object):
             else:
                 self.moving_wrong_count += 1
         if self.status_direction:
-            # TODO(kechxu) add direction evaluation
-            pass
+            source_degree = audio_detection.source_degree
+            if self.DegreeToDirection(source_degree) == self.status_direction:
+                self.direction_correct_count += 1
+            else:
+                self.direction_wrong_count += 1
 
     def Process(self):
         record_file_paths = list_files(self.dir_path)
