@@ -52,7 +52,7 @@ class AutotunerSanityCheck():
 
     def has_config_file(self):
         if not file_utils.file_exists(self.config_file_path):
-            self.job_utils.save_job_failure_code('E201')
+            self.job_utils.save_job_failure_code('E103')
             self.job_utils.save_job_failure_detail(
                 f'Config file {self.config_file_path} not found.')
             return False

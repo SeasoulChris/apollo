@@ -40,6 +40,8 @@ flags.DEFINE_string(
     "Optional postfix (e.g., mrac-control) of the running_role"
 )
 
+DEFAULT_SCENARIOS = [11014, 11015, 11016, 11017, 11018, 11019, 11020]
+
 
 class BaseTuner(BasePipeline):
     """Basic functionality for NLP."""
@@ -81,6 +83,11 @@ class BaseTuner(BasePipeline):
             else:
                 self.pconstants.update({parameter.parameter_name: parameter.constant})
 
+        # Set up scenarios
+        if not self.tuner_param_config_pb.scenarios.id:
+            self.tuner_param_config_pb.scenarios.id[:] = DEFAULT_SCENARIOS
+        print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
+
         # Set up autotuner optimization process parameters
         self.n_iter = tuner_parameters.n_iter
         self.init_points = tuner_parameters.init_points_1D ** (len(self.pbounds))
@@ -101,8 +108,6 @@ class BaseTuner(BasePipeline):
         self.best_params = {}
         self.optimize_time = 0.0
         self.time_efficiency = 0.0
-
-        print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
 
         self.init_optimizer_visualizer(self.tuner_param_config_pb.tuner_parameters)
 
