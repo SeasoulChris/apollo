@@ -1,3 +1,6 @@
+import requests
+import re
+
 from fueling.common.job_utils import JobUtils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -49,6 +52,7 @@ class AutotunerSanityCheck():
         self.job_utils = LocalJobUtils() if is_local else JobUtils(job_id)
         self.config_file_path = input_path
         self.config_pb = None
+        self.repo = None
 
     def has_config_file(self):
         if not file_utils.file_exists(self.config_file_path):
@@ -70,7 +74,7 @@ class AutotunerSanityCheck():
                 F'Cannot parse config file as binary or text proto: {error}')
             return False
 
-    def has_required_fields(self):
+    def check_required_fields(self):
         if not self.config_pb.git_info.commit_id:
             self.job_utils.save_job_failure_code('E101')
             self.job_utils.save_job_failure_detail(
@@ -85,15 +89,9 @@ class AutotunerSanityCheck():
                 F'Bad tuning module "{module_name}" found')
             return False
 
-        if not param.user_conf_filename.startswith('/apollo'):
-            self.job_utils.save_job_failure_code('E102')
-            self.job_utils.save_job_failure_detail(
-                'user_conf_filename is not defined under /apollo')
-            return False
-
         return True
 
-    def has_valid_n_iter(self):
+    def check_n_iter(self):
         if self.config_pb.tuner_parameters.n_iter > 1000:
             self.job_utils.save_job_failure_code('E102')
             self.job_utils.save_job_failure_detail('n_iter must be <= 1000')
@@ -101,24 +99,7 @@ class AutotunerSanityCheck():
 
         return True
 
-    def has_valid_dynamic_model(self):
-        try:
-            model_name = DynamicModel.Name(self.config_pb.dynamic_model)
-
-            # Default repo is apollo's master, which can be used for other dynamic models
-            if model_name == 'OWN_MODEL' and not self.config_pb.git_info.repo:
-                self.job_utils.save_job_failure_code('E101')
-                self.job_utils.save_job_failure_detail('missing git_info.repo')
-                return False
-            return True
-        except Exception as error:
-            logging.error(error)
-            self.job_utils.save_job_failure_code('E102')
-            self.job_utils.save_job_failure_detail(
-                f'Invalid dynamic model "{self.config_pb.dynamic_model}"')
-            return False
-
-    def has_valid_scenarios(self):
+    def check_scenarios(self):
         invalid_scenarios = set(filter(
             lambda scenario: scenario not in AutotunerSanityCheck.valid_scenarios,
             self.config_pb.scenarios.id
@@ -132,18 +113,126 @@ class AutotunerSanityCheck():
 
         return True
 
+    def get_git_file(self, file_path):
+        try:
+            owner, name, commit = self.repo['owner'], self.repo['name'], self.repo['commit']
+            url = f'https://raw.githubusercontent.com/{owner}/{name}/{commit}/{file_path}'
+            res = requests.get(url)
+            if res.status_code != 200:
+                return None
+            else:
+                return res
+        except BaseException as ex:
+            logging.error(ex)
+            return None
+
+    def check_git_file_exists(self, file_path):
+        return self.get_git_file(file_path) is not None
+
+    def check_git_repo(self):
+        if not self.config_pb.git_info.repo:
+            return True
+
+        match = re.match('^https://github.com/([^//]+)/([^//]+).git$', self.config_pb.git_info.repo)
+        if not match:
+            self.job_utils.save_job_failure_code('E102')
+            self.job_utils.save_job_failure_detail(
+                'Invalid git_info.repo found. Please provide repo as HTTPS URL.')
+            return False
+
+        (owner, name) = match.groups()
+        self.repo = {'owner': owner, 'name': name, 'commit': self.config_pb.git_info.commit_id}
+        return True
+
+    def check_apollo_env(self):
+        if not self.config_pb.git_info.repo:
+            return True
+
+        def is_apollo_60_plus(env):
+            # apollo 6.0+ has env.json file w/ OS set to ubuntu 18.04 and python 3.6
+            logging.info(f'Apollo env: {env}')
+            if env['OS']['distro'] != 'Ubuntu' or \
+                    env['OS']['release'] != '18.04' or env['Python'] != '3.6':
+                self.job_utils.save_job_failure_code('E102')
+                self.job_utils.save_job_failure_detail(
+                    f'Invalid apollo env found: {env}')
+                return False
+            return True
+
+        res = self.get_git_file('env.json')
+        if res:
+            return is_apollo_60_plus(res.json())
+        else:
+            self.job_utils.save_job_failure_code('E102')
+            self.job_utils.save_job_failure_detail('This service only supports apollo 6.0+')
+            return False
+
+    def check_control_conf(self):
+        control_conf_path = self.config_pb.tuner_parameters.user_conf_filename
+        if not control_conf_path.startswith('/apollo/modules'):
+            self.job_utils.save_job_failure_code('E102')
+            self.job_utils.save_job_failure_detail(
+                'user_conf_filename is not defined under /apollo/modules')
+            return False
+
+        if not self.check_git_file_exists(control_conf_path[len('/apollo/'):]):
+            self.job_utils.save_job_failure_code('E103')
+            self.job_utils.save_job_failure_detail(
+                f'{control_conf_path} not found from the given git repo.')
+            return False
+
+        return True
+
+    def check_dynamic_model(self):
+        try:
+            model_name = DynamicModel.Name(self.config_pb.dynamic_model)
+
+            # Default repo is apollo's master, which can be used for other dynamic models
+            if model_name == 'OWN_MODEL':
+                if not self.config_pb.git_info.repo:
+                    self.job_utils.save_job_failure_code('E101')
+                    self.job_utils.save_job_failure_detail('missing git_info.repo')
+                    return False
+
+                if not self.check_git_file_exists('modules/control/conf/dynamic_model_forward.bin'):
+                    self.job_utils.save_job_failure_code('E103')
+                    self.job_utils.save_job_failure_detail('missing forward model')
+                    return False
+
+                if not self.check_git_file_exists(
+                        'modules/control/conf/dynamic_model_backward.bin'):
+                    self.job_utils.save_job_failure_code('E103')
+                    self.job_utils.save_job_failure_detail('missing backward model')
+                    return False
+
+            return True
+        except Exception as error:
+            logging.error(error)
+            self.job_utils.save_job_failure_code('E102')
+            self.job_utils.save_job_failure_detail(
+                f'Invalid dynamic model "{self.config_pb.dynamic_model}"')
+            return False
+
     def check(self):
         check_list = [
             self.has_config_file,
             self.is_config_file_readable,
-            self.has_required_fields,
-            self.has_valid_n_iter,
-            self.has_valid_dynamic_model,
-            self.has_valid_scenarios,
+            self.check_required_fields,
+            self.check_n_iter,
+            self.check_scenarios,
+
+            # NOTE: the following checks require access to user's
+            # github repo so check_git_repo must happen first
+            self.check_git_repo,
+            self.check_apollo_env,
+            self.check_control_conf,
+            self.check_dynamic_model,
         ]
 
         for check_item in check_list:
             if not check_item():
+                logging.info('Sanity check failed.')
                 return False
 
+        logging.info('Sanity check passed.')
         return True

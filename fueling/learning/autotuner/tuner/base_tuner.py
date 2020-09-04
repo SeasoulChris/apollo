@@ -65,7 +65,6 @@ class BaseTuner(BasePipeline):
         if self.job_id and not AutotunerSanityCheck(
                 context_utils.is_local(), self.job_id, self.tuner_config_filename).check():
             raise Exception("Sanity check failed.")
-        logging.info('Sanity check passed.')
 
         # Upload the autotuner parameter configuration / target module configuration
         self.tuner_param_config_pb, self.algorithm_conf_pb = self.read_configs(self.conf_class)
