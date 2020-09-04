@@ -30,6 +30,9 @@ class Urbansound8K(object):
             label = 1
         if filepath.find('ambulance') != -1 or filepath.find('firetruck') != -1:
             label = 1
+        # TODO(all): read labels directly from the pipeline when ready
+        if fnmatch(filepath, '*record.*_channel_*.wav'):
+            label = 1
         signals = librosa.load(filepath, sr=self.sample_rate)
         if signals is None:
             logging.info('None signals found')
