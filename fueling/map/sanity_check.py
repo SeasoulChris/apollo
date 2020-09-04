@@ -56,25 +56,26 @@ def missing_message_data(path, channels=CHANNELS):
 
 def sanity_check(input_folder, output_folder, job_owner, job_id, email_receivers=None):
     err_msg = None
+    is_on_cloud = context_utils.is_cloud()
     if not len(list_records(input_folder)):
         err_msg = "One or more files are missing in %s" % input_folder
-        if context_utils.is_cloud():
+        if is_on_cloud:
             JobUtils(job_id).save_job_failure_code('E301')
     elif is_oversize_file(input_folder):
         err_msg = "The record file is oversize!"
-        if context_utils.is_cloud():
+        if is_on_cloud:
             JobUtils(job_id).save_job_failure_code('E300')
     elif parse_error(input_folder, output_folder):
         err_msg = "The input data path must be different from the output data path!"
-        if context_utils.is_cloud():
+        if is_on_cloud:
             JobUtils(job_id).save_job_failure_code('E307')
     elif missing_message_data(input_folder):
         err_msg = "Messages are missing in records of %s" % input_folder
-        if context_utils.is_cloud():
+        if is_on_cloud:
             JobUtils(job_id).save_job_failure_code('E302')
     else:
         logging.info("%s Passed sanity check." % input_folder)
-        if context_utils.is_cloud() and email_receivers:
+        if is_on_cloud and email_receivers:
             title = 'Virtual-lane-generation data sanity check passed for {}'.format(job_owner)
             content = 'job_id={} input_folder={} output_folder={}\n' \
                 'We are processing your job now. Please expect another email with results.'.format(
@@ -82,7 +83,7 @@ def sanity_check(input_folder, output_folder, job_owner, job_id, email_receivers
             email_utils.send_email_info(title, content, email_receivers)
         return True
 
-    if context_utils.is_cloud() and email_receivers:
+    if is_on_cloud and email_receivers:
         title = 'Error occurred during Virtual-lane-generation data sanity check for {}'.format(
             job_owner)
         content = 'job_id={} input_folder={}\n{}'.format(job_id, input_folder, cgi.escape(err_msg))

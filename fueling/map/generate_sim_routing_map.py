@@ -53,10 +53,11 @@ class SimMapPipeline(BasePipeline):
 
     def run(self):
         """Production."""
-        dst_prefix = self.FLAGS.get('output_data_path') or '/fuel/testdata/virtual_lane/result'
+        dst_prefix = self.FLAGS.get('output_data_path') or 'test/virtual_lane/result'
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         logging.info("job_id: %s" % job_id)
+        self.is_on_cloud = context_utils.is_cloud()
 
         origin_prefix = os.path.join(dst_prefix, job_owner, job_id)
         logging.info("origin_prefix: %s" % origin_prefix)
@@ -76,7 +77,7 @@ class SimMapPipeline(BasePipeline):
             logging.warning('topo_creator: {} not exists'.format(routing_creator_path))
         # RDD(tasks), the tasks without src_prefix as prefix
         self.to_rdd([source_path]).foreach(execute_task)
-        if context_utils.is_cloud():
+        if self.is_on_cloud:
             JobUtils(job_id).save_job_progress(50)
 
 

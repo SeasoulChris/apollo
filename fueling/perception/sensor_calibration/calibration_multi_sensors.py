@@ -8,7 +8,9 @@ import time
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
+from fueling.perception.sensor_calibration.sanity_check import sanity_check
 from fueling.perception.sensor_calibration.calibration_config import CalibrationConfig
+import fueling.common.context_utils as context_utils
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -27,7 +29,8 @@ class SensorCalibrationPipeline(BasePipeline):
 
     def run_test(self):
         """local mini test"""
-        self.run_internal('testdata/perception/sensor_calibration')
+        self.is_on_cloud = context_utils.is_cloud()
+        self.run_internal('/fuel/testdata/perception/sensor_calibration')
 
     def run(self):
         """Run Prod. production version"""
@@ -35,77 +38,84 @@ class SensorCalibrationPipeline(BasePipeline):
         result_files = []
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
+        self.is_on_cloud = context_utils.is_cloud()
+        src_prefix = self.FLAGS.get('input_data_path') or "test/sensor_calibration"
         object_storage = self.partner_storage() or self.our_storage()
-        source_dir = object_storage.abs_path(self.FLAGS.get('input_data_path'))
+        source_dir = object_storage.abs_path(src_prefix)
 
         job_type, job_size = 'SENSOR_CALIBRATION', file_utils.getDirSize(source_dir)
         redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
         redis_value = {'begin_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                        'job_size': job_size,
                        'job_status': 'running'}
-        redis_utils.redis_extend_dict(redis_key, redis_value)
-        JobUtils(job_id).save_job_input_data_size(source_dir)
-        JobUtils(job_id).save_job_sub_type('')
+        if self.is_on_cloud:
+            redis_utils.redis_extend_dict(redis_key, redis_value)
+            JobUtils(job_id).save_job_input_data_size(source_dir)
+            JobUtils(job_id).save_job_sub_type('')
 
         # Send result to job owner.
         receivers = email_utils.PERCEPTION_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
         if os.environ.get('PARTNER_EMAIL'):
             receivers.append(os.environ.get('PARTNER_EMAIL'))
+
+        if not sanity_check(source_dir, job_owner, job_id, receivers):
+            raise Exception("Sanity_check failed!")
+
         self.error_text = 'Calibration error, please contact after-sales technical support'
 
-        if file_utils.getInputDirDataSize(source_dir) >= 1 * 1024 * 1024 * 1024:
-            JobUtils(job_id).save_job_failure_code('E200')
-            title = 'Your sensor calibration job failed!'
-            content = 'Your input data is over size(1GB)!'
-            email_utils.send_email_error(title, content, receivers)
-            raise Exception("Input data is over size!")
         try:
-            result_files, sub_type = self.run_internal(self.FLAGS.get('input_data_path'))
+            result = self.run_internal(src_prefix)
         except BaseException as e:
-            JobUtils(job_id).save_job_failure_code('E204')
-            JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                 self.error_text, False)
+            if self.is_on_cloud:
+                JobUtils(job_id).save_job_failure_code('E209')
+                JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                     self.error_text, False)
             logging.error(e)
 
         logging.info(f"Generated sub_type {len(sub_type)} results: {sub_type}")
         sub_job_type = 'All'
-        if len(sub_type) == 1:
-            sub_job_type = sub_type.pop()
 
-        if result_files:
+        if result:
+            result_files, sub_type = result
+            if len(sub_type) == 1:
+                sub_job_type = sub_type.pop()
+
             title = 'Your sensor calibration job is done!'
             content = {'Job Owner': job_owner, 'Job ID': job_id}
-            email_utils.send_email_info(title, content, receivers, result_files)
-            redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
-                           'job_status': 'success', 'sub_type': sub_job_type}
-            redis_utils.redis_extend_dict(redis_key, redis_value)
+            if self.is_on_cloud:
+                email_utils.send_email_info(title, content, receivers, result_files)
+                redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+                               'job_status': 'success', 'sub_type': sub_job_type}
+                redis_utils.redis_extend_dict(redis_key, redis_value)
         else:
             title = 'Your sensor calibration job failed!'
             content = (f'We are sorry. Please report the job id {self.FLAGS["job_id"]} to us at '
                        'IDG-apollo@baidu.com, so we can investigate.')
-            email_utils.send_email_error(title, content, receivers)
-            redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
-                           'job_status': 'failed', 'sub_type': sub_job_type}
-            redis_utils.redis_extend_dict(redis_key, redis_value)
+            if self.is_on_cloud:
+                email_utils.send_email_error(title, content, receivers)
+                redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+                               'job_status': 'failed', 'sub_type': sub_job_type}
+                redis_utils.redis_extend_dict(redis_key, redis_value)
             logging.error('Failed to process sensor calibration job')
             raise Exception("Failed to process sensor calibration job!")
-        result = JobUtils(job_id).get_job_info()
-        for job_info in result:
-            if (int(time.mktime(datetime.now().timetuple())
-                    - time.mktime(job_info['start_time'].timetuple()))) > 259200:
-                JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                     self.error_text, False)
-                JobUtils(job_id).save_job_failure_code('E204')
-                raise Exception("The running time of sensor calibration is more than three days!")
-        JobUtils(job_id).save_job_sub_type(sub_job_type)
-        JobUtils(job_id).save_job_progress(100)
+        if self.is_on_cloud:
+            job_result = JobUtils(job_id).get_job_info()
+            for job_info in job_result:
+                if (int(time.mktime(datetime.now().timetuple())
+                        - time.mktime(job_info['start_time'].timetuple()))) > 259200:
+                    JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                         self.error_text, False)
+                    JobUtils(job_id).save_job_failure_code('E209')
+                    raise Exception("The running time is more than three days!")
+            JobUtils(job_id).save_job_sub_type(sub_job_type)
+            JobUtils(job_id).save_job_progress(100)
 
     def run_internal(self, job_dir):
         # If it's a partner job, move origin data to our storage before processing.
         if self.is_partner_job():
             job_dir = self.partner_storage().abs_path(job_dir)
             job_id = self.FLAGS.get('job_id')
-            dst_prefix = self.FLAGS.get('output_data_path')
+            dst_prefix = self.FLAGS.get('output_data_path') or job_dir
             origin_prefix = os.path.join(dst_prefix, job_id)
             job_output_dir = self.partner_storage().abs_path(origin_prefix)
             if not job_output_dir.startswith(bos_client.PARTNER_BOS_MOUNT_PATH):
@@ -138,13 +148,15 @@ class SensorCalibrationPipeline(BasePipeline):
 
         task_types = set()
         result_files = []
-        if not result_dirs:
-            logging.error(f"No result_dirs {result_dirs}:")
-            return None
-        for result_dir, task_name in result_dirs:
-            if result_dir:
-                task_types.add(task_name)
-                result_files.extend(glob.glob(os.path.join(result_dir, '*.yaml')))
+        for temp_dir in result_dirs:
+            if temp_dir:
+                result_dir, task_name = temp_dir
+                if result_dir:
+                    task_types.add(task_name)
+                    result_files.extend(glob.glob(os.path.join(result_dir, '*.yaml')))
+            else:
+                logging.error(f"result_dirs: {result_dirs}: has no results")
+                return None
         logging.info(f"Sensor Calibration on data {job_dir}: All Done")
         logging.info(f"Generated {len(result_files)} results: {result_files}")
         logging.info(f"Generated task_types {len(task_types)} results: {task_types}")
@@ -156,17 +168,14 @@ class SensorCalibrationPipeline(BasePipeline):
         job_id = self.FLAGS.get('job_id')
         self.index += 1
 
-        JobUtils(job_id).save_job_progress(10 + (80 // self.num) * (self.index - 1))
+        if self.is_on_cloud:
+            JobUtils(job_id).save_job_progress(10 + (80 // self.num) * (self.index - 1))
         source_dir, output_dir, executable_dir = message_meta
 
         logging.info(F'executable dir: {executable_dir}, exist? {os.path.exists(executable_dir)}')
 
         # from input config file, generating final fuel-using config file
         in_config_file = os.path.join(source_dir, 'sample_config.yaml')
-        if not os.path.exists(in_config_file):
-            JobUtils(job_id).save_job_failure_code('E202')
-            logging.error('{} is not exists!'.format(in_config_file))
-            return None
         calib_config = CalibrationConfig()
 
         config_file = calib_config.generate_task_config_yaml(root_path=source_dir,
@@ -187,14 +196,14 @@ class SensorCalibrationPipeline(BasePipeline):
         elif task_name == 'camera_to_lidar':
             executable_bin = os.path.join(executable_dir, 'multi_grid_lidar_camera_calibrator')
         else:
-            JobUtils(job_id).save_job_failure_code('E203')
             logging.error('not support {} yet'.format(task_name))
             return None
 
         if not os.path.exists(executable_bin):
-            JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                 self.error_text, False)
-            JobUtils(job_id).save_job_failure_code('E204')
+            if self.is_on_cloud:
+                JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                     self.error_text, False)
+                JobUtils(job_id).save_job_failure_code('E209')
             logging.error('{} is not exists!'.format(executable_bin))
             return None
         # set command
@@ -205,15 +214,25 @@ class SensorCalibrationPipeline(BasePipeline):
         if return_code == 0:
             logging.info('Finished sensor caliration.')
         else:
-            JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                 self.error_text, False)
-            JobUtils(job_id).save_job_failure_code('E204')
+            if self.is_on_cloud:
+                if return_code == 10:
+                    JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                         self.error_text, False)
+                    JobUtils(job_id).save_job_failure_code('E206')
+                elif return_code == 11:
+                    JobUtils(job_id).save_job_failure_code('E207')
+                elif return_code == 12:
+                    JobUtils(job_id).save_job_failure_code('E208')
+                else:
+                    JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                         self.error_text, False)
+                    JobUtils(job_id).save_job_failure_code('E209')
             logging.error('Failed to run sensor caliration for {}: {}'.format(task_name,
                                                                               return_code))
             time.sleep(60 * 3)
             return None
-
-        JobUtils(job_id).save_job_progress(10 + (80 // self.num) * self.index)
+        if self.is_on_cloud:
+            JobUtils(job_id).save_job_progress(10 + (80 // self.num) * self.index)
         return os.path.join(output_dir, 'results'), task_name
 
 

@@ -46,13 +46,14 @@ class LocalMapPipeline(BasePipeline):
 
     def run(self):
         """Production."""
-        src_prefix = self.FLAGS.get('input_data_path') or '/fuel/testdata/virtual_lane'
-        dst_prefix = self.FLAGS.get('output_data_path') or '/fuel/testdata/virtual_lane/result'
+        src_prefix = self.FLAGS.get('input_data_path') or 'test/virtual_lane/data'
+        dst_prefix = self.FLAGS.get('output_data_path') or 'test/virtual_lane/result'
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         zone_id = self.FLAGS.get('zone_id')
         lidar_type = self.FLAGS.get('lidar_type')
         logging.info("job_id: %s" % job_id)
+        self.is_on_cloud = context_utils.is_cloud()
 
         object_storage = self.partner_storage() or self.our_storage()
         source_dir = object_storage.abs_path(src_prefix)
@@ -96,22 +97,22 @@ class LocalMapPipeline(BasePipeline):
                 continue
             elif not (lidar_message or odometry_message or ins_stat_message):
                 title = 'Your base map is generated!'
-                if context_utils.is_cloud():
+                if self.is_on_cloud:
                     JobUtils(job_id).save_job_progress(100)
                 email_utils.send_email_info(title, content, receivers)
                 return
             else:
-                if context_utils.is_cloud():
+                if self.is_on_cloud:
                     JobUtils(job_id).save_job_failure_code('E304')
                 title = 'Your localmap is not generated!'
-                if context_utils.is_cloud():
+                if self.is_on_cloud:
                     email_utils.send_email_error(title, content, receivers)
                 raise Exception("One or more channels are missing in %s" % fbag)
 
         if not velodyne16_ext_list:
             logging.error('velodyne16_novatel_extrinsics_example.yaml not exists')
             title = 'Your localmap is not generated!'
-            if context_utils.is_cloud():
+            if self.is_on_cloud:
                 email_utils.send_email_error(title, content, receivers)
                 redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                                'job_status': 'failed', 'sub_type': 'base_map'}
@@ -130,7 +131,7 @@ class LocalMapPipeline(BasePipeline):
             logging.warning('local_map folder: {} not exists'.format(path))
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                            'job_status': 'failed', 'sub_type': 'base_map'}
-            if context_utils.is_cloud():
+            if self.is_on_cloud:
                 result = JobUtils(job_id).get_job_info()
                 for job_info in result:
                     if (int(time.mktime(datetime.now().timetuple())
@@ -145,9 +146,9 @@ class LocalMapPipeline(BasePipeline):
         else:
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                            'job_status': 'success', 'sub_type': 'All'}
-            if context_utils.is_cloud():
+            if self.is_on_cloud:
                 JobUtils(job_id).save_job_sub_type('all')
-        if context_utils.is_cloud():
+        if self.is_on_cloud:
             email_utils.send_email_info(title, content, receivers)
             redis_utils.redis_extend_dict(redis_key, redis_value)
             JobUtils(job_id).save_job_progress(100)

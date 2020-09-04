@@ -44,6 +44,7 @@ class MapGenSingleLine(BasePipeline):
         dst_prefix = os.path.join(src_dir, 'result')
         self.lane_width = 3.3
         self.extra_roi_extension = 1.0
+        self.is_on_cloud = False
 
         if not os.path.exists(dst_prefix):
             logging.warning('target_path: {} not exists'.format(dst_prefix))
@@ -62,8 +63,8 @@ class MapGenSingleLine(BasePipeline):
         logging.info('base_map.txt generated: Done, Test')
 
     def run(self):
-        src_prefix = self.FLAGS.get('input_data_path') or '/fuel/testdata/virtual_lane'
-        dst_prefix = self.FLAGS.get('output_data_path') or '/fuel/testdata/virtual_lane/result'
+        src_prefix = self.FLAGS.get('input_data_path') or 'test/virtual_lane/data'
+        dst_prefix = self.FLAGS.get('output_data_path') or 'test/virtual_lane/result'
 
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
@@ -71,6 +72,7 @@ class MapGenSingleLine(BasePipeline):
 
         self.lane_width = self.FLAGS.get('lane_width')
         self.extra_roi_extension = self.FLAGS.get('extra_roi_extension')
+        self.is_on_cloud = context_utils.is_cloud()
 
         # Access partner's storage if provided.
         object_storage = self.partner_storage() or self.our_storage()
@@ -88,7 +90,7 @@ class MapGenSingleLine(BasePipeline):
 
         logging.info("source_prefix: {}".format(source_dir))
 
-        if context_utils.is_cloud():
+        if self.is_on_cloud:
             JobUtils(job_id).save_job_input_data_size(source_dir)
             JobUtils(job_id).save_job_sub_type('')
         receivers = email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
@@ -102,7 +104,7 @@ class MapGenSingleLine(BasePipeline):
         redis_value = {'begin_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                        'job_size': job_size,
                        'job_status': 'running'}
-        if context_utils.is_cloud():
+        if self.is_on_cloud:
             redis_utils.redis_extend_dict(redis_key, redis_value)
 
         # RDD(record_path)
@@ -115,7 +117,7 @@ class MapGenSingleLine(BasePipeline):
             logging.warning('base_map.txt: {} not genterated'.format(path))
 
         logging.info('base_map.txt generated: Done, PROD')
-        if context_utils.is_cloud():
+        if self.is_on_cloud:
             JobUtils(job_id).save_job_progress(20)
             JobUtils(job_id).save_job_sub_type('base_map')
 
@@ -145,7 +147,7 @@ class MapGenSingleLine(BasePipeline):
                 points.append((pos.x, pos.y))
                 if(i == 0):
                     zone_id = self.FLAGS.get('zone_id')
-                    if context_utils.is_cloud():
+                    if self.is_on_cloud:
                         JobUtils(job_id).save_job_location(pos.x, pos.y, zone_id)
                     i += 1
 
