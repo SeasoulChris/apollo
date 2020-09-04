@@ -56,13 +56,20 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
             future_trajectory[i, 1] = path_point.y
             future_trajectory[i, 2] = path_point.theta
 
-        perturbate_normal_direction_range = self.FLAGS.get('perturbate_normal_direction_range')
+        perturbate_normal_direction_range = self.FLAGS.get(
+            'perturbate_normal_direction_range')
+        perturbate_tangential_direction_range = self.FLAGS.get(
+            'perturbate_tangential_direction_range')
+        is_lateral_or_longitudinal_synthesizing = self.FLAGS.get(
+            'is_lateral_or_longitudinal_synthesizing')
         ref_cost = self.FLAGS.get('ref_cost')
         elastic_band_smoothing_cost = self.FLAGS.get(
             'elastic_band_smoothing_cost')
         max_curvature = self.FLAGS.get('max_curvature')
 
         synthesizer = TrajectoryPerturbationSynthesizer(perturbate_normal_direction_range,
+                                                        perturbate_tangential_direction_range,
+                                                        is_lateral_or_longitudinal_synthesizing,
                                                         ref_cost,
                                                         elastic_band_smoothing_cost,
                                                         max_curvature)
