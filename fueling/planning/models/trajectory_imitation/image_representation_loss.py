@@ -39,6 +39,7 @@ class ImageRepresentationLoss():
         # TODO(Jinyun): use logsoftmax for more numerical stability
         self.kepsilon = 1e-6
         self.is_synthesized_weight = 0.1
+        self.is_turning_weight = 10.0
 
     def loss_fn(self, y_pred, y_true, dropout=True):
         batch_size = y_pred[0].shape[0]
@@ -69,20 +70,25 @@ class ImageRepresentationLoss():
         true_onrouting_mask = y_true[5].view(
             batch_size, -1) if self.onrouting_loss_weight != 0 else None
         is_synthesized = y_true[6].view(batch_size, -1)
-        is_synthesized_weight = torch.ones([batch_size, 1], device=pred_points.device)
+        is_synthesized_weight = torch.ones(
+            [batch_size, 1], device=pred_points.device)
         is_synthesized_weight[is_synthesized] = self.is_synthesized_weight
+        is_turning = y_true[7].view(batch_size, -1)
+        is_turning_weight = torch.ones(
+            [batch_size, 1], device=pred_points.device)
+        is_turning_weight[is_turning] = self.is_turning_weight
 
-        weighted_pos_reg_loss = is_synthesized_weight * self.pos_reg_loss_weight \
+        weighted_pos_reg_loss = is_turning * is_synthesized_weight * self.pos_reg_loss_weight \
             * torch.mean(nn.MSELoss(reduction='none')(
                 pred_points, true_points), dim=1, keepdim=True) \
             if self.pos_reg_loss_weight != 0 else torch.zeros(1, device=y_pred[0].device)
 
-        weighted_box_loss = is_synthesized_weight * self.box_loss_weight \
+        weighted_box_loss = is_turning * is_synthesized_weight * self.box_loss_weight \
             * torch.mean(nn.BCELoss(reduction='none')(
                 pred_boxs, true_boxs), dim=1, keepdim=True) \
             if self.box_loss_weight != 0 else torch.zeros(1, device=y_pred[0].device)
 
-        weighted_pos_dist_loss = is_synthesized_weight * self.pos_dist_loss_weight \
+        weighted_pos_dist_loss = is_turning * is_synthesized_weight * self.pos_dist_loss_weight \
             * torch.mean(nn.BCELoss(reduction='none')(
                 pred_pos_dists, true_pos_dists), dim=1, keepdim=True) \
             if self.pos_dist_loss_weight != 0 else torch.zeros(1, device=y_pred[0].device)

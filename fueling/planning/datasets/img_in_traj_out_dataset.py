@@ -639,6 +639,7 @@ class TrajectoryImitationSelfCNNLSTMWithEnvLossDataset(Dataset):
         frame_name = self.instances[idx]
 
         is_synthesized = 'is_synthesized' in frame_name
+        is_turning = 'NO_TURN' not in frame_name
 
         frame = proto_utils.get_pb_from_bin_file(
             frame_name, learning_data_pb2.LearningDataFrame())
@@ -789,7 +790,8 @@ class TrajectoryImitationSelfCNNLSTMWithEnvLossDataset(Dataset):
                  pred_obs,
                  offroad_mask,
                  routing_mask,
-                 torch.tensor([is_synthesized])))
+                 torch.tensor([is_synthesized]),
+                 torch.tensor([is_turning])))
 
 
 class TrajectoryImitationCNNLSTMWithEnvLossDataset(Dataset):
@@ -842,6 +844,7 @@ class TrajectoryImitationCNNLSTMWithEnvLossDataset(Dataset):
         frame_name = self.instances[idx]
 
         is_synthesized = 'is_synthesized' in frame_name
+        is_turning = 'NO_TURN' not in frame_name
 
         frame = proto_utils.get_pb_from_bin_file(
             frame_name, learning_data_pb2.LearningDataFrame())
@@ -970,4 +973,5 @@ class TrajectoryImitationCNNLSTMWithEnvLossDataset(Dataset):
                  pred_obs,
                  offroad_mask,
                  routing_mask,
-                 torch.tensor([is_synthesized])))
+                 torch.tensor([is_synthesized]),
+                 torch.tensor([is_turning])))
