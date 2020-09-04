@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from datetime import datetime
 import os
 import subprocess
 
@@ -133,7 +132,7 @@ def save_model(model, param_norm, filename, is_holistic=False):
         params_file.write(net_params.SerializeToString())
 
 
-def mlp_keras(x_data, y_data, param_norm, out_dir, is_backward=False, is_holistic=False):
+def mlp_keras(x_data, y_data, param_norm, out_dir, is_holistic=False, has_h5model=False):
     logging.info("Start to train MLP model")
     (input_fea_mean, input_fea_std), (output_fea_mean, output_fea_std) = param_norm
     x_data = (x_data - input_fea_mean) / input_fea_std
@@ -148,32 +147,23 @@ def mlp_keras(x_data, y_data, param_norm, out_dir, is_backward=False, is_holisti
     with tf.device('/gpu:0'):
         model.fit(x_train, y_train, shuffle=True, nb_epoch=EPOCHS, batch_size=32, verbose=2)
 
-    timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
-
     # save norm_params and model_weights to binary file
-    bin_model_dir = os.path.join(out_dir, 'binary_model/mlp')
-    bin_file_dir = os.path.join(bin_model_dir, timestr)
+    bin_file_dir = os.path.join(out_dir, 'binary_model/mlp')
     file_utils.makedirs(bin_file_dir)
     model_bin = os.path.join(bin_file_dir, 'fnn_model.bin')
     save_model(model, param_norm, model_bin, is_holistic)
 
     # save norm_params and model_weights to hdf5
-    if is_backward:
-        h5_model_dir = os.path.join(out_dir, 'h5_model/mlp/backward')
-        logging.info('is_backward mlp: %s' % is_backward)
-    else:
-        h5_model_dir = os.path.join(out_dir, 'h5_model/mlp/forward')
-        logging.info('is_backward mlp: %s' % is_backward)
+    if has_h5model:
+        h5_file_dir = os.path.join(out_dir, 'h5_model/mlp')
+        file_utils.makedirs(h5_file_dir)
 
-    h5_file_dir = os.path.join(h5_model_dir, timestr)
-    file_utils.makedirs(h5_file_dir)
+        norms_h5 = os.path.join(h5_file_dir, 'norms.h5')
+        with h5py.File(norms_h5, 'w') as h5_file:
+            h5_file.create_dataset('input_mean', data=input_fea_mean)
+            h5_file.create_dataset('input_std', data=input_fea_std)
+            h5_file.create_dataset('output_mean', data=output_fea_mean)
+            h5_file.create_dataset('output_std', data=output_fea_std)
 
-    norms_h5 = os.path.join(h5_file_dir, 'norms.h5')
-    with h5py.File(norms_h5, 'w') as h5_file:
-        h5_file.create_dataset('input_mean', data=input_fea_mean)
-        h5_file.create_dataset('input_std', data=input_fea_std)
-        h5_file.create_dataset('output_mean', data=output_fea_mean)
-        h5_file.create_dataset('output_std', data=output_fea_std)
-
-    weights_h5 = os.path.join(h5_file_dir, 'weights.h5')
-    model.save(weights_h5)
+        weights_h5 = os.path.join(h5_file_dir, 'weights.h5')
+        model.save(weights_h5)

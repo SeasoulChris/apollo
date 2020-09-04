@@ -6,4 +6,5 @@ flags.DEFINE_boolean('is_backward', False, 'backward or forward for dynamic mode
 
 # flags hold for internal use
 flags.DEFINE_boolean('is_holistic', False, 'holistic or nonholistic for dynamic model training')
+flags.DEFINE_boolean('has_h5model', False, 'genearte the h5 training model or not')
 flags.DEFINE_string('evaluation_vehicle_id', 'Mkz7', 'default vehicle_id for evaluation')

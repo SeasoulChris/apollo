@@ -25,19 +25,22 @@ class DynamicModelTraining(BasePipeline):
         job_id = self.FLAGS.get('job_id')
         is_backward = self.FLAGS.get('is_backward')
         is_holistic = self.FLAGS.get('is_holistic')
+        has_h5model = self.FLAGS.get('has_h5model')
+
         data_dir = '/fuel/testdata/control/generated_uniform'
         if is_backward:
             training_data_path = os.path.join(data_dir, job_owner, 'backward', job_id)
         else:
             training_data_path = os.path.join(data_dir, job_owner, 'forward', job_id)
         model_dir = '/fuel/testdata/control/learning_based_model'
-        output_dir = os.path.join(model_dir, 'dynamic_model_output')
+        output_path = os.path.join(model_dir, 'dynamic_model_output')
 
         vehicles = multi_vehicle_utils.get_vehicle(training_data_path)
         logging.info(f'vehicles = {vehicles}')
         # run test as a vehicle ID
         for vehicle in vehicles:
-            self.execute_task(vehicle, training_data_path, output_dir, is_backward, is_holistic)
+            self.execute_task(vehicle, training_data_path, output_path,
+                              is_holistic, has_h5model)
 
     def run(self):
         # initialize input/output dirs
@@ -45,18 +48,21 @@ class DynamicModelTraining(BasePipeline):
         job_id = self.FLAGS.get('job_id')
         is_backward = self.FLAGS.get('is_backward')
         is_holistic = self.FLAGS.get('is_holistic')
+        has_h5model = self.FLAGS.get('has_h5model')
 
-        # Check partner storage for online service
-        object_storage = self.partner_storage() or self.our_storage()
-
+        # get data from our storage
         data_dir = task_config['uniform_output_folder']
         if is_backward:
             data_prefix = os.path.join(data_dir, job_owner, 'backward', job_id)
         else:
             data_prefix = os.path.join(data_dir, job_owner, 'forward', job_id)
-        training_data_path = object_storage.abs_path(data_prefix)
+        our_storage = self.our_storage()
+        training_data_path = our_storage.abs_path(data_prefix)
 
-        output_dir = object_storage.abs_path(task_config['model_output_folder'])
+        # write partner storage for online service
+        output_dir = task_config['model_output_folder']
+        object_storage = self.partner_storage() or self.our_storage()
+        output_path = object_storage.abs_path(output_dir)
 
         # get vehicles
         vehicles = multi_vehicle_utils.get_vehicle(training_data_path)
@@ -66,41 +72,49 @@ class DynamicModelTraining(BasePipeline):
         # prepare for email notification
         SummaryTuple = collections.namedtuple(
             'Summary',
-            ['Vehicle', 'Input_Data_Path', 'Output_Model_Path', 'Is_Backward', 'Is_Holistic'])
+            ['Vehicle', 'Input_Data_Visual_Path', 'Output_Model_Path', 'Is_Backward'])
         messages = []
 
         # run proc as a vehicle ID
         vehicle_count = 0
         for vehicle in vehicles:
             vehicle_count += 1
-            self.execute_task(vehicle, training_data_path, output_dir, is_backward, is_holistic)
+            if is_backward:
+                model_output_path = os.path.join(output_path, vehicle, 'backward', job_id)
+            else:
+                model_output_path = os.path.join(output_path, vehicle, 'forward', job_id)
+            self.execute_task(vehicle, training_data_path, model_output_path,
+                              is_holistic, has_h5model)
+            input_data_visual_path = os.path.join(model_output_path, 'visual_result')
+            output_model_path = os.path.join(model_output_path, 'binary_model')
             messages.append(SummaryTuple(
-                Vehicle=vehicle, Input_Data_Path=training_data_path, Output_Model_Path=output_dir,
-                Is_Backward=is_backward, Is_Holistic=is_holistic))
+                Vehicle=vehicle, Input_Data_Visual_Path=input_data_visual_path,
+                Output_Model_Path=output_model_path, Is_Backward=is_backward))
             JobUtils(job_id).save_job_progress(45 + (95 - 45) * vehicle_count / vehicles_num)
 
         # send email notification
         title = F'Control Dynamic Model Training Results For {len(vehicles)} Vehicles'
-        # TODO(longtao): add all receivers after testing email notification
-        email_utils.send_email_info(title, messages, email_utils.DATA_TEAM)
+        email_receivers = (
+            email_utils.CONTROL_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM)
+        if os.environ.get('PARTNER_EMAIL'):
+            email_receivers.append(os.environ.get('PARTNER_EMAIL'))
+        email_utils.send_email_info(title, messages, email_receivers)
         JobUtils(job_id).save_job_progress(100)
 
-    def execute_task(self, vehicle, training_data_path, output_dir,
-                     is_backward=False, is_holistic=False):
+    def execute_task(self, vehicle, training_data_path, model_output_path, is_holistic=False,
+                     has_h5model=False):
         # vehicle dir
-        vehicle_dir = os.path.join(training_data_path, vehicle)
-        # model output dir
-        model_output_dir = os.path.join(output_dir, vehicle)
-        logging.info(f'vehicle_dir: {vehicle_dir}')
-        logging.info(f'model_output_dir: {model_output_dir}')
+        data_vehicle_dir = os.path.join(training_data_path, vehicle)
+        logging.info(f'data_vehicle_dir: {data_vehicle_dir}')
+        logging.info(f'model_output_path: {model_output_path}')
         # RDD hd5_dataset
-        hd5_files_path = glob.glob(os.path.join(vehicle_dir, '*/*.hdf5'))
+        hd5_files_path = glob.glob(os.path.join(data_vehicle_dir, '*/*.hdf5'))
         # logging.info('hd5_files_path = {}'.format(hd5_files_path))
         # for file in files_path:
         training_dataset_rdd = self.to_rdd(hd5_files_path)
-        self.run_internal(training_dataset_rdd, model_output_dir, is_backward, is_holistic)
+        self.run_internal(training_dataset_rdd, model_output_path, is_holistic, has_h5model)
 
-    def run_internal(self, training_dataset_rdd, output_dir, is_backward=False, is_holistic=False):
+    def run_internal(self, training_dataset_rdd, output_path, is_holistic=False, has_h5model=False):
         data = (
             # RDD(absolute_file_path)
             training_dataset_rdd
@@ -132,27 +146,27 @@ class DynamicModelTraining(BasePipeline):
             .first())
         logging.info(f'Param Norm = {param_norm}')
 
-        def _train(data_item, is_backward=False, is_holistic=False):
+        def _train(data_item, is_holistic=False, has_h5model=False):
             key, (input_data, output_data) = data_item
             if key == 'mlp_data':
                 mlp_keras.mlp_keras(
                     input_data,
                     output_data,
                     param_norm,
-                    output_dir,
-                    is_backward,
-                    is_holistic)
+                    output_path,
+                    is_holistic,
+                    has_h5model)
             elif key == 'lstm_data':
                 lstm_keras.lstm_keras(
                     input_data,
                     output_data,
                     param_norm,
-                    output_dir,
+                    output_path,
                     'lstm_two_layer',
-                    is_backward,
-                    is_holistic)
+                    is_holistic,
+                    has_h5model)
 
-        data.foreach(lambda data_item: _train(data_item, is_backward, is_holistic))
+        data.foreach(lambda data_item: _train(data_item, is_holistic, has_h5model))
 
 
 if __name__ == '__main__':

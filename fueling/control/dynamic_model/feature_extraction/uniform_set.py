@@ -93,7 +93,7 @@ class UniformSet(BasePipeline):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         is_backward = self.FLAGS.get('is_backward')
-        bos_client = self.partner_storage() or self.our_storage()
+        our_storage = self.our_storage()
 
         # intermediate result folder
         if is_backward:
@@ -103,11 +103,11 @@ class UniformSet(BasePipeline):
             origin_prefix = os.path.join(INTER_FOLDER, job_owner, 'forward', job_id)
             target_prefix = os.path.join(OUTPUT_FOLDER, job_owner, 'forward', job_id)
 
-        origin_dir = bos_client.abs_path(origin_prefix)
+        origin_dir = our_storage.abs_path(origin_prefix)
         logging.info('origin dir: %s' % origin_dir)
 
         # output folder
-        target_dir = bos_client.abs_path(target_prefix)
+        target_dir = our_storage.abs_path(target_prefix)
         logging.info('target dir: %s' % target_dir)
 
         # use prefix to list files
@@ -126,7 +126,7 @@ class UniformSet(BasePipeline):
         hdf5_files = spark_helper.cache_and_log(
             'hdf5_files',
             origin_vehicle_dir
-            .flatMapValues(lambda path: self.our_storage().list_files(path, '.hdf5')))
+            .flatMapValues(lambda path: our_storage.list_files(path, '.hdf5')))
         JobUtils(job_id).save_job_progress(35)
 
         self.run_internal(hdf5_files, origin_vehicle_dir, target_dir)

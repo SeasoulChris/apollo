@@ -42,14 +42,19 @@ class DynamicModelDatasetDistribution(BasePipeline):
         job_id = self.FLAGS.get('job_id')
         is_backward = self.FLAGS.get('is_backward')
 
-        our_storage = self.our_storage()
-
+        # get data from our storage
         data_dir = task_config['sample_output_folder']
         if is_backward:
             data_prefix = os.path.join(data_dir, job_owner, 'backward', job_id)
         else:
             data_prefix = os.path.join(data_dir, job_owner, 'forward', job_id)
+        our_storage = self.our_storage()
         visual_data_prefix = our_storage.abs_path(data_prefix)
+
+        # write partner storage for online service
+        output_dir = task_config['model_output_folder']
+        object_storage = self.partner_storage() or self.our_storage()
+        output_path = object_storage.abs_path(output_dir)
 
         # get vehicles
         vehicles = multi_vehicle_utils.get_vehicle(visual_data_prefix)
@@ -59,12 +64,18 @@ class DynamicModelDatasetDistribution(BasePipeline):
         for vehicle in vehicles:
             # list hdf5 files from sample set
             visual_data_path = os.path.join(visual_data_prefix, vehicle)
-            hdf5_file_list = self.to_rdd(self.our_storage().list_files(visual_data_path, '.hdf5'))
+            hdf5_file_list = self.to_rdd(our_storage.list_files(visual_data_path, '.hdf5'))
             logging.info(f'Visual data file: {hdf5_file_list.collect()}')
             # define visual result file name
-            output_dir = os.path.join(visual_data_path, 'visual_result')
-            os.mkdir(output_dir)
-            result_file = os.path.join(output_dir, 'dynamic_model_sample_dataset_distribution.pdf')
+            if is_backward:
+                visual_output_path = os.path.join(output_path, vehicle, 'backward', job_id,
+                                                  'visual_result')
+            else:
+                visual_output_path = os.path.join(output_path, vehicle, 'forward', job_id,
+                                                  'visual_result')
+            os.makedirs(visual_output_path)
+            result_file = os.path.join(visual_output_path,
+                                       'dynamic_model_sample_dataset_distribution.pdf')
             logging.info(f'Visual result file: {result_file}')
             # generate visual result file
             self.run_internal(vehicle, hdf5_file_list, result_file)

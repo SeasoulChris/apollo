@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from datetime import datetime
 import os
 
 from keras.layers import Dense
@@ -65,7 +64,7 @@ def setup_model(model_name, is_holistic=False):
 
 
 def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir,
-               model_name='lstm_two_layer', is_backward=False, is_holistic=False):
+               model_name='lstm_two_layer', is_holistic=False, has_h5model=False):
     logging.info("Start to train LSTM model")
     (input_fea_mean, input_fea_std), (output_fea_mean, output_fea_std) = param_norm
     for i in range(DIM_LSTM_LENGTH):
@@ -82,26 +81,18 @@ def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir,
                   validation_data=(lstm_input_split[1], lstm_output_split[1]),
                   epochs=EPOCHS, batch_size=64, verbose=2, shuffle=True)
 
-    timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
-
     # save norm_params and model_weights to hdf5
     # save norm_params and model_weights to hdf5
-    if is_backward:
-        h5_model_dir = os.path.join(out_dir, 'h5_model/lstm/backward')
-        logging.info('is_backward lstm: %s' % is_backward)
-    else:
-        h5_model_dir = os.path.join(out_dir, 'h5_model/lstm/forward')
-        logging.info('is_backward lstm: %s' % is_backward)
+    if has_h5model:
+        h5_file_dir = os.path.join(out_dir, 'h5_model/lstm')
+        file_utils.makedirs(h5_file_dir)
 
-    h5_file_dir = os.path.join(h5_model_dir, timestr)
-    file_utils.makedirs(h5_file_dir)
+        norms_h5 = os.path.join(h5_file_dir, 'norms.h5')
+        with h5py.File(norms_h5, 'w') as h5_file:
+            h5_file.create_dataset('input_mean', data=input_fea_mean)
+            h5_file.create_dataset('input_std', data=input_fea_std)
+            h5_file.create_dataset('output_mean', data=output_fea_mean)
+            h5_file.create_dataset('output_std', data=output_fea_std)
 
-    norms_h5 = os.path.join(h5_file_dir, 'norms.h5')
-    with h5py.File(norms_h5, 'w') as h5_file:
-        h5_file.create_dataset('input_mean', data=input_fea_mean)
-        h5_file.create_dataset('input_std', data=input_fea_std)
-        h5_file.create_dataset('output_mean', data=output_fea_mean)
-        h5_file.create_dataset('output_std', data=output_fea_std)
-
-    weights_h5 = os.path.join(h5_file_dir, 'weights.h5')
-    model.save(weights_h5)
+        weights_h5 = os.path.join(h5_file_dir, 'weights.h5')
+        model.save(weights_h5)

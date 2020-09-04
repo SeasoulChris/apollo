@@ -192,7 +192,7 @@ class SampleSet(BasePipeline):
         else:
             target_prefix = os.path.join(INTER_FOLDER, job_owner, 'forward', job_id)
             GEAR = 1
-        our_storage = self.partner_storage() or self.our_storage()
+        our_storage = self.our_storage()
         target_dir = our_storage.abs_path(target_prefix)
         logging.info('target_dir %s' % target_dir)
 
