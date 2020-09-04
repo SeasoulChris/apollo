@@ -31,6 +31,9 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
         frame = proto_utils.get_pb_from_bin_file(
             frame_file_path, learning_data_pb2.LearningDataFrame())
 
+        if 'NO_TURN' not in frame_file_path:
+            return self.dumpresult(frame, frame_file_path)
+
         past_trajectory_length = len(frame.adc_trajectory_point) \
             if len(frame.adc_trajectory_point) < self.max_past_history_len \
             else self.max_past_history_len
@@ -105,13 +108,7 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
             path_point.y = perturbated_future_trajectory[i, 1]
             path_point.theta = perturbated_future_trajectory[i, 2]
 
-        dst_file_path = frame_file_path.replace(self.src_dir , self.output_dir)
-        file_name = os.path.basename(frame_file_path)
-        dst_file_path = os.path.join(
-            os.path.dirname(dst_file_path), file_name + '.synthesized.bin')
-        file_utils.makedirs(os.path.dirname(dst_file_path))
-
-        proto_utils.write_pb_to_bin_file(frame, dst_file_path)
+        dst_file_path = self.dumpresult(frame, frame_file_path)
 
         if self.is_dumping_txt:
             output_txt_name = dst_file_path.replace('.bin', '') + '.txt'
@@ -125,6 +122,17 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
                                             perturbated_past_trajectory,
                                             perturbated_future_trajectory,
                                             perturbate_point_idx)
+
+        return dst_file_path
+
+    def dumpresult(self, frame, frame_file_path):
+        dst_file_path = frame_file_path.replace(self.src_dir, self.output_dir)
+        file_name = os.path.basename(frame_file_path)
+        dst_file_path = os.path.join(
+            os.path.dirname(dst_file_path), file_name + '.synthesized.bin')
+        file_utils.makedirs(os.path.dirname(dst_file_path))
+
+        proto_utils.write_pb_to_bin_file(frame, dst_file_path)
 
         return dst_file_path
 

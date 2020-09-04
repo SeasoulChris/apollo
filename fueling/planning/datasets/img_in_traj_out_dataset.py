@@ -338,7 +338,9 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
                                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
 
         logging.info('Processing directory: {}'.format(data_dir))
-        self.instances = file_utils.list_files(data_dir)
+        self.instances = list(filter(lambda frame_path:
+                                     'all_is_synthesized' not in frame_path,
+                                     file_utils.list_files(data_dir)))
 
         self.total_num_data_pt = len(self.instances)
 
