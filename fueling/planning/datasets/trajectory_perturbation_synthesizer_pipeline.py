@@ -105,17 +105,20 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
             path_point.y = perturbated_future_trajectory[i, 1]
             path_point.theta = perturbated_future_trajectory[i, 2]
 
+        dst_file_path = frame_file_path.replace(self.src_dir , self.output_dir)
         file_name = os.path.basename(frame_file_path)
-        output_file_name = os.path.join(
-            self.output_dir, file_name + '.synthesized.bin')
-        proto_utils.write_pb_to_bin_file(frame, output_file_name)
+        dst_file_path = os.path.join(
+            os.path.dirname(dst_file_path), file_name + '.synthesized.bin')
+        file_utils.makedirs(os.path.dirname(dst_file_path))
+
+        proto_utils.write_pb_to_bin_file(frame, dst_file_path)
 
         if self.is_dumping_txt:
-            output_txt_name = output_file_name.replace('.bin', '') + '.txt'
+            output_txt_name = dst_file_path.replace('.bin', '') + '.txt'
             proto_utils.write_pb_to_text_file(frame, output_txt_name)
 
         if self.is_dumping_img:
-            output_fig_name = output_file_name.replace('.bin', '') + '.png'
+            output_fig_name = dst_file_path.replace('.bin', '') + '.png'
             synthesizer.visualize_for_debug(output_fig_name,
                                             past_trajectory,
                                             future_trajectory,
@@ -123,7 +126,7 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
                                             perturbated_future_trajectory,
                                             perturbate_point_idx)
 
-        return output_file_name
+        return dst_file_path
 
     def run(self):
         self.src_dir = self.FLAGS.get('src_dir')
