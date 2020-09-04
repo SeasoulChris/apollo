@@ -475,8 +475,8 @@ def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map
     elif model_type == "kinematic_cnn_lstm":
         model = TrajectoryImitationKinematicConstrainedCNNLSTM(pred_horizon=10,
                                                                max_abs_steering_angle=0.52,
-                                                               max_acceleration=2,
-                                                               max_deceleration=-4,
+                                                               max_acceleration=4,
+                                                               max_deceleration=-6,
                                                                wheel_base=2.8448,
                                                                delta_t=0.2)
         test_dataset = TrajectoryImitationCNNLSTMDataset(test_set_folder,
