@@ -187,7 +187,8 @@ def valid_dataloader(valid_loader, model, loss, epoch, visualizer=None, analyzer
             analyzer.process(X, y, pred)
 
     valid_mean_loss = np.mean(loss_history)
-    visualizer.add_scalar("Valid Loss/val mean loss(every epoch)", valid_mean_loss, epoch - 1)
+    if visualizer is not None:
+        visualizer.add_scalar("Valid Loss/val mean loss(every epoch)", valid_mean_loss, epoch - 1)
 
     logging.info('Validation loss: {}.'.format(valid_mean_loss))
     logging.info('Validation accuracy = {}'.format(np.mean(loss_info_history)))
