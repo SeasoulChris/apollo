@@ -78,18 +78,18 @@ class ImageRepresentationLoss():
             [batch_size, 1], device=pred_points.device)
         is_turning_weight[is_turning] = self.is_turning_weight
 
-        weighted_pos_reg_loss = is_turning * is_synthesized_weight * self.pos_reg_loss_weight \
-            * torch.mean(nn.MSELoss(reduction='none')(
+        weighted_pos_reg_loss = is_turning_weight * is_synthesized_weight \
+            * self.pos_reg_loss_weight * torch.mean(nn.MSELoss(reduction='none')(
                 pred_points, true_points), dim=1, keepdim=True) \
             if self.pos_reg_loss_weight != 0 else torch.zeros(1, device=y_pred[0].device)
 
-        weighted_box_loss = is_turning * is_synthesized_weight * self.box_loss_weight \
-            * torch.mean(nn.BCELoss(reduction='none')(
+        weighted_box_loss = is_turning_weight * is_synthesized_weight \
+            * self.box_loss_weight * torch.mean(nn.BCELoss(reduction='none')(
                 pred_boxs, true_boxs), dim=1, keepdim=True) \
             if self.box_loss_weight != 0 else torch.zeros(1, device=y_pred[0].device)
 
-        weighted_pos_dist_loss = is_turning * is_synthesized_weight * self.pos_dist_loss_weight \
-            * torch.mean(nn.BCELoss(reduction='none')(
+        weighted_pos_dist_loss = is_turning_weight * is_synthesized_weight \
+            * self.pos_dist_loss_weight * torch.mean(nn.BCELoss(reduction='none')(
                 pred_pos_dists, true_pos_dists), dim=1, keepdim=True) \
             if self.pos_dist_loss_weight != 0 else torch.zeros(1, device=y_pred[0].device)
 
