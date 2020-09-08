@@ -60,6 +60,23 @@ py_proto_library(
 )
 
 proto_library(
+    name = "prediction_obstacle_proto",
+    srcs = ["prediction_obstacle.proto"],
+    deps = [
+        ":header_proto",
+        ":perception_obstacle_proto",
+    ],
+)
+
+py_proto_library(
+    name = "prediction_obstacle_py_pb2",
+    deps = [
+        ":header_py_pb2",
+        ":prediction_obstacle_proto",
+    ],
+)
+
+proto_library(
     name = "localization_raw_imu_proto",
     srcs = ["localization_raw_imu.proto"],
 )

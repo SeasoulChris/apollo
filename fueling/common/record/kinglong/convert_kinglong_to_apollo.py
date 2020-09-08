@@ -16,8 +16,8 @@ class ConvertKinglongToApollo(BasePipeline):
     """Convert Kinglong record to Apollo pipeline."""
 
     def run(self):
-        origin_prefix = 'kinglong/data_20200226/'
-        target_prefix = 'modules/prediction/kinglong/'
+        origin_prefix = 'modules/prediction/kinglong_january/'
+        target_prefix = 'modules/prediction/kinglong_benchmark/records/'
 
         record_files = (
             # RDD(file), start with origin_prefix

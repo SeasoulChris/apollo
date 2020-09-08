@@ -36,11 +36,14 @@ class AudioSaver(BasePipeline):
         self.frames = [b"" for _ in range(6)]
         reader = record_utils.read_record(
             [record_utils.MICROPHONE_CHANNEL])
+        parsed_microphone = False
         for msg in reader(record):
             if msg.topic == record_utils.MICROPHONE_CHANNEL:
                 audio = record_utils.message_to_proto(msg)
                 self.parse(audio)
-        self.dump_to_wave(record)
+                parsed_microphone = True
+        if parsed_microphone:
+            self.dump_to_wave(record)
 
     def dump_to_wave(self, record):
         """Save frame to file.wave"""

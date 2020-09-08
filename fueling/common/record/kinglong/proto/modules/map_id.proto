@@ -1,0 +1,7 @@
+syntax = "proto2";
+package fueling.common.record.kinglong.proto.modules;
+
+// Global unique ids for all objects (include lanes, junctions, overlaps, etc).
+message Id {
+  optional bytes id = 1;
+}
