@@ -111,6 +111,29 @@ class OpenserviceRegression(object):
         }
         return self.request_openservice(job_type, job_flags)
 
+    def submit_dynamic_modeling(self):
+        """submit dynamic modeling job"""
+        job_type = 'DYNAMIC_MODELING'
+        input_data_path = 'test/openservice-regression/DynamicModeling/input'
+        output_data_path = 'test/openservice-regression/DynamicModeling/output'
+        job_flags = {
+            'input_data_path': input_data_path,
+            'output_data_path': output_data_path,
+            'is_backward': False,
+        }
+        return self.request_openservice(job_type, job_flags)
+
+    def submit_control_auto_tuning(self):
+        """submit control auto-tuning job"""
+        job_type = 'CONTROL_AUTO_TUNING'
+        # for control auto-tuning job, the input path setting needs to specify the file name
+        input_data_path = (
+            'test/openservice-regression/ControlAutoTuning/input/mrac_tuner_param_config.pb.txt')
+        job_flags = {
+            'input_data_path': input_data_path,
+        }
+        return self.request_openservice(job_type, job_flags)
+
 
 if __name__ == '__main__':
     openservice = OpenserviceRegression()
@@ -118,7 +141,9 @@ if __name__ == '__main__':
                     'submit_sensor_calibration',
                     'submit_vehicle_calibration',
                     'submit_control_profiling',
-                    'submit_open_space_planner_profiling']
+                    'submit_open_space_planner_profiling',
+                    'submit_dynamic_modeling',
+                    'submit_control_auto_tuning']
     error_label = False
     job_info = df(lambda: df(lambda: ''))
     submited_cnt = 0
