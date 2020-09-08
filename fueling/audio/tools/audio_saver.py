@@ -64,7 +64,7 @@ class AudioSaver(BasePipeline):
         logging.info(chmod_cmd)
         file_name = os.path.basename(os.path.normpath(dir_path))
         for idx, data in enumerate(self.frames):
-            if idx != 2:
+            if idx < 1 or idx > 4:
                 continue
             file_path = os.path.join(
                 output_end_dir, "{}_channel_{}.wav".format(file_name, idx))
@@ -102,7 +102,7 @@ class AudioSaver(BasePipeline):
         os.system(chmod_cmd)
         logging.info(chmod_cmd)
         for idx, data in enumerate(self.frames):
-            if idx != 2:
+            if idx < 1 or idx > 4:
                 continue
             file_path = os.path.join(
                 output_end_dir, "{}_channel_{}.wav".format(record_base, idx))
