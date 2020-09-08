@@ -106,20 +106,27 @@ class ImageRepresentationLoss():
             * torch.mean(pred_boxs * true_onrouting_mask, dim=1, keepdim=True) \
             if self.onrouting_loss_weight != 0 else torch.zeros(1, device=y_pred[0].device)
 
-        if self.losswise_focal_loss or self.batchwise_focal_loss:
-            logging.info("original_weighted_pos_reg_loss is {}, "
-                         "original_weighted_box_loss is {},"
-                         "original_weighted_pos_dist_loss is {}, "
-                         "original_weighted_collision_loss is {}, "
-                         "original_weighted_offroad_loss is {}, "
-                         "original_weighted_onrouting_loss is {}".
-                         format(
-                             torch.mean(weighted_pos_reg_loss),
-                             torch.mean(weighted_box_loss),
-                             torch.mean(weighted_pos_dist_loss),
-                             torch.mean(weighted_collision_loss),
-                             torch.mean(weighted_offroad_loss),
-                             torch.mean(weighted_onrouting_loss)))
+        losses = dict()
+        losses["weighted_pos_reg_loss"] = torch.mean(weighted_pos_reg_loss)
+        losses["weighted_box_loss"] = torch.mean(weighted_box_loss)
+        losses["weighted_pos_dist_loss"] = torch.mean(weighted_pos_dist_loss)
+        losses["weighted_collision_loss"] = torch.mean(weighted_collision_loss)
+        losses["weighted_offroad_loss"] = torch.mean(weighted_offroad_loss)
+        losses["weighted_onrouting_loss"] = torch.mean(weighted_onrouting_loss)
+
+        logging.info("weighted_pos_reg_loss is {}, "
+                     "weighted_box_loss is {},"
+                     "weighted_pos_dist_loss is {}, "
+                     "weighted_collision_loss is {}, "
+                     "weighted_offroad_loss is {}, "
+                     "weighted_onrouting_loss is {}".
+                     format(
+                         torch.mean(weighted_pos_reg_loss),
+                         torch.mean(weighted_box_loss),
+                         torch.mean(weighted_pos_dist_loss),
+                         torch.mean(weighted_collision_loss),
+                         torch.mean(weighted_offroad_loss),
+                         torch.mean(weighted_onrouting_loss)))
 
         if self.losswise_focal_loss:
             total_loss = torch.zeros((batch_size, 1), device=y_pred[0].device)\
@@ -221,42 +228,29 @@ class ImageRepresentationLoss():
                 ** self.focal_loss_gamma * weighted_onrouting_loss \
                 if self.onrouting_loss_weight != 0 else torch.zeros(1, device=y_pred[0].device)
 
-        weighted_pos_reg_loss = torch.mean(weighted_pos_reg_loss)
-        weighted_box_loss = torch.mean(weighted_box_loss)
-        weighted_pos_dist_loss = torch.mean(weighted_pos_dist_loss)
-        weighted_collision_loss = torch.mean(weighted_collision_loss)
-        weighted_offroad_loss = torch.mean(weighted_offroad_loss)
-        weighted_onrouting_loss = torch.mean(weighted_onrouting_loss)
-
-        logging.info("weighted_pos_reg_loss is {}, weighted_box_loss is {},"
-                     "weighted_pos_dist_loss is {}, weighted_collision_loss is {}, "
-                     "weighted_offroad_loss is {}, weighted_onrouting_loss is {}".
-                     format(
-                         weighted_pos_reg_loss,
-                         weighted_box_loss,
-                         weighted_pos_dist_loss,
-                         weighted_collision_loss,
-                         weighted_offroad_loss,
-                         weighted_onrouting_loss))
+        if self.losswise_focal_loss or self.batchwise_focal_loss:
+            logging.info("focal_weighted_pos_reg_loss is {}, focal_weighted_box_loss is {},"
+                         "focal_weighted_pos_dist_loss is {}, focal_weighted_collision_loss is {}, "
+                         "focal_weighted_offroad_loss is {}, focal_weighted_onrouting_loss is {}".
+                         format(
+                             torch.mean(weighted_pos_reg_loss),
+                             torch.mean(weighted_box_loss),
+                             torch.mean(weighted_pos_dist_loss),
+                             torch.mean(weighted_collision_loss),
+                             torch.mean(weighted_offroad_loss),
+                             torch.mean(weighted_onrouting_loss)))
 
         imitation_dropout = False
         if dropout and self.imitation_dropout:
             imitation_dropout = self.imitation_dropout
 
-        losses = dict()
-        losses["weighted_pos_reg_loss"] = weighted_pos_reg_loss
-        losses["weighted_box_loss"] = weighted_box_loss
-        losses["weighted_pos_dist_loss"] = weighted_pos_dist_loss
-        losses["weighted_collision_loss"] = weighted_collision_loss
-        losses["weighted_offroad_loss"] = weighted_offroad_loss
-        losses["weighted_onrouting_loss"] = weighted_onrouting_loss
         losses["total_loss"] = (0 if imitation_dropout and torch.rand(1) > 0.5 else 1) * \
-            (weighted_pos_reg_loss
-             + weighted_box_loss
-             + weighted_pos_dist_loss) + \
-            weighted_collision_loss + \
-            weighted_offroad_loss + \
-            weighted_onrouting_loss
+            (torch.mean(weighted_pos_reg_loss)
+             + torch.mean(weighted_box_loss)
+             + torch.mean(weighted_pos_dist_loss)) \
+            + torch.mean(weighted_collision_loss) \
+            + torch.mean(weighted_offroad_loss) \
+            + torch.mean(weighted_onrouting_loss)
 
         return losses
 
