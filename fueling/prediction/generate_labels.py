@@ -17,6 +17,8 @@ class GenerateLabels(BasePipeline):
     """Records to GenerateLabels proto pipeline."""
     def __init__(self):
         super(GenerateLabels, self).__init__()
+        self.is_on_cloud = context_utils.is_cloud()
+        self.if_error = False
 
     def run(self):
         input_path = self.FLAGS.get('input_path')
@@ -39,10 +41,15 @@ class GenerateLabels(BasePipeline):
 
         self.run_internal(todo_bin_files)
 
-        if self.FLAGS.get('show_job_details'):
+        if self.is_on_cloud:
             job_id = (self.FLAGS.get('job_id') if self.is_partner_job() else
                       self.FLAGS.get('job_id')[:4])
             JobUtils(job_id).save_job_progress(20)
+            if self.if_error:
+                error_text = 'Failed to generate labels.'
+                JobUtils(job_id).save_job_failure_code('E603')
+                JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                     error_text, False)
 
     def run_internal(self, bin_files_rdd):
         """Run the pipeline with given arguments."""
@@ -54,8 +61,7 @@ class GenerateLabels(BasePipeline):
             return
         logging.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
-    @staticmethod
-    def process_file(src_file):
+    def process_file(self, src_file):
         """Call prediction python code to generate labels."""
         label_gen = LabelGenerator()
         try:
@@ -68,6 +74,7 @@ class GenerateLabels(BasePipeline):
             return 1
         except BaseException:
             logging.error('Failed to process {}'.format(src_file))
+            self.if_error = True
         return 0
 
 

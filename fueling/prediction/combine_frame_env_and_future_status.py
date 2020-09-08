@@ -40,6 +40,7 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
     '''Records to feature proto pipeline.'''
     def __init__(self):
         super(CombineFrameEnvAndFutureStatus, self).__init__()
+        self.is_on_cloud = context_utils.is_cloud()
 
     def run(self):
         input_path = self.FLAGS.get('input_path')
@@ -52,7 +53,7 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
 
         self.run_internal(frame_env_dir)
 
-        if self.FLAGS.get('show_job_details'):
+        if self.is_on_cloud:
             job_id = (self.FLAGS.get('job_id') if self.is_partner_job() else
                       self.FLAGS.get('job_id')[:4])
             JobUtils(job_id).save_job_progress(40)

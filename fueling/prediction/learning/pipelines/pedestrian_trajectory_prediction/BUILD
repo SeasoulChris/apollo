@@ -62,6 +62,7 @@ py_binary(
     deps = [
         ":pedestrian_trajectory_dataset_cloud",
         "//fueling/common:base_pipeline",
+        "//fueling/common:context_utils",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:job_utils",

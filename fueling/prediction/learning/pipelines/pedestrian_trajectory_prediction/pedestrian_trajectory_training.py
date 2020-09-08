@@ -7,6 +7,7 @@ import time
 import torch
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.context_utils as context_utils
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 from fueling.common.job_utils import JobUtils
@@ -21,6 +22,7 @@ from fueling.prediction.learning.models.semantic_map_model.semantic_map_model \
 class PedestrianTraining(BasePipeline):
     def __init__(self):
         super(PedestrianTraining, self).__init__()
+        self.is_on_cloud = context_utils.is_cloud()
 
     def run(self):
         self.input_path = self.FLAGS.get('input_path')
@@ -32,7 +34,7 @@ class PedestrianTraining(BasePipeline):
         self.to_rdd(range(1)).foreach(lambda instance: self.train(instance, self.data_dir))
         logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
 
-        if self.FLAGS.get('show_job_details'):
+        if self.is_on_cloud:
             job_id = (self.FLAGS.get('job_id') if self.is_partner_job() else
                       self.FLAGS.get('job_id')[:4])
             JobUtils(job_id).save_job_progress(100)

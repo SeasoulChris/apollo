@@ -13,6 +13,8 @@ class FrameEnv(BasePipeline):
     """Records to FrameEnv proto pipeline."""
     def __init__(self):
         super(FrameEnv, self).__init__()
+        self.is_on_cloud = context_utils.is_cloud()
+        self.if_error = False
 
     def run(self):
         self.input_path = self.FLAGS.get('input_path')
@@ -29,10 +31,15 @@ class FrameEnv(BasePipeline):
             .distinct())
         self.run_internal(records_dir, self.origin_prefix, self.target_prefix)
 
-        if self.FLAGS.get('show_job_details'):
+        if self.is_on_cloud:
             job_id = (self.FLAGS.get('job_id') if self.is_partner_job() else
                       self.FLAGS.get('job_id')[:4])
             JobUtils(job_id).save_job_progress(30)
+            if self.if_error:
+                error_text = 'Failed to dump frame env proto from record files.'
+                JobUtils(job_id).save_job_failure_code('E603')
+                JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                     error_text, False)
 
     def run_internal(self, records_dir_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
@@ -50,8 +57,7 @@ class FrameEnv(BasePipeline):
             .cache())
         logging.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
-    @staticmethod
-    def process_dir(record_dir, target_dir, map_name):
+    def process_dir(self, record_dir, target_dir, map_name):
         """Call prediction C++ code."""
         additional_ld_path = "/usr/local/miniconda/envs/fuel/lib/"
         command = (
@@ -63,6 +69,7 @@ class FrameEnv(BasePipeline):
             return 1
         else:
             logging.error('Failed to process {} to {}'.format(record_dir, target_dir))
+            self.if_error = True
         return 0
 
     def get_map_dir_by_path(self, path):

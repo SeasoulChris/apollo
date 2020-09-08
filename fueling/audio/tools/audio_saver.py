@@ -28,7 +28,7 @@ class AudioSaver(BasePipeline):
         # logging.info("Save to {}".format(output_dir))
         self.to_rdd(
             self.our_storage().list_files(flags.FLAGS.record_folder)).filter(
-                record_utils.is_record_file).map(os.path.dirname).foreach(
+                record_utils.is_record_file).map(os.path.dirname).distinct().foreach(
                     lambda dir_path: self.save_to_wave_for_dir(dir_path))
 
     def save_to_wave_for_dir(self, dir_path):
