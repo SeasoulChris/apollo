@@ -336,9 +336,10 @@ def save_model_torch_script(model, likelihood, test_features, file_name):
         os.makedirs(file_dir)
     wrapped_model = MeanVarModelWrapper(model, likelihood)
     with gpytorch.settings.trace_mode(), torch.no_grad():
-        _ = wrapped_model(test_features)  # Compute cache
+        pred = wrapped_model(test_features)  # Compute cache
         traced_model = torch.jit.trace(wrapped_model, test_features, check_trace=False)
         logging.info(f'saving model: {file_name}')
+        logging.debug(f'pred is: {pred}')
     traced_model.save(file_name)
 
 
