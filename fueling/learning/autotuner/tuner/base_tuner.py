@@ -16,6 +16,7 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.common.sanity_check import AutotunerSanityCheck
+from fueling.learning.autotuner.proto.dynamic_model_info_pb2 import DynamicModel
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
 import fueling.common.context_utils as context_utils
 import fueling.common.email_utils as email_utils
@@ -69,6 +70,19 @@ class BaseTuner(BasePipeline):
         # Upload the autotuner parameter configuration / target module configuration
         self.tuner_param_config_pb, self.algorithm_conf_pb = self.read_configs(self.conf_class)
 
+        # Set up default scenarios if needed
+        if not self.tuner_param_config_pb.scenarios.id:
+            self.tuner_param_config_pb.scenarios.id[:] = DEFAULT_SCENARIOS
+        print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
+
+        # Set default dynamic model if needed
+        model_name = DynamicModel.Name(self.tuner_param_config_pb.dynamic_model)
+        if model_name == 'PERFECT_CONTROL':
+            # PERFECT_CONTROL is the default value set by proto.
+            # As this field isn't set, use OWN_MODEL instead.
+            logging.info('No dynamic model specified. Set to OWN_MODEL')
+            self.tuner_param_config_pb.dynamic_model = DynamicModel.OWN_MODEL
+
         # Set up bounded region or desired constant value of parameter space
         self.pbounds = {}
         self.pconstants = {}
@@ -81,11 +95,6 @@ class BaseTuner(BasePipeline):
                 self.pbounds.update({parameter.parameter_name: (parameter.min, parameter.max)})
             else:
                 self.pconstants.update({parameter.parameter_name: parameter.constant})
-
-        # Set up scenarios
-        if not self.tuner_param_config_pb.scenarios.id:
-            self.tuner_param_config_pb.scenarios.id[:] = DEFAULT_SCENARIOS
-        print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
 
         # Set up autotuner optimization process parameters
         self.n_iter = tuner_parameters.n_iter
@@ -150,7 +159,6 @@ class BaseTuner(BasePipeline):
 
     def init_cost_client(self):
         config = self.tuner_param_config_pb
-
         self.cost_client = CostComputationClient(
             flags.FLAGS.cost_computation_service_url,
             config.git_info,

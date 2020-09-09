@@ -186,6 +186,12 @@ class AutotunerSanityCheck():
     def check_dynamic_model(self):
         try:
             model_name = DynamicModel.Name(self.config_pb.dynamic_model)
+            if model_name == 'PERFECT_CONTROL':
+                # PERFECT_CONTROL is the default value set by proto.
+                # As this field isn't set, use OWN_MODEL instead.
+                logging.info('No dynamic model specified. Set to OWN_MODEL')
+                self.config_pb.dynamic_model = DynamicModel.OWN_MODEL
+                model_name = 'OWN_MODEL'
 
             # Default repo is apollo's master, which can be used for other dynamic models
             if model_name == 'OWN_MODEL':
@@ -210,7 +216,7 @@ class AutotunerSanityCheck():
             logging.error(error)
             self.job_utils.save_job_failure_code('E102')
             self.job_utils.save_job_failure_detail(
-                f'Invalid dynamic model "{self.config_pb.dynamic_model}"')
+                f'Invalid dynamic model "{model_name}"')
             return False
 
     def check(self):

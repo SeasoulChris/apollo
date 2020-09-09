@@ -46,6 +46,7 @@ py_library(
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/learning/autotuner/client:cost_computation_client",
+        "//fueling/learning/autotuner/proto:dynamic_model_info_py_pb2",
     ],
 )
 
