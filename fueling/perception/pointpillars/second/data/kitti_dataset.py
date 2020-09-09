@@ -5,8 +5,8 @@ import numpy as np
 
 from fueling.perception.pointpillars.second.core import box_np_ops
 from fueling.perception.pointpillars.second.data import kitti_common as kitti
-from fueling.perception.pointpillars.second.utils.eval import get_official_eval_result
 from fueling.perception.pointpillars.second.data.dataset import Dataset, register_dataset
+from fueling.perception.pointpillars.second.utils.eval import get_official_eval_result
 from fueling.perception.pointpillars.second.utils.progress_bar import progress_bar_iter as prog_bar
 import fueling.common.logging as logging
 

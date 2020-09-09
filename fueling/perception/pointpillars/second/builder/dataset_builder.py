@@ -22,17 +22,18 @@ Detection configuration framework, they should define their own builder function
 that wraps the build function.
 """
 
-from fueling.perception.pointpillars.second.protos import input_reader_pb2
+import numpy as np
+
+from fueling.perception.pointpillars.second.core import box_np_ops
 from fueling.perception.pointpillars.second.data.dataset import get_dataset_class
 from fueling.perception.pointpillars.second.data.preprocess import prep_pointcloud
-from fueling.perception.pointpillars.second.core import box_np_ops
-import numpy as np
+from fueling.perception.pointpillars.second.protos import input_reader_pb2
 from fueling.perception.pointpillars.second.builder import dbsampler_builder
-from functools import partial
 from fueling.perception.pointpillars.second.utils.config_tool import get_downsample_factor
+from functools import partial
+import fueling.common.logging as logging
 import fueling.perception.pointpillars.second.data.kitti_dataset
 import fueling.perception.pointpillars.second.data.nuscenes_dataset
-import fueling.common.logging as logging
 
 
 def build(input_reader_config,

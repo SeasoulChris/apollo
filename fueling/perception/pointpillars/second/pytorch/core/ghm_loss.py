@@ -11,9 +11,10 @@ Licensed under the MIT License (see LICENSE for details)
 Written by Buyu Li
 """
 
+import torch
+
 from fueling.perception.pointpillars.second.pytorch.core.losses import (
     Loss, _sigmoid_cross_entropy_with_logits)
-import torch
 import fueling.common.logging as logging
 
 

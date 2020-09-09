@@ -4,10 +4,10 @@ import time
 import cv2 as cv
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.perception.pointpillars.second.create_data import nuscenes_data_prep
-import fueling.common.logging as logging
 from fueling.common.job_utils import JobUtils
+from fueling.perception.pointpillars.second.create_data import nuscenes_data_prep
 import fueling.common.context_utils as context_utils
+import fueling.common.logging as logging
 
 
 class CreateDataNuscenes(BasePipeline):

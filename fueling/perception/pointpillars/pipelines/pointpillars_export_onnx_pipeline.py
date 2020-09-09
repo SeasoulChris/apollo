@@ -4,12 +4,12 @@ import os
 import time
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.perception.pointpillars.second.pytorch.trans_onnx import trans_onnx
-import fueling.common.logging as logging
 from fueling.common.job_utils import JobUtils
+from fueling.perception.pointpillars.second.pytorch.trans_onnx import trans_onnx
 import fueling.common.context_utils as context_utils
-import fueling.common.file_utils as file_utils
 import fueling.common.email_utils as email_utils
+import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 
 
 class PointPillarsExportOnnx(BasePipeline):
@@ -54,6 +54,7 @@ class PointPillarsExportOnnx(BasePipeline):
         receivers = email_utils.PREDICTION_TEAM
         if os.environ.get('PARTNER_EMAIL'):
             receivers.append(os.environ.get('PARTNER_EMAIL'))
+            receivers += email_utils.D_KIT_TEAM + email_utils.DATA_TEAM
         email_utils.send_email_info(title, content, receivers)
 
 

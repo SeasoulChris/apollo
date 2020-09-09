@@ -1,15 +1,14 @@
-import json
+from google.protobuf import text_format
 from pathlib import Path
+import json
+import numpy as np
 import pickle
-import time
+import psutil
 import re
 import shutil
-import numpy as np
+import time
 import torch
-from google.protobuf import text_format
 
-from fueling.perception.pointpillars.torchplus.train.checkpoint import (
-    restore, save_models, try_restore_latest_checkpoints)
 from fueling.perception.pointpillars.second.builder import target_assigner_builder, voxel_builder
 from fueling.perception.pointpillars.second.data.preprocess import (
     merge_second_batch, merge_second_batch_multigpu)
@@ -19,7 +18,8 @@ from fueling.perception.pointpillars.second.pytorch.builder import (
     lr_scheduler_builder, optimizer_builder, second_builder)
 from fueling.perception.pointpillars.second.utils.log_tool import SimpleModelLog
 from fueling.perception.pointpillars.second.utils.progress_bar import ProgressBar
-import psutil
+from fueling.perception.pointpillars.torchplus.train.checkpoint import (
+    restore, save_models, try_restore_latest_checkpoints)
 import fueling.common.logging as logging
 
 

@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
+import cv2 as cv
 import os
 import sys
 import time
 import torch
-import cv2 as cv
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.logging as logging
-from fueling.perception.pointpillars.second.pytorch.train import train
 from fueling.common.job_utils import JobUtils
+from fueling.perception.pointpillars.second.pytorch.train import train
 import fueling.common.context_utils as context_utils
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 
 
 class PointPillarsTraining(BasePipeline):

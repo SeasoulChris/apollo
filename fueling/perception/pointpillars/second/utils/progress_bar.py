@@ -1,8 +1,8 @@
 import enum
 import math
+import numpy as np
 import time
 
-import numpy as np
 import fueling.common.logging as logging
 
 

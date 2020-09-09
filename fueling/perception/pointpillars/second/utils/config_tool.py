@@ -2,8 +2,9 @@
 # some functions should be only used for KITTI dataset.
 
 from google.protobuf import text_format
-from fueling.perception.pointpillars.second.protos import pipeline_pb2
 import numpy as np
+
+from fueling.perception.pointpillars.second.protos import pipeline_pb2
 import fueling.common.logging as logging
 
 

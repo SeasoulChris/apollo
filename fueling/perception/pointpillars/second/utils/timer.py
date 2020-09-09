@@ -1,5 +1,6 @@
-import time
 from contextlib import contextmanager
+import time
+
 import fueling.common.logging as logging
 
 

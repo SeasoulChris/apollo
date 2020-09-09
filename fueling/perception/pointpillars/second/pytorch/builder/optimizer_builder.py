@@ -16,8 +16,8 @@
 
 from functools import partial
 
-import torch
 from torch import nn
+import torch
 
 from fueling.perception.pointpillars.torchplus.train.fastai_optim import OptimWrapper
 import fueling.common.logging as logging

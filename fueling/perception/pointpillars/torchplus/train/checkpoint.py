@@ -1,9 +1,9 @@
+from pathlib import Path
 import json
 import os
 import signal
-from pathlib import Path
-
 import torch
+
 import fueling.common.logging as logging
 
 
