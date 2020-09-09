@@ -1,10 +1,10 @@
 import json
-import logging
 import os
 import signal
 from pathlib import Path
 
 import torch
+import fueling.common.logging as logging
 
 
 class DelayedKeyboardInterrupt(object):
@@ -14,7 +14,7 @@ class DelayedKeyboardInterrupt(object):
 
     def handler(self, sig, frame):
         self.signal_received = (sig, frame)
-        logging.debug('SIGINT received. Delaying KeyboardInterrupt.')
+        logging.info('SIGINT received. Delaying KeyboardInterrupt.')
 
     def __exit__(self, type, value, traceback):
         signal.signal(signal.SIGINT, self.old_handler)
@@ -121,7 +121,7 @@ def restore(ckpt_path, model, map_func=None):
     if map_func is not None:
         map_func(state_dict)
     model.load_state_dict(state_dict)
-    print("Restoring parameters from {}".format(ckpt_path))
+    logging.info("Restoring parameters from {}".format(ckpt_path))
 
 
 def _check_model_names(models):

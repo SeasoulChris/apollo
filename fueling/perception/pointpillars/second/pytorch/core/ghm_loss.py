@@ -14,6 +14,7 @@ Written by Buyu Li
 from fueling.perception.pointpillars.second.pytorch.core.losses import (
     Loss, _sigmoid_cross_entropy_with_logits)
 import torch
+import fueling.common.logging as logging
 
 
 class GHMCLoss(Loss):
@@ -67,7 +68,7 @@ class GHMCLoss(Loss):
                     weights_ghm[inds] = num_examples / num_in_bin
                 num_valid_bins += 1
         if self.count <= 0:
-            print("GHMC loss bins:", num_bins)
+            logging.info("GHMC loss bins:{}".format(num_bins))
             self.count = 50
         if num_valid_bins > 0:
             weights_ghm = weights_ghm / num_valid_bins

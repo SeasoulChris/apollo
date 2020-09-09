@@ -4,6 +4,7 @@
 from google.protobuf import text_format
 from fueling.perception.pointpillars.second.protos import pipeline_pb2
 import numpy as np
+import fueling.common.logging as logging
 
 
 def change_detection_range(model_config, new_range):
@@ -55,4 +56,4 @@ if __name__ == "__main__":
 
     change_detection_range(config, [-50, -50, 50, 50])
     proto_str = text_format.MessageToString(config, indent=2)
-    print(proto_str)
+    logging.info("{}".format(proto_str))

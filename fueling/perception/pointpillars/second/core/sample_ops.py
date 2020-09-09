@@ -7,6 +7,7 @@ import numpy as np
 from fueling.perception.pointpillars.second.core import box_np_ops
 from fueling.perception.pointpillars.second.core import preprocess as prep
 from fueling.perception.pointpillars.second.utils.check import shape_mergeable
+import fueling.common.logging as logging
 
 
 class DataBaseSamplerV2:
@@ -17,13 +18,13 @@ class DataBaseSamplerV2:
                  rate=1.0,
                  global_rot_range=None):
         for k, v in db_infos.items():
-            print(f"load {len(v)} {k} database infos")
+            logging.info('load {} {} database infos'.format(len(v), k))
 
         if db_prepor is not None:
             db_infos = db_prepor(db_infos)
-            print("After filter database:")
+            logging.info("After filter database:")
             for k, v in db_infos.items():
-                print(f"load {len(v)} {k} database infos")
+                logging.info('load {} {} database infos'.format(len(v), k))
 
         self.db_infos = db_infos
         self._rate = rate
@@ -71,7 +72,7 @@ class DataBaseSamplerV2:
                             info_dict[group_name] += 1
                         else:
                             info_dict[group_name] = 1
-                print(info_dict)
+                logging.info('{}'.format(info_dict))
 
         self._sampler_dict = {}
         for k, v in self._group_db_infos.items():

@@ -20,6 +20,7 @@ import torch
 from torch import nn
 
 from fueling.perception.pointpillars.torchplus.train.fastai_optim import OptimWrapper
+import fueling.common.logging as logging
 
 
 def children(m: nn.Module):
@@ -87,7 +88,7 @@ def build(optimizer_config, net, name=None, mixed=False, loss_scale=512.0):
         wd=config.weight_decay,
         true_wd=optimizer_config.fixed_weight_decay,
         bn_wd=True)
-    print(hasattr(optimizer, "_amp_stash"), '_amp_stash')
+    logging.info("{}, {}".format(hasattr(optimizer, "_amp_stash"), '_amp_stash'))
     if optimizer is None:
         raise ValueError('Optimizer %s not supported.' % optimizer_type)
 

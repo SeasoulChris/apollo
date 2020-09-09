@@ -8,6 +8,7 @@ from pathlib import Path
 
 
 from fueling.perception.pointpillars.second.utils.find import find_cuda, find_cuda_device_arch
+import fueling.common.logging as logging
 
 
 class Gpp:
@@ -244,7 +245,7 @@ def compile_func(cmd, code_folder, compiler):
         shell = cmd.shell(compiler=compiler)
     else:
         shell = cmd.shell()
-    print(shell)
+    logging.info("{}".format(shell))
     cwd = None
     if code_folder is not None:
         cwd = str(code_folder)

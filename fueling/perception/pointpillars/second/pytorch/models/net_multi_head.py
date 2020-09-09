@@ -308,8 +308,8 @@ class ApolloVoxelNetNuscenesMultiHead(VoxelNet):
                          name)
         assert self._num_class == 10
         assert isinstance(self.rpn, rpn.RPNNoHead)
-        self.small_classes = ["pedestrian", "traffic_cone", "bicycle", "motorcycle", "barrier"]
-        self.large_classes = ["car", "truck", "trailer", "bus", "construction_vehicle"]
+        self.small_classes = ["Pedestrian", "traffic_cone", "Cyclist", "motorcycle", "barrier"]
+        self.large_classes = ["Car", "Truck", "trailer", "bus", "construction_vehicle"]
         small_num_anchor_loc = sum(
             [self.target_assigner.num_anchors_per_location_class(c) for c in self.small_classes])
         large_num_anchor_loc = sum(

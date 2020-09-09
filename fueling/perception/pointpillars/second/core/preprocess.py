@@ -7,6 +7,7 @@ import numpy as np
 from fueling.perception.pointpillars.second.core import box_np_ops
 from fueling.perception.pointpillars.second.core.geometry import (points_in_convex_polygon_3d_jit,
                                                                   points_in_convex_polygon_jit)
+import fueling.common.logging as logging
 
 
 class BatchSampler:
@@ -39,7 +40,7 @@ class BatchSampler:
 
     def _reset(self):
         if self._name is not None:
-            print("reset", self._name)
+            logging.info("reset:{}".format(self._name))
         if self._shuffle:
             np.random.shuffle(self._indices)
         self._idx = 0
@@ -62,7 +63,7 @@ class DataBasePreprocessing:
 class DBFilterByDifficulty(DataBasePreprocessing):
     def __init__(self, removed_difficulties):
         self._removed_difficulties = removed_difficulties
-        print(removed_difficulties)
+        logging.info("removed_difficulties:{}".format(removed_difficulties))
 
     def _preprocess(self, db_infos):
         new_db_infos = {}
@@ -77,7 +78,7 @@ class DBFilterByDifficulty(DataBasePreprocessing):
 class DBFilterByMinNumPoint(DataBasePreprocessing):
     def __init__(self, min_gt_point_dict):
         self._min_gt_point_dict = min_gt_point_dict
-        print(min_gt_point_dict)
+        logging.info("min_gt_point_dict:{}".format(min_gt_point_dict))
 
     def _preprocess(self, db_infos):
         for name, min_num in self._min_gt_point_dict.items():
@@ -898,5 +899,5 @@ if __name__ == "__main__":
     bboxes = np.array([[0.0, 0.0, 0.5, 0.5], [0.2, 0.2, 0.6, 0.6],
                        [0.7, 0.7, 0.9, 0.9], [0.55, 0.55, 0.8, 0.8]])
     bbox_corners = box_np_ops.minmax_to_corner_2d(bboxes)
-    print(bbox_corners.shape)
-    print(box_collision_test(bbox_corners, bbox_corners))
+    logging.info('{}'.format(bbox_corners.shape))
+    logging.info('{}'.format(box_collision_test(bbox_corners, bbox_corners)))

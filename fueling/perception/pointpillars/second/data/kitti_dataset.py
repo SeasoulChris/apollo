@@ -5,15 +5,15 @@ import numpy as np
 
 from fueling.perception.pointpillars.second.core import box_np_ops
 from fueling.perception.pointpillars.second.data import kitti_common as kitti
-from fueling.perception.pointpillars.second.utils.eval import (
-    get_coco_eval_result, get_official_eval_result)
+from fueling.perception.pointpillars.second.utils.eval import get_official_eval_result
 from fueling.perception.pointpillars.second.data.dataset import Dataset, register_dataset
 from fueling.perception.pointpillars.second.utils.progress_bar import progress_bar_iter as prog_bar
+import fueling.common.logging as logging
 
 
 @register_dataset
 class KittiDataset(Dataset):
-    NumPointFeatures = 4
+    NumPointFeatures = 5
 
     def __init__(self,
                  root_path,
@@ -27,7 +27,7 @@ class KittiDataset(Dataset):
         self._root_path = Path(root_path)
         self._kitti_infos = infos
 
-        print("remain number of infos:", len(self._kitti_infos))
+        logging.info('remain number of infos:{}'.format(len(self._kitti_infos)))
         self._class_names = class_names
         self._prep_func = prep_func
 
@@ -140,21 +140,23 @@ class KittiDataset(Dataset):
             self._class_names,
             z_axis=z_axis,
             z_center=z_center)
+        '''
         result_coco = get_coco_eval_result(
             gt_annos,
             dt_annos,
             self._class_names,
             z_axis=z_axis,
             z_center=z_center)
+        '''
         return {
             "results": {
                 "official": result_official_dict["result"],
-                "coco": result_coco["result"],
+                # "coco": result_coco["result"],
             },
             "detail": {
                 "eval.kitti": {
                     "official": result_official_dict["detail"],
-                    "coco": result_coco["detail"]
+                    # "coco": result_coco["detail"]
                 }
             },
         }
@@ -200,7 +202,11 @@ class KittiDataset(Dataset):
             velo_path = velo_reduced_path
         points = np.fromfile(
             str(velo_path), dtype=np.float32,
-            count=-1).reshape([-1, self.NumPointFeatures])
+            count=-1).reshape([-1, self.NumPointFeatures - 1])
+
+        ts_delta = np.zeros((points.shape[0], 1), dtype=np.float32)
+        points = np.concatenate((points, ts_delta), -1)
+
         res["lidar"]["points"] = points
         image_info = info["image"]
         image_path = image_info['image_path']
@@ -342,11 +348,12 @@ def _calculate_num_points_in_gt(data_path,
 
 def create_kitti_info_file(data_path, save_path=None, relative_path=True):
     imageset_folder = Path(__file__).resolve().parent / "ImageSets"
+    logging.info('imageset_folder:{}'.format(imageset_folder))
     train_img_ids = _read_imageset_file(str(imageset_folder / "train.txt"))
     val_img_ids = _read_imageset_file(str(imageset_folder / "val.txt"))
     test_img_ids = _read_imageset_file(str(imageset_folder / "test.txt"))
 
-    print("Generate info. this may take several minutes.")
+    logging.info('Generate info. this may take several minutes.')
     if save_path is None:
         save_path = Path(data_path)
     else:
@@ -360,7 +367,7 @@ def create_kitti_info_file(data_path, save_path=None, relative_path=True):
         relative_path=relative_path)
     _calculate_num_points_in_gt(data_path, kitti_infos_train, relative_path)
     filename = save_path / 'kitti_infos_train.pkl'
-    print(f"Kitti info train file is saved to {filename}")
+    logging.info('Kitti info train file is saved to {}'.format(filename))
     with open(filename, 'wb') as f:
         pickle.dump(kitti_infos_train, f)
     kitti_infos_val = kitti.get_kitti_image_info(
@@ -372,11 +379,11 @@ def create_kitti_info_file(data_path, save_path=None, relative_path=True):
         relative_path=relative_path)
     _calculate_num_points_in_gt(data_path, kitti_infos_val, relative_path)
     filename = save_path / 'kitti_infos_val.pkl'
-    print(f"Kitti info val file is saved to {filename}")
+    logging.info('Kitti info val file is saved to {}'.format(filename))
     with open(filename, 'wb') as f:
         pickle.dump(kitti_infos_val, f)
     filename = save_path / 'kitti_infos_trainval.pkl'
-    print(f"Kitti info trainval file is saved to {filename}")
+    logging.info('Kitti info trainval file is saved to {}'.format(filename))
     with open(filename, 'wb') as f:
         pickle.dump(kitti_infos_train + kitti_infos_val, f)
 
@@ -389,7 +396,7 @@ def create_kitti_info_file(data_path, save_path=None, relative_path=True):
         image_ids=test_img_ids,
         relative_path=relative_path)
     filename = save_path / 'kitti_infos_test.pkl'
-    print(f"Kitti info test file is saved to {filename}")
+    logging.info('Kitti info test file is saved to {}'.format(filename))
     with open(filename, 'wb') as f:
         pickle.dump(kitti_infos_test, f)
 

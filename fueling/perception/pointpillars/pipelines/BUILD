@@ -7,6 +7,9 @@ py_binary(
     srcs = [
         "pointpillars_training_pipeline.py",
     ],
+    data = [
+        "//testdata/perception/pointpillars:pointpillars_pretrained_model",
+    ],
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:job_utils",
@@ -27,12 +30,28 @@ py_binary(
 )
 
 py_binary(
+    name = "create_kitti_data_pipeline",
+    srcs = [
+        "create_kitti_data_pipeline.py",
+    ],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:job_utils",
+        "//fueling/perception/pointpillars/second:create_data",
+    ],
+)
+
+py_binary(
     name = "pointpillars_export_onnx_pipeline",
     srcs = [
         "pointpillars_export_onnx_pipeline.py",
     ],
+    data = [
+        "//testdata/perception/pointpillars:pointpillars_pretrained_model",
+    ],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:email_utils",
         "//fueling/common:job_utils",
         "//fueling/perception/pointpillars/second/pytorch:trans_onnx",
     ],
@@ -44,7 +63,7 @@ py_binary(
         "pointpillars_end_to_end_pipeline.py",
     ],
     deps = [
-        ":create_data_pipeline",
+        ":create_kitti_data_pipeline",
         ":pointpillars_export_onnx_pipeline",
         ":pointpillars_training_pipeline",
     ],

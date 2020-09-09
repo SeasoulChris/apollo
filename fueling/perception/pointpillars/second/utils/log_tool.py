@@ -1,6 +1,7 @@
 from pathlib import Path
 from tensorboardX import SummaryWriter
 import json
+import fueling.common.logging as logging
 
 
 def _flat_nested_json_dict(json_dict, flatted, sep=".", start=""):
@@ -91,7 +92,7 @@ class SimpleModelLog:
     def log_text(self, text, step, tag="regular log"):
         """This function only add text to log.txt and tensorboard texts
         """
-        print(text)
+        logging.info("{}".format(text))
         print(text, file=self.log_file)
         if step > self._text_current_gstep and self._text_current_gstep != -1:
             total_text = '\n'.join(self._tb_texts)
@@ -117,6 +118,6 @@ class SimpleModelLog:
                     continue
                 self.summary_writter.add_scalar(k, v, step)
         log_str = metric_to_str(metrics)
-        print(log_str)
+        logging.info("{}".format(log_str))
         print(log_str, file=self.log_file)
         print(json.dumps(metrics), file=self.log_mjson_file)

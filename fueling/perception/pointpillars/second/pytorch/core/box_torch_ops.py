@@ -3,8 +3,8 @@ import torch
 from torch import stack as tstack
 
 from fueling.perception.pointpillars.torchplus.tools import torch_to_np_dtype
-from fueling.perception.pointpillars.second.core.non_max_suppression.nms_gpu import nms_gpu_cc
-from fueling.perception.pointpillars.second.core.non_max_suppression.nms_cpu import rotate_nms_cc
+from fueling.perception.pointpillars.second.core.non_max_suppression.nms_cpu import (
+    rotate_nms_cc, nms_cc)
 
 
 def second_box_encode(boxes, anchors, encode_angle_to_vector=False, smooth_dim=False):
@@ -433,12 +433,13 @@ def nms(bboxes,
         pre_max_size = min(num_keeped_scores, pre_max_size)
         scores, indices = torch.topk(scores, k=pre_max_size)
         bboxes = bboxes[indices]
+
     dets = torch.cat([bboxes, scores.unsqueeze(-1)], dim=1)
     dets_np = dets.data.cpu().numpy()
     if len(dets_np) == 0:
         keep = np.array([], dtype=np.int64)
     else:
-        ret = np.array(nms_gpu_cc(dets_np, iou_threshold), dtype=np.int64)
+        ret = np.array(nms_cc(dets_np, iou_threshold), dtype=np.int64)
         keep = ret[:post_max_size]
     if keep.shape[0] == 0:
         return torch.zeros([0]).long().to(bboxes.device)

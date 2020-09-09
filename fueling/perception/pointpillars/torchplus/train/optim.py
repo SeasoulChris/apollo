@@ -1,4 +1,5 @@
 import torch
+import fueling.common.logging as logging
 
 
 required = object()
@@ -91,7 +92,7 @@ class MixedPrecisionWrapper(object):
                 if self.grad_scale is None or self.auto_scale is False:
                     raise ValueError("nan/inf detected but auto_scale disabled.")
                 self.grad_scale *= self.dec_factor
-                print('scale decay to {}'.format(self.grad_scale))
+                logging.info("scale decay to {}".format(self.grad_scale))
                 return
         if self.auto_scale is True:
             self.stable_iter_count += 1

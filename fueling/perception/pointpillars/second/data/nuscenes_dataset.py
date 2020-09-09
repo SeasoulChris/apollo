@@ -11,6 +11,7 @@ from fueling.perception.pointpillars.second.utils.eval import (
     get_coco_eval_result, get_official_eval_result)
 from fueling.perception.pointpillars.second.utils.progress_bar import progress_bar_iter as prog_bar
 from fueling.perception.pointpillars.second.data.nusc_eval import eval_main
+import fueling.common.logging as logging
 
 
 @register_dataset
@@ -210,11 +211,9 @@ class NuScenesDataset(Dataset):
         I use num_lidar_pts to set easy, mod, hard.
         easy: num>15, mod: num>7, hard: num>0.
         """
-        print("++++++++NuScenes KITTI unofficial Evaluation:")
-        print(
-            "++++++++easy: num_lidar_pts>15, mod: num_lidar_pts>7, hard: num_lidar_pts>0"
-        )
-        print("++++++++The bbox AP is invalid. Don't forget to ignore it.")
+        logging.info('++++++++NuScenes KITTI unofficial Evaluation:')
+        logging.info("++++++++easy: num_lidar_pts>15, mod: num_lidar_pts>7, hard: num_lidar_pts>0")
+        logging.info("++++++++The bbox AP is invalid. Don't forget to ignore it.")
         class_names = self._class_names
         gt_annos = self.ground_truth_annotations
         if gt_annos is None:
@@ -560,7 +559,7 @@ def _lidar_nusc_box_to_global(info, boxes, classes, eval_version="cvpr_2019"):
 
 def _get_available_scenes(nusc):
     available_scenes = []
-    print("total scene num:", len(nusc.scene))
+    logging.info("total scene num:{}".format(len(nusc.scene)))
     for scene in nusc.scene:
         scene_token = scene["token"]
         scene_rec = nusc.get('scene', scene_token)
@@ -582,7 +581,7 @@ def _get_available_scenes(nusc):
         if scene_not_exist:
             continue
         available_scenes.append(scene)
-    print("exist scene num:", len(available_scenes))
+    logging.info("exist scene num:{}".format(len(available_scenes)))
     return available_scenes
 
 
@@ -741,17 +740,16 @@ def create_nuscenes_infos(root_path, version="v1.0-trainval", max_sweeps=10):
         for s in val_scenes
     ])
     if test:
-        print(f"test scene: {len(train_scenes)}")
+        logging.info("test scene: {}".format(len(train_scenes)))
     else:
-        print(
-            f"train scene: {len(train_scenes)}, val scene: {len(val_scenes)}")
+        logging.info("train scene: {},val scene: {}".format(len(train_scenes), len(val_scenes)))
     train_nusc_infos, val_nusc_infos = _fill_trainval_infos(
         nusc, train_scenes, val_scenes, test, max_sweeps=max_sweeps)
     metadata = {
         "version": version,
     }
     if test:
-        print(f"test sample: {len(train_nusc_infos)}")
+        logging.info("test sample: {}".format(len(train_nusc_infos)))
         data = {
             "infos": train_nusc_infos,
             "metadata": metadata,
@@ -759,9 +757,10 @@ def create_nuscenes_infos(root_path, version="v1.0-trainval", max_sweeps=10):
         with open(root_path / "infos_test.pkl", 'wb') as f:
             pickle.dump(data, f)
     else:
-        print(
-            f"train sample: {len(train_nusc_infos)}, val sample: {len(val_nusc_infos)}"
-        )
+        logging.info(
+            "train sample: {},val sample: {}".format(
+                len(train_nusc_infos),
+                len(val_nusc_infos)))
         data = {
             "infos": train_nusc_infos,
             "metadata": metadata,
@@ -823,7 +822,7 @@ def get_all_box_mean(info_path):
         result = get_box_mean(info_path, k)
         details[k] = result["detail"]
         res[k] = result["box3d"]
-    print(json.dumps(res, indent=2))
+    logging.info("{}".format(json.dumps(res, indent=2)))
     return details
 
 
@@ -887,8 +886,8 @@ def cluster_trailer_box(info_path, class_name="bus"):
     labels = db.labels_
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
     n_noise_ = list(labels).count(-1)
-    print(n_clusters_, n_noise_)
-    print(trailer_dims)
+    logging.info("{}, {}".format(n_clusters_, n_noise_))
+    logging.info("{}".format(trailer_dims))
 
     import matplotlib.pyplot as plt
     unique_labels = set(labels)

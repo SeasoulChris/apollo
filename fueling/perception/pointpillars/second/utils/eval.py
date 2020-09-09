@@ -3,8 +3,7 @@ import io as sysio
 import numba
 import numpy as np
 
-from fueling.perception.pointpillars.second.core.non_max_suppression.nms_gpu import (
-    rotate_iou_gpu_eval)
+from fueling.perception.pointpillars.second.core import box_np_ops
 
 
 @numba.jit
@@ -30,10 +29,17 @@ def get_thresholds(scores: np.ndarray, num_gt, num_sample_pts=41):
 
 
 def clean_data(gt_anno, dt_anno, current_class, difficulty):
+    '''
     CLASS_NAMES = [
         'car', 'pedestrian', 'cyclist', 'van', 'person_sitting', 'car',
         'tractor', 'trailer'
     ]
+    '''
+    CLASS_NAMES = [
+        'bus', 'Car', 'construction_vehicle', 'trailer', 'Truck', 'barrier',
+        'Cyclist', 'motorcycle', 'Pedestrian', 'traffic_cone'
+    ]
+
     MIN_HEIGHT = [40, 25, 25]
     MAX_OCCLUSION = [0, 1, 2]
     MAX_TRUNCATION = [0.15, 0.3, 0.5]
@@ -119,12 +125,11 @@ def image_box_overlap(boxes, query_boxes, criterion=-1):
 
 
 def bev_box_overlap(boxes, qboxes, criterion=-1, stable=True):
-    # riou = box_np_ops.riou_cc(boxes, qboxes)
-    riou = rotate_iou_gpu_eval(boxes, qboxes, criterion)
+    riou = box_np_ops.riou_cc(boxes, qboxes)
+    # riou = rotate_iou_gpu_eval(boxes, qboxes, criterion)
     return riou
 
 
-@numba.jit(nopython=True, parallel=True)
 def box3d_overlap_kernel(boxes,
                          qboxes,
                          rinc,
@@ -171,8 +176,8 @@ def box3d_overlap(boxes, qboxes, criterion=-1, z_axis=1, z_center=1.0):
     bev_axes.pop(z_axis)
 
     # t = time.time()
-    # rinc = box_np_ops.rinter_cc(boxes[:, bev_axes], qboxes[:, bev_axes])
-    rinc = rotate_iou_gpu_eval(boxes[:, bev_axes], qboxes[:, bev_axes], 2)
+    rinc = box_np_ops.rinter_cc(boxes[:, bev_axes], qboxes[:, bev_axes])
+    # rinc = rotate_iou_gpu_eval(boxes[:, bev_axes], qboxes[:, bev_axes], 2)
     # print("riou time", time.time() - t)
     box3d_overlap_kernel(boxes, qboxes, rinc, criterion, z_axis, z_center)
     return rinc
@@ -739,13 +744,14 @@ def get_official_eval_result(gt_annos,
         gt_annos and dt_annos must contains following keys:
         [bbox, location, dimensions, rotation_y, score]
     """
-    overlap_mod = np.array([[0.7, 0.5, 0.5, 0.7, 0.5, 0.7, 0.7, 0.7],
-                            [0.7, 0.5, 0.5, 0.7, 0.5, 0.7, 0.7, 0.7],
-                            [0.7, 0.5, 0.5, 0.7, 0.5, 0.7, 0.7, 0.7]])
-    overlap_easy = np.array([[0.7, 0.5, 0.5, 0.7, 0.5, 0.5, 0.5, 0.5],
-                             [0.5, 0.25, 0.25, 0.5, 0.25, 0.5, 0.5, 0.5],
-                             [0.5, 0.25, 0.25, 0.5, 0.25, 0.5, 0.5, 0.5]])
+    overlap_mod = np.array([[0.7, 0.7, 0.7, 0.7, 0.7, 0.5, 0.5, 0.5, 0.5, 0.5],
+                            [0.7, 0.7, 0.7, 0.7, 0.7, 0.5, 0.5, 0.5, 0.5, 0.5],
+                            [0.7, 0.7, 0.7, 0.7, 0.7, 0.5, 0.5, 0.5, 0.5, 0.5]])
+    overlap_easy = np.array([[0.7, 0.7, 0.7, 0.7, 0.7, 0.5, 0.5, 0.5, 0.5, 0.5],
+                             [0.5, 0.5, 0.5, 0.5, 0.5, 0.25, 0.25, 0.25, 0.25, 0.25],
+                             [0.5, 0.5, 0.5, 0.5, 0.5, 0.25, 0.25, 0.25, 0.25, 0.25]])
     min_overlaps = np.stack([overlap_mod, overlap_easy], axis=0)  # [2, 3, 5]
+    '''
     class_to_name = {
         0: 'Car',
         1: 'Pedestrian',
@@ -755,6 +761,19 @@ def get_official_eval_result(gt_annos,
         5: 'car',
         6: 'tractor',
         7: 'trailer',
+    }
+    '''
+    class_to_name = {
+        0: 'bus',
+        1: 'Car',
+        2: 'construction_vehicle',
+        3: 'trailer',
+        4: 'Truck',
+        5: 'barrier',
+        6: 'Cyclist',
+        7: 'motorcycle',
+        8: 'Pedestrian',
+        9: 'traffic_cone',
     }
     name_to_class = {v: n for n, v in class_to_name.items()}
     if not isinstance(current_classes, (list, tuple)):

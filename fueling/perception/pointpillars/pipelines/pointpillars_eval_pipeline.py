@@ -22,6 +22,7 @@ class PointPillarsEvaluate(BasePipeline):
 
     def eval(self, instance_id):
         """Run Evaluate task"""
+
         cv.setNumThreads(0)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
@@ -34,12 +35,15 @@ class PointPillarsEvaluate(BasePipeline):
         logging.info('cuda version: {}'.format(torch.version.cuda))
         logging.info('gpu device count: {}'.format(torch.cuda.device_count()))
 
+        config_path = '/fuel/fueling/perception/pointpillars/second/'\
+                      'configs/all.pp.mhead.cloud.config'
+        model_dir = '/fuel/fueling/perception/pointpillars/second/models'
+        ckpt_path = '/fuel/fueling/perception/pointpillars/second/models/voxelnet-5865.tckpt'
+        '''
         config_path = '/mnt/bos/modules/perception/pointpillars/config/all.pp.mhead.config'
-        # model_dir = '/fuel/fueling/perception/pointpillars/second/cloud_models'
         model_dir = '/mnt/bos/modules/perception/pointpillars/models/'
-        # ckpt_path='/fuel/fueling/perception/pointpillars/second/cloud_models/voxelnet-5865.tckpt'
         ckpt_path = '/mnt/bos/modules/perception/pointpillars/models/voxelnet-5865.tckpt'
-
+        '''
         evaluate(config_path, model_dir, ckpt_path=ckpt_path, measure_time=True, batch_size=1)
 
 

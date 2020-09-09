@@ -6,6 +6,7 @@ import numpy as np
 from fueling.perception.pointpillars.second.core import box_np_ops
 from fueling.perception.pointpillars.second.data.dataset import get_dataset_class
 from fueling.perception.pointpillars.second.utils.progress_bar import progress_bar_iter as prog_bar
+import fueling.common.logging as logging
 
 
 def create_groundtruth_database(dataset_class_name,
@@ -92,7 +93,7 @@ def create_groundtruth_database(dataset_class_name,
                 else:
                     all_db_infos[names[i]] = [db_info]
     for k, v in all_db_infos.items():
-        print(f"load {len(v)} {k} database infos")
+        logging.info('load {} {} database infos'.format(len(v), k))
 
     with open(db_info_save_path, 'wb') as f:
         pickle.dump(all_db_infos, f)
@@ -182,7 +183,7 @@ def create_groundtruth_database_parallel(dataset_class_name,
                 else:
                     all_db_infos[names[i]] = [db_info]
     for k, v in all_db_infos.items():
-        print(f"load {len(v)} {k} database infos")
+        logging.info('load {} {} database infos'.format(len(v), k))
 
     with open(db_info_save_path, 'wb') as f:
         pickle.dump(all_db_infos, f)

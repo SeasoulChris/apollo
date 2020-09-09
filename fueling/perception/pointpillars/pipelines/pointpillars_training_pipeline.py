@@ -3,7 +3,6 @@
 import os
 import sys
 import time
-from absl import flags
 import torch
 import cv2 as cv
 
@@ -11,17 +10,8 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 from fueling.perception.pointpillars.second.pytorch.train import train
 from fueling.common.job_utils import JobUtils
-
-flags.DEFINE_string('config_path',
-                    '/mnt/bos/modules/perception/pointpillars/config/all.pp.mhead.config',
-                    'training config file')
-flags.DEFINE_string('pretrained_path',
-                    '/mnt/bos/modules/perception/pointpillars/'
-                    'pretrained_model/voxelnet-58650.tckpt',
-                    'finetune pertrained model path')
-flags.DEFINE_string('model_dir',
-                    '/mnt/bos/modules/perception/pointpillars/models/',
-                    'training models saved dir')
+import fueling.common.context_utils as context_utils
+import fueling.common.file_utils as file_utils
 
 
 class PointPillarsTraining(BasePipeline):
@@ -29,14 +19,20 @@ class PointPillarsTraining(BasePipeline):
 
     def run(self):
         """Run."""
+        job_id = self.FLAGS.get('job_id')
+        output_data_path = self.FLAGS.get('output_data_path')
+        object_storage = self.partner_storage() or self.our_storage()
+        self.output_data_path = object_storage.abs_path(output_data_path)
+
         time_start = time.time()
         self.to_rdd(range(1)).foreach(self.training)
         logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
+        if context_utils.is_cloud():
+            JobUtils(job_id).save_job_progress(90)
 
     def training(self, instance_id):
         """Run training task"""
         cv.setNumThreads(0)
-        os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
         logging.info('nvidia-smi on Executor {}:'.format(instance_id))
         if os.system('nvidia-smi') != 0:
@@ -47,13 +43,14 @@ class PointPillarsTraining(BasePipeline):
         logging.info('cuda version: {}'.format(torch.version.cuda))
         logging.info('gpu device count: {}'.format(torch.cuda.device_count()))
 
-        job_id = self.FLAGS.get('job_id')
-        config_path = self.FLAGS.get('config_path')
-        model_dir = self.FLAGS.get('model_dir')
-        pretrained_path = self.FLAGS.get('pretrained_path')
+        config_path = file_utils.fuel_path(
+            'testdata/perception/pointpillars/'
+            'all.pp.mhead.cloud.config')
+        model_dir = os.path.join(self.output_data_path, 'models/')
+        pretrained_path = file_utils.fuel_path(
+            'testdata/perception/pointpillars/voxelnet-nuscenes-58650.tckpt')
 
-        train(config_path, model_dir, job_id, pretrained_path=pretrained_path)
-        JobUtils(job_id).save_job_progress(90)
+        train(config_path, model_dir, pretrained_path=pretrained_path)
 
 
 if __name__ == '__main__':

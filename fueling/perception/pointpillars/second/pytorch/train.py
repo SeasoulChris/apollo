@@ -19,8 +19,8 @@ from fueling.perception.pointpillars.second.pytorch.builder import (
     lr_scheduler_builder, optimizer_builder, second_builder)
 from fueling.perception.pointpillars.second.utils.log_tool import SimpleModelLog
 from fueling.perception.pointpillars.second.utils.progress_bar import ProgressBar
-from fueling.common.job_utils import JobUtils
 import psutil
+import fueling.common.logging as logging
 
 
 def example_convert_to_torch(example, dtype=torch.float32,
@@ -71,7 +71,7 @@ def build_network(model_cfg, measure_time=False, export_onnx=False):
 def _worker_init_fn(worker_id):
     time_seed = np.array(time.time(), dtype=np.int32)
     np.random.seed(time_seed + worker_id)
-    print(f"WORKER {worker_id} seed:", np.random.get_state()[1][0])
+    logging.info('WORKER {} seed:{}'.format(worker_id, np.random.get_state()[1][0]))
 
 
 def freeze_params(params: dict, include: str = None, exclude: str = None):
@@ -133,7 +133,6 @@ def filter_param_dict(state_dict: dict, include: str = None, exclude: str = None
 
 def train(config_path,
           model_dir,
-          job_id,
           result_path=None,
           create_folder=False,
           display_step=50,
@@ -154,7 +153,7 @@ def train(config_path,
 
     model_dir = Path(model_dir)
     if not resume and model_dir.exists():
-        print("model dir exists and not resume, net will delete the dir")
+        logging.warning('model dir exists and not resume, net will delete the dir')
         shutil.rmtree(str(model_dir))
 
     model_dir.mkdir(parents=True, exist_ok=True)
@@ -188,7 +187,7 @@ def train(config_path,
     #     net.convert_norm_to_float(net)
     target_assigner = net.target_assigner
     voxel_generator = net.voxel_generator
-    print("num parameters:", len(list(net.parameters())))
+    logging.info('num parameters:{}'.format(len(list(net.parameters()))))
     try_restore_latest_checkpoints(model_dir, [net])
     if pretrained_path is not None:
         model_dict = net.state_dict()
@@ -198,9 +197,9 @@ def train(config_path,
         for k, v in pretrained_dict.items():
             if k in model_dict and v.shape == model_dict[k].shape:
                 new_pretrained_dict[k] = v
-        print("Load pretrained parameters:")
+        logging.info("Load pretrained parameters:")
         for k, v in new_pretrained_dict.items():
-            print(k, v.shape)
+            logging.info("{}, {}".format(k, v.shape))
         model_dict.update(new_pretrained_dict)
         net.load_state_dict(model_dict)
         freeze_params_v2(dict(net.named_parameters()), freeze_include, freeze_exclude)
@@ -242,7 +241,7 @@ def train(config_path,
 
     if multi_gpu:
         num_gpu = torch.cuda.device_count()
-        print(f"MULTI-GPU: use {num_gpu} gpu")
+        logging.info("MULTI-GPU: use {} gpu".format(num_gpu))
         collate_fn = merge_second_batch_multigpu
     else:
         collate_fn = merge_second_batch
@@ -349,7 +348,7 @@ def train(config_path,
                 if global_step % display_step == 0:
                     if measure_time:
                         for name, val in net.get_avg_time_dict().items():
-                            print(f"avg {name} time = {val * 1000:.3f} ms")
+                            logging.info("avg {} time = {:.3f} ms".format(name, val * 1000))
 
                     loc_loss_elem = [
                         float(loc_loss[:, :, i].sum().detach().cpu().numpy()
@@ -421,12 +420,11 @@ def train(config_path,
                 step += 1
                 if step >= total_step:
                     break
-            job_progress_num = int(80 * step / total_step) + 10
-            JobUtils(job_id).save_job_progress(job_progress_num)
+
             if step >= total_step:
                 break
     except Exception as e:
-        print(json.dumps(example["metadata"], indent=2))
+        logging.info("{}".format(json.dumps(example["metadata"], indent=2)))
         model_logging.log_text(str(e), step)
         model_logging.log_text(json.dumps(example["metadata"], indent=2), step)
         save_models(model_dir, [net, amp_optimizer],
@@ -476,7 +474,7 @@ def evaluate(config_path,
     net = build_network(model_cfg, measure_time=measure_time).to(device)
     if train_cfg.enable_mixed_precision:
         net.half()
-        print("half inference!")
+        logging.info("half inference!")
         net.metrics_to_float()
         net.convert_norm_to_float(net)
     target_assigner = net.target_assigner
@@ -512,7 +510,7 @@ def evaluate(config_path,
     result_path_step.mkdir(parents=True, exist_ok=True)
     t = time.time()
     detections = []
-    print("Generate output labels...")
+    logging.info("Generate output labels...")
     bar = ProgressBar()
     bar.start((len(eval_dataset) + batch_size - 1) // batch_size)
     prep_example_times = []
@@ -535,22 +533,22 @@ def evaluate(config_path,
             t2 = time.time()
 
     sec_per_example = len(eval_dataset) / (time.time() - t)
-    print(f'generate label finished({sec_per_example:.2f}/s). start eval:')
+    logging.info("generate label finished({:.2f}/s). start eval:".format(sec_per_example))
     if measure_time:
-        print(
-            f"avg example to torch time: {np.mean(prep_example_times) * 1000:.3f} ms"
-        )
-        print(f"avg prep time: {np.mean(prep_times) * 1000:.3f} ms")
+        logging.info(
+            "avg example to torch time: {:.3f} ms".format(
+                np.mean(prep_example_times) * 1000))
+        logging.info("avg prep time: {:.3f} ms".format(np.mean(prep_times) * 1000))
     for name, val in net.get_avg_time_dict().items():
-        print(f"avg {name} time = {val * 1000:.3f} ms")
+        logging.info("avg {} time = {:.3f} ms".format(name, val))
     with open(result_path_step / "result.pkl", 'wb') as f:
         pickle.dump(detections, f)
     result_dict = eval_dataset.dataset.evaluation(detections,
                                                   str(result_path_step))
     if result_dict is not None:
         for k, v in result_dict["results"].items():
-            print("Evaluation {}".format(k))
-            print(v)
+            logging.info("Evaluation {}".format(k))
+            logging.info("{}".format(v))
 
 
 def helper_tune_target_assigner(config_path, target_rate=None,
@@ -657,14 +655,18 @@ def helper_tune_target_assigner(config_path, target_rate=None,
         labels = example['labels']
         for i in range(1, len(classes) + 1):
             anchor_count[classes[i - 1]] += int(np.sum(labels == i))
-    print("avg voxel gene time", total_voxel_gene_time / count)
+    logging.info("avg voxel gene time {}".format(total_voxel_gene_time / count))
 
-    print(json.dumps(class_count, indent=2))
-    print(json.dumps(anchor_count, indent=2))
+    logging.info("{}".format(json.dumps(class_count, indent=2)))
+    logging.info("{}".format(json.dumps(anchor_count, indent=2)))
     if target_rate is not None:
         for ag in target_assigner._anchor_generators:
             if ag.class_name in target_rate:
-                print(ag.class_name, ag.match_threshold, ag.unmatch_threshold)
+                logging.info(
+                    "{}, {}, {}".format(
+                        ag.class_name,
+                        ag.match_threshold,
+                        ag.unmatch_threshold))
 
 
 def mcnms_parameters_search(config_path,

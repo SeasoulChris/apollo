@@ -32,6 +32,7 @@ from functools import partial
 from fueling.perception.pointpillars.second.utils.config_tool import get_downsample_factor
 import fueling.perception.pointpillars.second.data.kitti_dataset
 import fueling.perception.pointpillars.second.data.nuscenes_dataset
+import fueling.common.logging as logging
 
 
 def build(input_reader_config,
@@ -68,7 +69,7 @@ def build(input_reader_config,
     grid_size = voxel_generator.grid_size
     feature_map_size = grid_size[:2] // out_size_factor
     feature_map_size = [*feature_map_size, 1][::-1]
-    print("feature_map_size", feature_map_size)
+    logging.info("feature_map_size:{}".format(feature_map_size))
     assert all([n != '' for n in target_assigner.classes]
                ), "you must specify class_name in anchor_generators."
     dataset_cls = get_dataset_class(dataset_cfg.dataset_class_name)

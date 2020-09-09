@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+import fueling.common.logging as logging
 
 
 def _get_info_from_anaconda_info(info, split=":"):
@@ -103,7 +104,7 @@ def find_cuda_device_arch():
                         f"g++ {f.name} -o {f_path.stem}"
                         f" -I{cuda_home / 'include'} -L{cuda_home / 'lib64'} -lcudart"
                     )
-                    print(cmd)
+                    logging.info("{}".format(cmd))
                     subprocess.check_output(cmd, shell=True, cwd=f_path.parent)
                     cmd = f"./{f_path.stem}"
                     arches = subprocess.check_output(
@@ -183,7 +184,7 @@ def get_gpu_memory_usage():
             cmd = (
                 f"g++ {f.name} -o {f_path.stem} -std=c++11"
                 f" -I{cuda_home / 'include'} -L{cuda_home / 'lib64'} -lcudart")
-            print(cmd)
+            logging.info("{}".format(cmd))
             subprocess.check_output(cmd, shell=True, cwd=f_path.parent)
             cmd = f"./{f_path.stem}"
             usages = subprocess.check_output(
@@ -196,4 +197,4 @@ def get_gpu_memory_usage():
 
 
 if __name__ == "__main__":
-    print(find_cuda_device_arch())
+    logging.info("{}".format(find_cuda_device_arch()))

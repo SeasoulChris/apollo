@@ -3,6 +3,7 @@ import math
 import time
 
 import numpy as np
+import fueling.common.logging as logging
 
 
 def progress_str(val, *args, width=20, with_ptg=True):
@@ -58,7 +59,7 @@ def progress_bar_iter(task_list, width=20, with_ptg=True, step_time_average=50, 
             width=width,
             with_ptg=with_ptg)
         print(name + prog_str + '   ', end='\r')
-    print("")
+    logging.info("")
 
 
 list_bar = progress_bar_iter
@@ -87,7 +88,7 @@ def enumerate_bar(task_list, width=20, with_ptg=True, step_time_average=50, name
             width=width,
             with_ptg=with_ptg)
         print(name + prog_str + '   ', end='\r')
-    print("")
+    logging.info("")
 
 
 def max_point_str(val, max_point):
