@@ -3,6 +3,11 @@ load("@rules_python//python:defs.bzl", "py_library")
 package(default_visibility = ["//visibility:public"])
 
 py_library(
+    name = "attention_block",
+    srcs = ["attention_block.py"],
+)
+
+py_library(
     name = "differentiable_kinematic_models",
     srcs = ["differentiable_kinematic_models.py"],
 )
