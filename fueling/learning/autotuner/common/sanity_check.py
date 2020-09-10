@@ -17,6 +17,10 @@ class LocalJobUtils():
     def save_job_failure_detail(self, msg):
         logging.info(f'Failure detail: {msg}')
 
+    def get_job_info(self):
+        logging.info('No job info in local test mode')
+        return []
+
 
 class AutotunerSanityCheck():
     valid_scenarios = set([
@@ -197,18 +201,18 @@ class AutotunerSanityCheck():
             if model_name == 'OWN_MODEL':
                 if not self.config_pb.git_info.repo:
                     self.job_utils.save_job_failure_code('E101')
-                    self.job_utils.save_job_failure_detail('missing git_info.repo')
+                    self.job_utils.save_job_failure_detail('Missing git_info.repo')
                     return False
 
                 if not self.check_git_file_exists('modules/control/conf/dynamic_model_forward.bin'):
                     self.job_utils.save_job_failure_code('E103')
-                    self.job_utils.save_job_failure_detail('missing forward model')
+                    self.job_utils.save_job_failure_detail('Missing forward model')
                     return False
 
                 if not self.check_git_file_exists(
                         'modules/control/conf/dynamic_model_backward.bin'):
                     self.job_utils.save_job_failure_code('E103')
-                    self.job_utils.save_job_failure_detail('missing backward model')
+                    self.job_utils.save_job_failure_detail('Missing backward model')
                     return False
 
             return True
@@ -220,6 +224,10 @@ class AutotunerSanityCheck():
             return False
 
     def check(self):
+        def error_message(status, folder):
+            return ('Sanity_Check: Failed; \n'
+                    f'Detailed Reason: {status}; \n'
+                    f'Data Directory: {folder}.')
         check_list = [
             self.has_config_file,
             self.is_config_file_readable,
@@ -237,8 +245,13 @@ class AutotunerSanityCheck():
 
         for check_item in check_list:
             if not check_item():
+                job_info_list = self.job_utils.get_job_info()
+                if job_info_list:
+                    failure_detail = job_info_list[0]['failure_detail']
+                else:
+                    failure_detail = 'Unknown'
                 logging.info('Sanity check failed.')
-                return False
+                return error_message(failure_detail, self.config_file_path)
 
         logging.info('Sanity check passed.')
-        return True
+        return 'OK'

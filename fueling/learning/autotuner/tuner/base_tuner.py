@@ -63,8 +63,11 @@ class BaseTuner(BasePipeline):
         self.tuner_config_filename = self.object_storage.abs_path(self.FLAGS.get('input_data_path'))
 
         # Sanity check
-        if self.job_id and not AutotunerSanityCheck(
-                context_utils.is_local(), self.job_id, self.tuner_config_filename).check():
+        sanity_status = AutotunerSanityCheck(
+            context_utils.is_local(), self.job_id, self.tuner_config_filename).check()
+        if self.job_id and sanity_status != 'OK':
+            if context_utils.is_cloud() and flags.FLAGS.tuner_generate_report:
+                self.summarize_task('', sanity_status)
             raise Exception("Sanity check failed.")
 
         # Upload the autotuner parameter configuration / target module configuration
@@ -367,10 +370,16 @@ class BaseTuner(BasePipeline):
             title, email_content, receivers, attachments)
 
     def run(self):
+        # if initialize() fails, then directly exit from run()
         try:
             self.initialize()
             if context_utils.is_cloud():
                 JobUtils(self.job_id).save_job_progress(10)
+        except Exception as error:
+            logging.error(error)
+            return
+        # if optimize() fails, then save_result() and exit
+        try:
             self.optimize()
             if context_utils.is_cloud():
                 JobUtils(self.job_id).save_job_progress(95)
