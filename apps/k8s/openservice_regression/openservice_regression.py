@@ -119,7 +119,7 @@ class OpenserviceRegression(object):
         job_flags = {
             'input_data_path': input_data_path,
             'output_data_path': output_data_path,
-            'is_backward': False,
+            'is_backward': 'False',
         }
         return self.request_openservice(job_type, job_flags)
 

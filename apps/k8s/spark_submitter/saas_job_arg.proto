@@ -17,6 +17,7 @@ message SaasJobArg {
     PREDICTION_MODEL_TRAINING = 7;
     DYNAMIC_MODELING = 8;
     PERCEPTION_POINTPILLARS_TRAINING = 9;
+    CONTROL_AUTO_TUNING = 10;
   }
   optional JobType job_type = 1;
 
