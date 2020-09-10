@@ -20,6 +20,7 @@ class DumpFeatureProto(BasePipeline):
 
     def run(self):
         self.input_path = self.FLAGS.get('input_path')
+        # self.input_path = 'modules/prediction/kinglong_benchmark'
         self.origin_prefix = os.path.join(self.input_path, 'records')
         self.target_prefix = os.path.join(self.input_path, 'labels')
         self.object_storage = self.partner_storage() or self.our_storage()
@@ -155,10 +156,4 @@ class DumpFeatureProto(BasePipeline):
 
 
 if __name__ == '__main__':
-    origin_prefix = 'modules/prediction/kinglong/'
-    target_prefix = 'modules/prediction/kinglong_labels/'
-    if context_utils.is_local():
-        origin_prefix = "/fuel/kinglong_data/records/"
-        target_prefix = "/fuel/kinglong_data/labels/"
-    if context_utils.is_local():
-        DumpFeatureProto(origin_prefix, target_prefix).main()
+    DumpFeatureProto().main()

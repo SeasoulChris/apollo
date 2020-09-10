@@ -21,6 +21,7 @@ class GenerateLabels(BasePipeline):
         self.if_error = False
 
     def run(self):
+        # input_path = 'modules/prediction/kinglong_benchmark'
         input_path = self.FLAGS.get('input_path')
         self.source_prefix = os.path.join(input_path, 'labels')
         # RDD(bin_files)
@@ -79,6 +80,4 @@ class GenerateLabels(BasePipeline):
 
 
 if __name__ == '__main__':
-    source_prefix = ('/fuel/kinglong_data/labels/' if context_utils.is_local() else
-                     'modules/prediction/kinglong_labels/')
-    GenerateLabels(source_prefix).main()
+    GenerateLabels().main()

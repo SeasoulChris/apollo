@@ -18,11 +18,12 @@ class FrameEnv(BasePipeline):
 
     def run(self):
         self.input_path = self.FLAGS.get('input_path')
+        self.object_storage = self.partner_storage() or self.our_storage()
         self.origin_prefix = os.path.join(self.input_path, 'records')
         self.target_prefix = os.path.join(self.input_path, 'frame_envs')
         records_dir = (
             # RDD(file), start with origin_prefix
-            self.to_rdd(self.our_storage().list_files(self.origin_prefix))
+            self.to_rdd(self.object_storage.list_files(self.origin_prefix))
             # RDD(record_file)
             .filter(record_utils.is_record_file)
             # RDD(record_dir), with record_file inside
@@ -127,9 +128,4 @@ class FrameEnv(BasePipeline):
 
 
 if __name__ == '__main__':
-    origin_prefix = 'modules/prediction/kinglong/'
-    target_prefix = 'modules/prediction/kinglong_frame_envs/'
-    if context_utils.is_local():
-        origin_prefix = "/fuel/kinglong_data/records/"
-        target_prefix = "/fuel/kinglong_data/frame_envs/"
-    FrameEnv(origin_prefix, target_prefix).main()
+    FrameEnv().main()

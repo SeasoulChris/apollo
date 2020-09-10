@@ -168,6 +168,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:db_backed_utils",
+        "//fueling/common:job_utils",
         "//fueling/common:logging",
         "//fueling/common:mongo_utils",
         "//fueling/common:record_utils",
