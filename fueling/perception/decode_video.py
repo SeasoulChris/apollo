@@ -135,12 +135,12 @@ class DecodeVideoPipeline(BasePipeline):
         target_groups.foreach(decode_videos)
 
         # Replace video frames with the decoded images back to original records
-        # logging.info('Decoding done, now replacing original records')
-        # target_records = target_records.repartition(int(os.environ.get('APOLLO_EXECUTORS', 10)))
-        # PairRDD(target_dir, record)
-        # (target_records
-        #  .foreach(lambda target_record:
-        #           replace_images(target_record, root_dir, decoded_records_dir)))
+        logging.info('Decoding done, now replacing original records')
+        target_records = target_records.repartition(int(os.environ.get('APOLLO_EXECUTORS', 10)))
+        PairRDD(target_dir, record)
+        (target_records
+         .foreach(lambda target_record:
+                  replace_images(target_record, root_dir, decoded_records_dir)))
 
 # Helper functions
 
