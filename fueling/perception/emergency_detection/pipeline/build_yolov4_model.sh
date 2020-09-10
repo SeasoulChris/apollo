@@ -6,7 +6,7 @@ CONTEXT="${BUILD_PATH}/${BUILD_DIR}"
 echo "
 FROM alpine
 VOLUME /apollo/modules/perception/camera/lib/obstacle/detector/yolov4/
-COPY ./yolov4.pth /apollo/modules/perception/camera/lib/obstacle/detector/yolov4/
+COPY ./yolov4_1_3_416_416.onnx /apollo/modules/perception/camera/lib/obstacle/detector/yolov4/
 " > "${CONTEXT}"/Dockerfile
 
 echo "Building auto labeler volume."
