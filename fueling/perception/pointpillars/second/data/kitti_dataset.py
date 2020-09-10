@@ -347,7 +347,8 @@ def _calculate_num_points_in_gt(data_path,
 
 
 def create_kitti_info_file(data_path, save_path=None, relative_path=True):
-    imageset_folder = Path(__file__).resolve().parent / "ImageSets"
+    # imageset_folder = Path(__file__).resolve().parent / "ImageSets"
+    imageset_folder = Path(data_path)
     logging.info('imageset_folder:{}'.format(imageset_folder))
     train_img_ids = _read_imageset_file(str(imageset_folder / "train.txt"))
     val_img_ids = _read_imageset_file(str(imageset_folder / "val.txt"))

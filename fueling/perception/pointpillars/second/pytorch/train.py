@@ -8,6 +8,8 @@ import re
 import shutil
 import time
 import torch
+import os
+
 
 from fueling.perception.pointpillars.second.builder import target_assigner_builder, voxel_builder
 from fueling.perception.pointpillars.second.data.preprocess import (
@@ -133,6 +135,7 @@ def filter_param_dict(state_dict: dict, include: str = None, exclude: str = None
 
 def train(config_path,
           model_dir,
+          input_data_path,
           result_path=None,
           create_folder=False,
           display_step=50,
@@ -176,7 +179,11 @@ def train(config_path,
         f.write(proto_str)
 
     input_cfg = config.train_input_reader
+    input_cfg.dataset.kitti_info_path = os.path.join(input_data_path, 'kitti_infos_train.pkl')
+    input_cfg.dataset.kitti_root_path = input_data_path
     eval_input_cfg = config.eval_input_reader
+    eval_input_cfg.dataset.kitti_info_path = os.path.join(input_data_path, 'kitti_infos_val.pkl')
+    eval_input_cfg.dataset.kitti_root_path = input_data_path
     model_cfg = config.model.second
     train_cfg = config.train_config
 

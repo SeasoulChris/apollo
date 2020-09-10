@@ -21,8 +21,10 @@ class PointPillarsTraining(BasePipeline):
         """Run."""
         job_id = self.FLAGS.get('job_id')
         output_data_path = self.FLAGS.get('output_data_path')
+        input_data_path = self.FLAGS.get('input_data_path')
         object_storage = self.partner_storage() or self.our_storage()
         self.output_data_path = object_storage.abs_path(output_data_path)
+        self.input_data_path = object_storage.abs_path(input_data_path)
 
         time_start = time.time()
         self.to_rdd(range(1)).foreach(self.training)
@@ -50,7 +52,7 @@ class PointPillarsTraining(BasePipeline):
         pretrained_path = file_utils.fuel_path(
             'testdata/perception/pointpillars/voxelnet-nuscenes-58650.tckpt')
 
-        train(config_path, model_dir, pretrained_path=pretrained_path)
+        train(config_path, model_dir, self.input_data_path, pretrained_path=pretrained_path)
 
 
 if __name__ == '__main__':
