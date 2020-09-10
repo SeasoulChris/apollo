@@ -7,6 +7,7 @@ py_library(
     srcs = ["utils.py"],
     deps = [
         "//fueling/common:logging",
+        "//fueling/learning/autotuner/proto:dynamic_model_info_py_pb2",
     ],
 )
 
@@ -14,6 +15,7 @@ py_library(
     name = "sanity_check",
     srcs = ["sanity_check.py"],
     deps = [
+        ":utils",
         "//fueling/common:file_utils",
         "//fueling/common:job_utils",
         "//fueling/common:logging",

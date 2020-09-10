@@ -2,12 +2,12 @@ import requests
 import re
 
 from fueling.common.job_utils import JobUtils
+from fueling.learning.autotuner.proto.dynamic_model_info_pb2 import DynamicModel
+from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs, TuningModule
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
-
-from fueling.learning.autotuner.proto.dynamic_model_info_pb2 import DynamicModel
-from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs, TuningModule
+import fueling.learning.autotuner.common.utils as tuner_utils
 
 
 class LocalJobUtils():
@@ -79,21 +79,45 @@ class AutotunerSanityCheck():
             return False
 
     def check_required_fields(self):
-        if not self.config_pb.git_info.commit_id:
+        # must have either commit_id or repo
+        if not self.config_pb.git_info.commit_id and not self.config_pb.git_info.repo:
             self.job_utils.save_job_failure_code('E101')
-            self.job_utils.save_job_failure_detail(
-                'missing git_info.commit_id')
+            self.job_utils.save_job_failure_detail('Missing git_info')
             return False
 
-        param = self.config_pb.tuner_parameters
-        module_name = TuningModule.Name(param.user_tuning_module)
-        if module_name != 'CONTROL':
+        # module_name must be 'CONTROL'
+        try:
+            param = self.config_pb.tuner_parameters
+            module_name = TuningModule.Name(param.user_tuning_module)
+            if module_name != 'CONTROL':
+                self.job_utils.save_job_failure_code('E102')
+                self.job_utils.save_job_failure_detail(
+                    F'Bad tuning module "{module_name}" found')
+                return False
+        except Exception as error:
             self.job_utils.save_job_failure_code('E102')
-            self.job_utils.save_job_failure_detail(
-                F'Bad tuning module "{module_name}" found')
+            self.job_utils.save_job_failure_detail(F'Unknown tuning model found. {error}')
+            return False
+
+        # dynamic model checking
+        try:
+            DynamicModel.Name(self.config_pb.dynamic_model)
+        except Exception as error:
+            self.job_utils.save_job_failure_code('E102')
+            self.job_utils.save_job_failure_detail(F'Unknown dynamic model found. {error}')
             return False
 
         return True
+
+    def set_config_default(self):
+        try:
+            tuner_utils.set_tuner_config_default(self.config_pb)
+            return True
+        except Exception as error:
+            self.job_utils.save_job_failure_code('E100')
+            self.job_utils.save_job_failure_detail(
+                F'Unable to set default values for the given config: {error}')
+            return False
 
     def check_n_iter(self):
         if self.config_pb.tuner_parameters.n_iter > 1000:
@@ -187,51 +211,38 @@ class AutotunerSanityCheck():
 
         return True
 
-    def check_dynamic_model(self):
-        try:
-            model_name = DynamicModel.Name(self.config_pb.dynamic_model)
-            if model_name == 'PERFECT_CONTROL':
-                # PERFECT_CONTROL is the default value set by proto.
-                # As this field isn't set, use OWN_MODEL instead.
-                logging.info('No dynamic model specified. Set to OWN_MODEL')
-                self.config_pb.dynamic_model = DynamicModel.OWN_MODEL
-                model_name = 'OWN_MODEL'
+    def check_dynamic_model_bin(self):
+        model_name = DynamicModel.Name(self.config_pb.dynamic_model)
+        if model_name == 'OWN_MODEL':
+            if not self.config_pb.git_info.repo:
+                self.job_utils.save_job_failure_code('E101')
+                self.job_utils.save_job_failure_detail('Missing git_info.repo')
+                return False
 
-            # Default repo is apollo's master, which can be used for other dynamic models
-            if model_name == 'OWN_MODEL':
-                if not self.config_pb.git_info.repo:
-                    self.job_utils.save_job_failure_code('E101')
-                    self.job_utils.save_job_failure_detail('Missing git_info.repo')
-                    return False
+            if not self.check_git_file_exists('modules/control/conf/dynamic_model_forward.bin'):
+                self.job_utils.save_job_failure_code('E103')
+                self.job_utils.save_job_failure_detail('Missing forward model')
+                return False
 
-                if not self.check_git_file_exists('modules/control/conf/dynamic_model_forward.bin'):
-                    self.job_utils.save_job_failure_code('E103')
-                    self.job_utils.save_job_failure_detail('Missing forward model')
-                    return False
+            if not self.check_git_file_exists(
+                    'modules/control/conf/dynamic_model_backward.bin'):
+                self.job_utils.save_job_failure_code('E103')
+                self.job_utils.save_job_failure_detail('Missing backward model')
+                return False
 
-                if not self.check_git_file_exists(
-                        'modules/control/conf/dynamic_model_backward.bin'):
-                    self.job_utils.save_job_failure_code('E103')
-                    self.job_utils.save_job_failure_detail('Missing backward model')
-                    return False
-
-            return True
-        except Exception as error:
-            logging.error(error)
-            self.job_utils.save_job_failure_code('E102')
-            self.job_utils.save_job_failure_detail(
-                f'Invalid dynamic model "{model_name}"')
-            return False
+        return True
 
     def check(self):
         def error_message(status, folder):
             return ('Sanity_Check: Failed; \n'
                     f'Detailed Reason: {status}; \n'
                     f'Data Directory: {folder}.')
+
         check_list = [
             self.has_config_file,
             self.is_config_file_readable,
             self.check_required_fields,
+            self.set_config_default,
             self.check_n_iter,
             self.check_scenarios,
 
@@ -240,7 +251,7 @@ class AutotunerSanityCheck():
             self.check_git_repo,
             self.check_apollo_env,
             self.check_control_conf,
-            self.check_dynamic_model,
+            self.check_dynamic_model_bin,
         ]
 
         for check_item in check_list:

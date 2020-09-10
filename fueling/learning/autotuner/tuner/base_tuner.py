@@ -16,18 +16,18 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.common.sanity_check import AutotunerSanityCheck
-from fueling.learning.autotuner.proto.dynamic_model_info_pb2 import DynamicModel
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
 import fueling.common.context_utils as context_utils
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
+import fueling.learning.autotuner.common.utils as tuner_utils
 
 
 flags.DEFINE_string(
     "cost_computation_service_url",
-    "localhost:50052",
+    "costservice.autotuner.svc.cluster.local:50052",
     "URL to access the cost computation service"
 )
 flags.DEFINE_boolean(
@@ -40,8 +40,6 @@ flags.DEFINE_string(
     "",
     "Optional postfix (e.g., mrac-control) of the running_role"
 )
-
-DEFAULT_SCENARIOS = [11014, 11015, 11016, 11017, 11018, 11019, 11020]
 
 
 class BaseTuner(BasePipeline):
@@ -72,19 +70,7 @@ class BaseTuner(BasePipeline):
 
         # Upload the autotuner parameter configuration / target module configuration
         self.tuner_param_config_pb, self.algorithm_conf_pb = self.read_configs(self.conf_class)
-
-        # Set up default scenarios if needed
-        if not self.tuner_param_config_pb.scenarios.id:
-            self.tuner_param_config_pb.scenarios.id[:] = DEFAULT_SCENARIOS
-        print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
-
-        # Set default dynamic model if needed
-        model_name = DynamicModel.Name(self.tuner_param_config_pb.dynamic_model)
-        if model_name == 'PERFECT_CONTROL':
-            # PERFECT_CONTROL is the default value set by proto.
-            # As this field isn't set, use OWN_MODEL instead.
-            logging.info('No dynamic model specified. Set to OWN_MODEL')
-            self.tuner_param_config_pb.dynamic_model = DynamicModel.OWN_MODEL
+        tuner_utils.set_tuner_config_default(self.tuner_param_config_pb)
 
         # Set up bounded region or desired constant value of parameter space
         self.pbounds = {}
