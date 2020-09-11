@@ -2,8 +2,12 @@
 
 cd /apollo
 bazel build -c opt \
+    //modules/localization/msf/common/io/... \
+    //modules/localization/msf/local_pyramid_map/base_map/... \
+    //modules/localization/msf/local_pyramid_map/pyramid_map/... \
     //modules/localization/msf/local_tool/data_extraction/... \
     //modules/localization/msf/local_tool/map_creation/... \
+    //modules/localization/proto/... \
     //modules/map/tools:sim_map_generator \
     //modules/planning/pipeline/... \
     //modules/prediction/pipeline/... \

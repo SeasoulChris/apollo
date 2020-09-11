@@ -20,3 +20,4 @@ fi
 DISTDIR="/fuel/.cache/distdir"
 mkdir -p "${DISTDIR}"
 bazel build --distdir="${DISTDIR}" ${TARGET}
+bash /fuel/tools/build_apollo.sh
