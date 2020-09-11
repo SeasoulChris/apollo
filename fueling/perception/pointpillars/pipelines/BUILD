@@ -22,7 +22,7 @@ py_test(
     srcs = ["pointpillars_training_pipeline_test.py"],
     deps = [
         ":pointpillars_training_pipeline",
-    ]
+    ],
 )
 
 py_binary(
@@ -51,10 +51,10 @@ py_binary(
 
 py_test(
     name = "create_kitti_data_pipeline_test",
-    srcs = ["create_kitti_data_pipeline_test.py",],
+    srcs = ["create_kitti_data_pipeline_test.py"],
     deps = [
         ":create_kitti_data_pipeline",
-    ]
+    ],
 )
 
 py_binary(
@@ -78,7 +78,7 @@ py_test(
     srcs = ["pointpillars_export_onnx_pipeline_test.py"],
     deps = [
         ":pointpillars_export_onnx_pipeline",
-    ]
+    ],
 )
 
 py_binary(

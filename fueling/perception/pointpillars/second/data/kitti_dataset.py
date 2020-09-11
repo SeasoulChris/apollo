@@ -430,8 +430,9 @@ def _create_reduced_point_cloud(data_path,
                                                     image_info["image_shape"])
         if save_path is None:
             save_path = v_path.parent.parent / (v_path.parent.stem + "_reduced")
-            save_path.mkdir(parents=True, exist_ok=True)
-            
+            if not save_path.exists():
+                save_path.mkdir(parents=True, exist_ok=True)
+
             save_filename = v_path.parent.parent / (
                 v_path.parent.stem + "_reduced") / v_path.name
             # save_filename = str(v_path) + '_reduced'

@@ -41,7 +41,10 @@ class PointPillarsTraining(BasePipeline):
         if context_utils.is_cloud():
             JobUtils(job_id).save_job_progress(90)
             if self.if_error:
+                error_text = "Failed to training model"
                 JobUtils(job_id).save_job_failure_code('E702')
+                JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                     error_text, False)
 
     def training(self, instance_id):
         """Run training task"""

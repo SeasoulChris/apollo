@@ -14,6 +14,7 @@ import fueling.common.logging as logging
 
 class PointPillarsExportOnnx(BasePipeline):
     """Demo pipeline."""
+
     def run_test(self):
 
         config_path = '/fuel/testdata/perception/pointpillars/' \
@@ -41,7 +42,10 @@ class PointPillarsExportOnnx(BasePipeline):
             JobUtils(job_id).save_job_progress(100)
             self.send_email_notification(output_data_path)
             if self.if_error:
+                error_text = "Failed to export onnx file"
                 JobUtils(job_id).save_job_failure_code('E703')
+                JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                     error_text, False)
 
     def export_onnx(self, instance_id):
         """Run export onnx task"""
