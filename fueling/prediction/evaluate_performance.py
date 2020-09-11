@@ -1,20 +1,19 @@
 #!/usr/bin/env python
-import glob
 import os
 
 import numpy as np
 
 from modules.prediction.proto import offline_features_pb2
+from modules.perception.proto import perception_obstacle_pb2
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.logging as logging
 import fueling.common.spark_op as spark_op
 
 
-TIME_RANGES = [3.0, 1.0, 8.0]
-REGIONS = ['sunnyvale', 'san_mateo']
+TIME_RANGES = [3.0, 1.0]
 
-DISTANCE_THRESHOLD = 1.5
-
+FILTERED_OBSTACLE_TYPE = perception_obstacle_pb2.PerceptionObstacle.PEDESTRIAN
 FILTERED_EVALUATOR = None  # prediction_conf_pb2.ObstacleConf.SEMANTIC_LSTM_EVALUATOR
 FILTERED_PREDICTOR = None  # prediction_conf_pb2.ObstacleConf.EXTRAPOLATION_PREDICTOR
 FILTERED_PRIORITY = None  # feature_pb2.ObstaclePriority.CAUTION
@@ -22,30 +21,20 @@ FILTERED_PRIORITY = None  # feature_pb2.ObstaclePriority.CAUTION
 
 class PerformanceEvaluator(BasePipeline):
     """Evaluate performance pipeline."""
-
-    def run_test(self):
-        """Run test."""
-        result_files = self.to_rdd(
-            glob.glob('/apollo/data/prediction/results/*/*/prediction_result.*.bin'))
-        for time_range in TIME_RANGES:
-            metrics = self.run_internal(result_files, time_range)
-            saved_filename = 'metrics_{}.npy'.format(time_range)
-            save_path = os.path.join('/apollo/data/prediction/results', saved_filename)
-            np.save(save_path, metrics)
-
     def run(self):
-        bos_client = self.our_storage()
+        input_path = 'modules/prediction/kinglong_benchmark'
+        self.result_prefix = os.path.join(input_path, 'results')
+        self.label_prefix = os.path.join(input_path, 'results')
+        self.object_storage = self.partner_storage() or self.our_storage()
         for time_range in TIME_RANGES:
-            for region in REGIONS:
-                """Run prod."""
-                origin_prefix = os.path.join('modules/prediction/results', region)
-                # RDD(file) result files with the pattern prediction_result.*.bin
-                result_file_rdd = self.to_rdd(self.our_storage().list_files(origin_prefix)).filter(
-                    spark_op.filter_path(['*prediction_result.*.bin']))
-                metrics = self.run_internal(result_file_rdd, time_range)
-                saved_filename = 'metrics_{}_{}.npy'.format(time_range, region)
-                np.save(os.path.join(bos_client.abs_path('modules/prediction/results'),
-                                     saved_filename), metrics)
+            # RDD(file) result files with the pattern prediction_result.*.bin
+            result_file_rdd = (
+                self.to_rdd(self.our_storage().list_files(self.result_prefix))
+                .filter(spark_op.filter_path(['*prediction_result.*.bin'])))
+            metrics = self.run_internal(result_file_rdd, time_range)
+            saved_filename = 'metrics_{}.npy'.format(time_range)
+            np.save(os.path.join(self.object_storage.abs_path(self.result_prefix),
+                                 saved_filename), metrics)
 
     def run_internal(self, result_file_rdd, time_range):
         """Run the pipeline with given arguments."""
@@ -61,24 +50,29 @@ class PerformanceEvaluator(BasePipeline):
             .collect())
         return metrics
 
-    @staticmethod
-    def evaluate(result_file, time_range):
+    def evaluate(self, result_file, time_range):
         """Call prediction python code to evaluate performance"""
         result_dir = os.path.dirname(result_file)
         future_status_dir = result_dir.replace('results', 'labels')
-        future_status_file = os.path.join(future_status_dir, 'future_status.npy')
-        future_status_dict = np.load(future_status_file).item()
+        future_status_filenames = os.listdir(future_status_dir)
 
-        portion_correct_predicted_sum = 0.0
-        num_obstacle_sum = 0.0
-        num_trajectory_sum = 0.0
-        disp_sum = 0.0
-        num_valid_disp = 0.0
+        future_status_dict = dict()
+        for future_status_filename in future_status_filenames:
+            future_status_filepath = os.path.join(future_status_dir, future_status_filename)
+            if future_status_filepath.endswith('future_status.npy'):
+                dict_curr = np.load(future_status_filepath, allow_pickle=True).item()
+                future_status_dict.update(dict_curr)
+
+        total_ade_sum = 0.0
+        total_num_trajectory = 0.0
 
         list_prediction_result = offline_features_pb2.ListPredictionResult()
         with open(result_file, 'rb') as f:
             list_prediction_result.ParseFromString(f.read())
         for prediction_result in list_prediction_result.prediction_result:
+            if FILTERED_OBSTACLE_TYPE is not None and \
+               prediction_result.obstacle_conf.obstacle_type != FILTERED_OBSTACLE_TYPE:
+                continue
             if FILTERED_EVALUATOR is not None and \
                prediction_result.obstacle_conf.evaluator_type != FILTERED_EVALUATOR:
                 continue
@@ -88,111 +82,49 @@ class PerformanceEvaluator(BasePipeline):
             if FILTERED_PRIORITY is not None and \
                prediction_result.obstacle_conf.priority_type != FILTERED_PRIORITY:
                 continue
-            portion_correct_predicted, num_obstacle, num_trajectory = \
-                CorrectlyPredictePortion(prediction_result, future_status_dict, time_range)
-            portion_correct_predicted_sum += portion_correct_predicted
-            num_obstacle_sum += num_obstacle
-            num_trajectory_sum += num_trajectory
+            ade_sum, num_traj = self.DisplacementError(prediction_result,
+                                                       future_status_dict, time_range)
+            total_ade_sum += ade_sum
+            total_num_trajectory += num_traj
 
-            disp = DisplacementError(prediction_result, future_status_dict, time_range)
-            if disp is not None:
-                print(disp)
-                disp_sum += disp
-                num_valid_disp += 1
+        logging.info('(ade, num_traj) = ({}, {})'.format(total_ade_sum, total_num_trajectory))
+        return [('total_ade_sum', total_ade_sum),
+                ('total_num_trajectory', total_num_trajectory)]
 
-        return [('portion_correct_predicted_sum', portion_correct_predicted_sum),
-                ('num_obstacle_sum', num_obstacle_sum),
-                ('num_trajectory_sum', num_trajectory_sum),
-                ('disp_sum', disp_sum),
-                ('num_valid_disp', num_valid_disp)]
+    def DisplacementError(self, prediction_result, future_status_dict, time_range):
+        dict_key = "{}@{:.3f}".format(prediction_result.id, prediction_result.timestamp)
+        if dict_key not in future_status_dict:
+            return 0.0, 0.0
+        obstacle_future_status = future_status_dict[dict_key]
+        if not obstacle_future_status:
+            return 0.0, 0.0
+        if len(prediction_result.trajectory) == 0:
+            return 0.0, 0.0
 
+        num_point = int(round(time_range / 0.1))
 
-def IsCorrectlyPredicted(future_point, curr_time, prediction_result):
-    future_relative_time = future_point[6] - curr_time
-    for predicted_traj in prediction_result.trajectory:
-        i = 0
-        while i + 1 < len(predicted_traj.trajectory_point) and \
-                predicted_traj.trajectory_point[i + 1].relative_time < future_relative_time:
-            i += 1
-        predicted_x = predicted_traj.trajectory_point[i].path_point.x
-        predicted_y = predicted_traj.trajectory_point[i].path_point.y
-        diff_x = abs(predicted_x - future_point[0])
-        diff_y = abs(predicted_y - future_point[1])
-        if diff_x * diff_x + diff_y * diff_y < DISTANCE_THRESHOLD * DISTANCE_THRESHOLD:
-            return True
-    return False
+        if len(obstacle_future_status) < num_point + 1:
+            return 0.0, 0.0
 
+        ade_sum = 0.0
+        num_trajectory = 0.0
+        for predicted_traj in prediction_result.trajectory:
+            if len(predicted_traj.trajectory_point) < num_point + 1:
+                continue
+            ade = 0.0
+            for i in range(1, num_point + 1):
+                pred_x = predicted_traj.trajectory_point[i].path_point.x
+                pred_y = predicted_traj.trajectory_point[i].path_point.y
+                true_x = obstacle_future_status[i][0]
+                true_y = obstacle_future_status[i][1]
+                diff_x = abs(pred_x - true_x)
+                diff_y = abs(pred_y - true_y)
+                ade += np.sqrt(diff_x * diff_x + diff_y * diff_y)
+            ade /= num_point
+            ade_sum += ade
+            num_trajectory += 1
 
-def CorrectlyPredictePortion(prediction_result, future_status_dict, time_range):
-    dict_key = "{}@{:.3f}".format(prediction_result.id, prediction_result.timestamp)
-    if dict_key not in future_status_dict:
-        return 0.0, 0.0, 0.0
-    obstacle_future_status = future_status_dict[dict_key]
-    if not obstacle_future_status:
-        return 0.0, 0.0, 0.0
-    if len(prediction_result.trajectory) == 0:
-        return 0.0, 0.0, 0.0
-
-    portion_correct_predicted = 0.0
-    curr_timestamp = obstacle_future_status[0][6]
-
-    total_future_point_count = 0.0
-    correct_future_point_count = 0.0
-    for future_point in obstacle_future_status:
-        if future_point[6] - curr_timestamp > time_range:
-            break
-        if IsCorrectlyPredicted(future_point, curr_timestamp, prediction_result):
-            correct_future_point_count += 1.0
-        total_future_point_count += 1.0
-    if total_future_point_count == 0:
-        return 0.0, 0.0, 0.0
-    portion_correct_predicted = correct_future_point_count / total_future_point_count
-
-    return portion_correct_predicted, 1.0, len(prediction_result.trajectory)
-
-
-def PointDisplacement(future_point, curr_time, prediction_result):
-    disp_sum = 0.0
-    num_valid_trajectory_point = 0.0
-    future_relative_time = future_point[6] - curr_time
-    for predicted_traj in prediction_result.trajectory:
-        i = 0
-        while i + 1 < len(predicted_traj.trajectory_point) and \
-                predicted_traj.trajectory_point[i + 1].relative_time < future_relative_time:
-            i += 1
-        predicted_x = predicted_traj.trajectory_point[i].path_point.x
-        predicted_y = predicted_traj.trajectory_point[i].path_point.y
-        diff_x = abs(predicted_x - future_point[0])
-        diff_y = abs(predicted_y - future_point[1])
-        disp_sum += np.sqrt(diff_x * diff_x + diff_y * diff_y)
-        num_valid_trajectory_point += 1.0
-    return (disp_sum, num_valid_trajectory_point)
-
-
-def DisplacementError(prediction_result, future_status_dict, time_range):
-    dict_key = "{}@{:.3f}".format(prediction_result.id, prediction_result.timestamp)
-    if dict_key not in future_status_dict:
-        return None
-    obstacle_future_status = future_status_dict[dict_key]
-    if not obstacle_future_status:
-        return None
-    if len(prediction_result.trajectory) == 0:
-        return None
-
-    curr_timestamp = obstacle_future_status[0][6]
-    total_future_point_count = 0.0
-    disp_error_sum = 0.0
-    num_trajectory_point = 0.0
-    for future_point in obstacle_future_status:
-        if future_point[6] - curr_timestamp > time_range:
-            break
-        total_future_point_count += 1.0
-        (disp_sum, num_valid_trajectory_point) = \
-            PointDisplacement(future_point, curr_timestamp, prediction_result)
-        disp_error_sum += disp_sum
-        num_trajectory_point += num_valid_trajectory_point
-
-    return disp_error_sum / (1e-6 + num_trajectory_point)
+        return ade_sum, num_trajectory
 
 
 if __name__ == '__main__':

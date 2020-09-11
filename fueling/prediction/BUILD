@@ -83,7 +83,9 @@ py_binary(
     srcs = ["evaluate_performance.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:logging",
         "//fueling/common:spark_op",
+        "@apollo//modules/perception/proto:perception_obstacle_py_pb2",
         "@apollo//modules/prediction/proto:feature_py_pb2",
         "@apollo//modules/prediction/proto:offline_features_py_pb2",
         "@apollo//modules/prediction/proto:prediction_conf_py_pb2",
