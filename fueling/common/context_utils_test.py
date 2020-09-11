@@ -11,6 +11,7 @@ class ContextUtilsTest(absltest.TestCase):
     def test_context(self):
         self.assertTrue(context_utils.is_local())
         self.assertFalse(context_utils.is_cloud())
+        self.assertTrue(context_utils.is_test())
 
 
 if __name__ == '__main__':

@@ -45,8 +45,8 @@ py_library(
         "//fueling/common:job_utils",
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
-        "//fueling/learning/autotuner/common:utils",
         "//fueling/learning/autotuner/client:cost_computation_client",
+        "//fueling/learning/autotuner/common:utils",
     ],
 )
 

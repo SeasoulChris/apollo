@@ -10,3 +10,7 @@ def is_local():
 
 def is_cloud():
     return os.path.isdir('/opt/spark/work-dir')
+
+
+def is_test():
+    return bool(os.environ.get('TEST_BINARY'))
