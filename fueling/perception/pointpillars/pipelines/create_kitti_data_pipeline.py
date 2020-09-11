@@ -71,7 +71,7 @@ class CreateDataKitti(BasePipeline):
             self.if_error = True
             return False, error_text
 
-        need_input_names = ['calib', 'velodyne', 'label_2', 'image_2']
+        need_input_names = ['calib', 'velodyne', 'image_2']
 
         for input_dir in ['training', 'testing']:
             input_subdir = os.path.join(input_folder, input_dir)
