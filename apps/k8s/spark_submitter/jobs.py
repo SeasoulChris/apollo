@@ -86,7 +86,7 @@ class SensorCalibration(BaseJob):
     def parse_arg(self, job_arg):
         entrypoint = 'fueling/perception/sensor_calibration/calibration_multi_sensors.py'
         client_flags = {
-            'workers': 4, 'cpu': 4, 'memory': 32,
+            'workers': 2, 'cpu': 2, 'memory': 32,
             'partner_storage_writable': True,
         }
         job_flags = {
@@ -100,7 +100,7 @@ class VirtualLaneGeneration(BaseJob):
     def parse_arg(self, job_arg):
         entrypoint = 'fueling/map/generate_maps.py'
         client_flags = {
-            'workers': 4, 'cpu': 4, 'memory': 64,
+            'workers': 2, 'cpu': 2, 'memory': 32,
             'partner_storage_writable': True,
         }
         job_flags = {
