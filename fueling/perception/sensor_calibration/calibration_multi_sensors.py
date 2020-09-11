@@ -30,7 +30,8 @@ class SensorCalibrationPipeline(BasePipeline):
     def run_test(self):
         """local mini test"""
         self.is_on_cloud = context_utils.is_cloud()
-        self.run_internal('/fuel/testdata/perception/sensor_calibration')
+        result_files, sub_type = self.run_internal('/fuel/testdata/perception/sensor_calibration')
+        assert result_files
 
     def run(self):
         """Run Prod. production version"""
@@ -52,6 +53,7 @@ class SensorCalibrationPipeline(BasePipeline):
             redis_utils.redis_extend_dict(redis_key, redis_value)
             JobUtils(job_id).save_job_input_data_size(source_dir)
             JobUtils(job_id).save_job_sub_type('')
+            JobUtils(job_id).save_job_progress(10)
 
         # Send result to job owner.
         receivers = email_utils.PERCEPTION_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
@@ -64,7 +66,7 @@ class SensorCalibrationPipeline(BasePipeline):
         self.error_text = 'Calibration error, please contact after-sales technical support'
 
         try:
-            result = self.run_internal(src_prefix)
+            result_files, sub_type = self.run_internal(src_prefix)
         except BaseException as e:
             if self.is_on_cloud:
                 JobUtils(job_id).save_job_failure_code('E209')
@@ -75,8 +77,7 @@ class SensorCalibrationPipeline(BasePipeline):
         logging.info(f"Generated sub_type {len(sub_type)} results: {sub_type}")
         sub_job_type = 'All'
 
-        if result:
-            result_files, sub_type = result
+        if result_files:
             if len(sub_type) == 1:
                 sub_job_type = sub_type.pop()
 
@@ -92,6 +93,13 @@ class SensorCalibrationPipeline(BasePipeline):
             content = (f'We are sorry. Please report the job id {self.FLAGS["job_id"]} to us at '
                        'IDG-apollo@baidu.com, so we can investigate.')
             if self.is_on_cloud:
+                if sub_type == "E209" or "E206":
+                    JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                         self.error_text, False)
+                    JobUtils(job_id).save_job_failure_code('E209')
+                else:
+                    JobUtils(job_id).save_job_failure_code(sub_type)
+                JobUtils(job_id).save_job_progress(80)
                 email_utils.send_email_error(title, content, receivers)
                 redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                                'job_status': 'failed', 'sub_type': sub_job_type}
@@ -132,14 +140,11 @@ class SensorCalibrationPipeline(BasePipeline):
         subjobs = self._get_subdirs(job_dir)
         logging.info(F'subjobs : {subjobs}')
 
-        executable_dir = 'modules/perception/sensor_calibration/executable_bin'
+        executable_dir = '/fuel/modules/perception/sensor_calibration/executable_bin'
         message_meta = [(os.path.join(job_dir, j),
                          os.path.join(job_output_dir, j),
                          self.our_storage().abs_path(executable_dir))
                         for j in subjobs]
-
-        self.num = len(subjobs)
-        self.index = 0
 
         # Run the pipeline with given parameters.
         result_dirs = self.to_rdd(message_meta).map(self.execute_task).collect()
@@ -148,15 +153,18 @@ class SensorCalibrationPipeline(BasePipeline):
 
         task_types = set()
         result_files = []
-        for temp_dir in result_dirs:
-            if temp_dir:
-                result_dir, task_name = temp_dir
+        if result_dirs:
+            for result_dir, task_name in result_dirs:
                 if result_dir:
                     task_types.add(task_name)
                     result_files.extend(glob.glob(os.path.join(result_dir, '*.yaml')))
-            else:
-                logging.error(f"result_dirs: {result_dirs}: has no results")
-                return None
+                else:
+                    logging.error(f"error code: {task_name}")
+                    return '', task_name
+        else:
+            logging.error(f"result_dirs: {result_dirs}: has no results")
+            return '', 'E209'
+
         logging.info(f"Sensor Calibration on data {job_dir}: All Done")
         logging.info(f"Generated {len(result_files)} results: {result_files}")
         logging.info(f"Generated task_types {len(task_types)} results: {task_types}")
@@ -165,11 +173,7 @@ class SensorCalibrationPipeline(BasePipeline):
     def execute_task(self, message_meta):
         """example task executing, return results dir."""
         logging.info('start to execute sensor calbiration service')
-        job_id = self.FLAGS.get('job_id')
-        self.index += 1
 
-        if self.is_on_cloud:
-            JobUtils(job_id).save_job_progress(10 + (80 // self.num) * (self.index - 1))
         source_dir, output_dir, executable_dir = message_meta
 
         logging.info(F'executable dir: {executable_dir}, exist? {os.path.exists(executable_dir)}')
@@ -197,15 +201,11 @@ class SensorCalibrationPipeline(BasePipeline):
             executable_bin = os.path.join(executable_dir, 'multi_grid_lidar_camera_calibrator')
         else:
             logging.error('not support {} yet'.format(task_name))
-            return None
+            return '', 'E202'
 
         if not os.path.exists(executable_bin):
-            if self.is_on_cloud:
-                JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                     self.error_text, False)
-                JobUtils(job_id).save_job_failure_code('E209')
             logging.error('{} is not exists!'.format(executable_bin))
-            return None
+            return '', 'E209'
         # set command
         command = f'{executable_bin} --config {config_file}'
         logging.info('sensor calibration executable command is {}'.format(command))
@@ -214,25 +214,17 @@ class SensorCalibrationPipeline(BasePipeline):
         if return_code == 0:
             logging.info('Finished sensor caliration.')
         else:
-            if self.is_on_cloud:
-                if return_code == 10:
-                    JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                         self.error_text, False)
-                    JobUtils(job_id).save_job_failure_code('E206')
-                elif return_code == 11:
-                    JobUtils(job_id).save_job_failure_code('E207')
-                elif return_code == 12:
-                    JobUtils(job_id).save_job_failure_code('E208')
-                else:
-                    JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                         self.error_text, False)
-                    JobUtils(job_id).save_job_failure_code('E209')
             logging.error('Failed to run sensor caliration for {}: {}'.format(task_name,
                                                                               return_code))
-            time.sleep(60 * 3)
-            return None
-        if self.is_on_cloud:
-            JobUtils(job_id).save_job_progress(10 + (80 // self.num) * self.index)
+            # time.sleep(60 * 3)
+            if return_code == 10:
+                return '', 'E206'
+            elif return_code == 11:
+                return '', 'E207'
+            elif return_code == 12:
+                return '', 'E208'
+            else:
+                return '', 'E209'
         return os.path.join(output_dir, 'results'), task_name
 
 

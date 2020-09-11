@@ -75,12 +75,6 @@ def sanity_check(input_folder, output_folder, job_owner, job_id, email_receivers
             JobUtils(job_id).save_job_failure_code('E302')
     else:
         logging.info("%s Passed sanity check." % input_folder)
-        if is_on_cloud and email_receivers:
-            title = 'Virtual-lane-generation data sanity check passed for {}'.format(job_owner)
-            content = 'job_id={} input_folder={} output_folder={}\n' \
-                'We are processing your job now. Please expect another email with results.'.format(
-                    job_id, input_folder, output_folder)
-            email_utils.send_email_info(title, content, email_receivers)
         return True
 
     if is_on_cloud and email_receivers:

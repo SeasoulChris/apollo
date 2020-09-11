@@ -49,6 +49,10 @@ class SimMapPipeline(BasePipeline):
         src_dir = self.our_storage().abs_path(dir_prefix)
         dst_prefix = os.path.join(src_dir, 'result')
         self.to_rdd([dst_prefix]).foreach(execute_task)
+        path = os.path.join(dst_prefix, 'routing_map.txt')
+        assert os.path.exists(path)
+        path = os.path.join(dst_prefix, 'sim_map.txt')
+        assert os.path.exists(path)
         logging.info('sim map gen: Done, TEST')
 
     def run(self):
@@ -68,13 +72,13 @@ class SimMapPipeline(BasePipeline):
         base_map_path = os.path.join(source_path, 'base_map.txt')
 
         if not os.path.exists(base_map_path):
-            logging.warning('base_map.txt: {} not exists'.format(base_map_path))
+            logging.error('base_map.txt: {} not exists'.format(base_map_path))
         sim_map_generator_path = '/apollo/bazel-bin/modules/map/tools/sim_map_generator'
         if not os.path.exists(sim_map_generator_path):
-            logging.warning('sim_map_generator: {} not exists'.format(sim_map_generator_path))
+            logging.error('sim_map_generator: {} not exists'.format(sim_map_generator_path))
         routing_creator_path = '/apollo/bazel-bin/modules/routing/topo_creator/topo_creator'
         if not os.path.exists(routing_creator_path):
-            logging.warning('topo_creator: {} not exists'.format(routing_creator_path))
+            logging.error('topo_creator: {} not exists'.format(routing_creator_path))
         # RDD(tasks), the tasks without src_prefix as prefix
         self.to_rdd([source_path]).foreach(execute_task)
         if self.is_on_cloud:

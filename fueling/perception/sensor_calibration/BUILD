@@ -22,6 +22,7 @@ py_test(
     deps = [
         ":calibration_multi_sensors",
     ],
+    timeout = "long",
 )
 
 py_library(

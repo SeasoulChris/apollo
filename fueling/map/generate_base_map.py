@@ -57,10 +57,9 @@ class MapGenSingleLine(BasePipeline):
         todo_records = self.to_rdd([src_dir])
         self.run_internal(todo_records, src_dir, dst_prefix)
 
-        path = os.path.join(dst_prefix, 'base_map.txt')
-        if not os.path.exists(path):
-            logging.warning('base_map.txt: {} not genterated'.format(path))
-        logging.info('base_map.txt generated: Done, Test')
+        path = os.path.join(dst_prefix, 'base_map.bin')
+        assert os.path.exists(path)
+        logging.info('base_map.bin generated: Done, Test')
 
     def run(self):
         src_prefix = self.FLAGS.get('input_data_path') or 'test/virtual_lane/data'
@@ -109,12 +108,21 @@ class MapGenSingleLine(BasePipeline):
 
         # RDD(record_path)
         todo_records = self.to_rdd([source_dir])
+        fbags = sorted(glob.glob(os.path.join(source_dir, '*.record*')))
+        logging.info('fbags: {}'.format(fbags))
+        reader = record_utils.read_record([record_utils.LOCALIZATION_CHANNEL])
+        for msg in reader(fbags[0]):
+            pos = record_utils.message_to_proto(msg).pose.position
+            zone_id = self.FLAGS.get('zone_id')
+            if self.is_on_cloud:
+                JobUtils(job_id).save_job_location(pos.x, pos.y, zone_id)
+                break
         # todo_records = self.to_rdd(glob.glob(os.path.join(source_dir, '*.record*')))
         self.run_internal(todo_records, source_dir, target_dir)
 
         path = os.path.join(target_dir, 'base_map.txt')
         if not os.path.exists(path):
-            logging.warning('base_map.txt: {} not genterated'.format(path))
+            logging.error('base_map.txt: {} not genterated'.format(path))
 
         logging.info('base_map.txt generated: Done, PROD')
         if self.is_on_cloud:
@@ -139,17 +147,10 @@ class MapGenSingleLine(BasePipeline):
         fbags = sorted(glob.glob(os.path.join(source_dir, '*.record*')))
         logging.info('fbags: {}'.format(fbags))
         reader = record_utils.read_record([record_utils.LOCALIZATION_CHANNEL])
-        i = 0
-        job_id = self.FLAGS.get('job_id')
         for fbag in fbags:
             for msg in reader(fbag):
                 pos = record_utils.message_to_proto(msg).pose.position
                 points.append((pos.x, pos.y))
-                if(i == 0):
-                    zone_id = self.FLAGS.get('zone_id')
-                    if self.is_on_cloud:
-                        JobUtils(job_id).save_job_location(pos.x, pos.y, zone_id)
-                    i += 1
 
         logging.info('Success to read localization pose points {}'.format(len(points)))
         return points

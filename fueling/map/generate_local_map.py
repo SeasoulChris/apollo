@@ -37,11 +37,13 @@ class LocalMapPipeline(BasePipeline):
         dir_prefix = '/fuel/testdata/virtual_lane'
         src_dir = self.our_storage().abs_path(dir_prefix)
         dst_prefix = os.path.join(src_dir, 'result')
-        zone_id = self.FLAGS.get('zone_id')
+        zone_id = self.FLAGS.get('zone_id') or 50
         lidar_type = self.FLAGS.get('lidar_type')
         # RDD(record_path)
         todo_records = self.to_rdd([src_dir])
         self.run_internal(todo_records, src_dir, dst_prefix, zone_id, lidar_type)
+        path = os.path.join(dst_prefix, 'local_map')
+        assert os.path.exists(path)
         logging.info('local map gen: Done, TEST')
 
     def run(self):
