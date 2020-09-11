@@ -147,7 +147,8 @@ def train(config_path,
           freeze_exclude=None,
           multi_gpu=False,
           measure_time=False,
-          resume=False):
+          resume=False,
+          unit_test=False):
     """train a VoxelNet model specified by a config file.
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -188,6 +189,8 @@ def train(config_path,
     train_cfg = config.train_config
 
     net = build_network(model_cfg, measure_time).to(device)
+    if unit_test:
+        return
     # if train_cfg.enable_mixed_precision:
     #     net.half()
     #     net.metrics_to_float()

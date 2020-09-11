@@ -17,6 +17,14 @@ py_binary(
     ],
 )
 
+py_test(
+    name = "pointpillars_training_pipeline_test",
+    srcs = ["pointpillars_training_pipeline_test.py"],
+    deps = [
+        ":pointpillars_training_pipeline",
+    ]
+)
+
 py_binary(
     name = "create_data_pipeline",
     srcs = [
@@ -41,6 +49,14 @@ py_binary(
     ],
 )
 
+py_test(
+    name = "create_kitti_data_pipeline_test",
+    srcs = ["create_kitti_data_pipeline_test.py",],
+    deps = [
+        ":create_kitti_data_pipeline",
+    ]
+)
+
 py_binary(
     name = "pointpillars_export_onnx_pipeline",
     srcs = [
@@ -55,6 +71,14 @@ py_binary(
         "//fueling/common:job_utils",
         "//fueling/perception/pointpillars/second/pytorch:trans_onnx",
     ],
+)
+
+py_test(
+    name = "pointpillars_export_onnx_pipeline_test",
+    srcs = ["pointpillars_export_onnx_pipeline_test.py"],
+    deps = [
+        ":pointpillars_export_onnx_pipeline",
+    ]
 )
 
 py_binary(

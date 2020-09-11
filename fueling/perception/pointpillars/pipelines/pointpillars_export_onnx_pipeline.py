@@ -14,9 +14,19 @@ import fueling.common.logging as logging
 
 class PointPillarsExportOnnx(BasePipeline):
     """Demo pipeline."""
+    def run_test(self):
+
+        config_path = '/fuel/testdata/perception/pointpillars/' \
+                      'all.pp.mhead.cloud.config'
+        model_path = '/fuel/testdata/perception/pointpillars/' \
+                     'voxelnet-nuscenes-58650.tckpt'
+        save_onnx_path = '/fuel/testdata/perception/pointpillars/onnx'
+
+        trans_onnx(config_path, model_path, save_onnx_path)
 
     def run(self):
         """Run."""
+        self.if_error = False
         job_id = self.FLAGS.get('job_id')
         output_data_path = self.FLAGS.get('output_data_path')
         object_storage = self.partner_storage() or self.our_storage()
@@ -30,6 +40,8 @@ class PointPillarsExportOnnx(BasePipeline):
         if context_utils.is_cloud():
             JobUtils(job_id).save_job_progress(100)
             self.send_email_notification(output_data_path)
+            if self.if_error:
+                JobUtils(job_id).save_job_failure_code('E703')
 
     def export_onnx(self, instance_id):
         """Run export onnx task"""
@@ -41,7 +53,11 @@ class PointPillarsExportOnnx(BasePipeline):
         model_path = os.path.join(self.output_data_path, 'models/voxelnet-5865.tckpt')
         save_onnx_path = self.output_data_path
 
-        trans_onnx(config_path, model_path, save_onnx_path)
+        try:
+            trans_onnx(config_path, model_path, save_onnx_path)
+        except BaseException:
+            logging.error('Failed to export onnx')
+            self.if_error = True
 
     def send_email_notification(self, model_path):
         """Send email notification to users"""

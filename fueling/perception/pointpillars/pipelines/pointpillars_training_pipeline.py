@@ -17,8 +17,17 @@ import fueling.common.logging as logging
 class PointPillarsTraining(BasePipeline):
     """Demo pipeline."""
 
+    def run_test(self):
+
+        config_path = '/fuel/testdata/perception/pointpillars/' \
+                      'all.pp.mhead.cloud.config'
+        model_dir = '/fuel/testdata/perception/pointpillars/models/'
+        input_data_path = '/fuel/testdata/perception/pointpillars/kitti_testdata'
+        train(config_path, model_dir, input_data_path, unit_test=True)
+
     def run(self):
         """Run."""
+        self.if_error = False
         job_id = self.FLAGS.get('job_id')
         output_data_path = self.FLAGS.get('output_data_path')
         input_data_path = self.FLAGS.get('input_data_path')
@@ -31,6 +40,8 @@ class PointPillarsTraining(BasePipeline):
         logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
         if context_utils.is_cloud():
             JobUtils(job_id).save_job_progress(90)
+            if self.if_error:
+                JobUtils(job_id).save_job_failure_code('E702')
 
     def training(self, instance_id):
         """Run training task"""
@@ -52,7 +63,11 @@ class PointPillarsTraining(BasePipeline):
         pretrained_path = file_utils.fuel_path(
             'testdata/perception/pointpillars/voxelnet-nuscenes-58650.tckpt')
 
-        train(config_path, model_dir, self.input_data_path, pretrained_path=pretrained_path)
+        try:
+            train(config_path, model_dir, self.input_data_path, pretrained_path=pretrained_path)
+        except BaseException:
+            logging.error('Failed to training model')
+            self.if_error = True
 
 
 if __name__ == '__main__':

@@ -429,6 +429,9 @@ def _create_reduced_point_cloud(data_path,
         points_v = box_np_ops.remove_outside_points(points_v, rect, Trv2c, P2,
                                                     image_info["image_shape"])
         if save_path is None:
+            save_path = v_path.parent.parent / (v_path.parent.stem + "_reduced")
+            save_path.mkdir(parents=True, exist_ok=True)
+            
             save_filename = v_path.parent.parent / (
                 v_path.parent.stem + "_reduced") / v_path.name
             # save_filename = str(v_path) + '_reduced'
@@ -455,6 +458,8 @@ def create_reduced_point_cloud(data_path,
     if test_info_path is None:
         test_info_path = Path(data_path) / 'kitti_infos_test.pkl'
 
+    if save_path is None:
+        save_path
     _create_reduced_point_cloud(data_path, train_info_path, save_path)
     _create_reduced_point_cloud(data_path, val_info_path, save_path)
     _create_reduced_point_cloud(data_path, test_info_path, save_path)
