@@ -133,6 +133,22 @@ class Utils(object):
             confs += (f'--conf spark.kubernetes.driver.secretKeyRef.{key}={value} '
                       f'--conf spark.kubernetes.executor.secretKeyRef.{key}={value} ')
 
+        # Rapids.
+        if arg.rapids.rapids_enabled:
+            discovery_script = arg.rapids.rapids_discovery_script
+            concurrent_tasks = arg.rapids.rapids_concurrent_tasks
+            executor_gpus = arg.rapids.rapids_executor_gpu
+            confs += (f'--conf spark.rapids.memory.pinnedPool.size=2G '
+                      f'--conf spark.sql.files.maxPartitionBytes=512m '
+                      f'--conf spark.plugins=com.nvidia.spark.SQLPlugin '
+                      f'--conf spark.executor.resource.gpu.vendor=nvidia.com '
+                      f'--conf spark.task.cpus=1 '
+                      f'--conf spark.executor.resource.gpu.discoveryScript={discovery_script} '
+                      f'--conf spark.rapids.sql.concurrentGpuTasks={concurrent_tasks} '
+                      f'--conf spark.task.resource.gpu.amount={arg.rapids.rapids_task_gpu} '
+                      f'--conf spark.executor.cores={arg.rapids.rapids_task_cores} '
+                      f'--conf spark.executor.resource.gpu.amount={executor_gpus} ')
+
         job_filename = os.path.splitext(os.path.basename(arg.job.entrypoint))[0].replace('_', '-')
         job_name = f'job-{job_id}-{submitter}-{job_filename}'
         site_package = site.getsitepackages()[0]

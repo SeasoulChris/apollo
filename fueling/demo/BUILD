@@ -75,3 +75,11 @@ py_test(
         ":stat_auto_mileage",
     ],
 )
+
+py_binary(
+    name = "rapids_demo",
+    srcs = ["rapids_demo.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+    ],
+)

@@ -10,6 +10,7 @@ message SparkSubmitArg {
   optional Worker worker = 4;
   optional Partner partner = 5;
   optional Driver driver = 6;
+  optional Rapids rapids = 7;
 }
 
 // Will be stored in MongoDB.
@@ -101,4 +102,15 @@ message Partner {
   optional string vehicle_sn = 3;
   optional string job_type = 4;
   optional string email = 5;
+}
+
+// RAPIDS for enabling GPU acceleration on Spark SQL and DataFrame
+// https://github.com/NVIDIA/spark-rapids
+message Rapids {
+  optional bool rapids_enabled = 1 [default = false];
+  optional uint32 rapids_task_cores = 2 [default = 4];
+  optional uint32 rapids_executor_gpu = 3 [default = 1];
+  optional float rapids_task_gpu = 4 [default = 0.25];
+  optional int32 rapids_concurrent_tasks = 5 [default = 1];
+  optional string rapids_discovery_script = 6;
 }

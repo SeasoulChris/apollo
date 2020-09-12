@@ -53,6 +53,15 @@ flags.DEFINE_string('partner_vehicle_sn', None, 'Partner verhicle_sn.')
 flags.DEFINE_string('partner_job_type', None, 'Partner job type.')
 flags.DEFINE_string('partner_email', None, 'Partner email')
 
+# Rapids.
+flags.DEFINE_boolean('rapids_enabled', False, 'Whether enable RAPIDS feature.')
+flags.DEFINE_integer('rapids_task_cores', 4, 'Rapids task cores.')
+flags.DEFINE_integer('rapids_executor_gpu', 1, 'Rapids executor gpu amount.')
+flags.DEFINE_float('rapids_task_gpu', 0.25, 'Rapids task gpu amount.')
+flags.DEFINE_integer('rapids_concurrent_tasks', 1, 'Rapids concurrent tasks number.')
+flags.DEFINE_string('rapids_discovery_script',
+                    '/opt/spark/rapids/get_gpus_resources.sh', 'Rapids GPU discovery script path.')
+
 # Internal use.
 # TODO(longtao): Change it back when switch is done
 flags.DEFINE_string('kube_proxy', '10.21.226.6', 'Kube proxy.')
@@ -74,6 +83,7 @@ class SparkSubmitterClient(object):
             'worker': self.get_worker(),
             'driver': self.get_driver(),
             'partner': self.get_partner(),
+            'rapids': self.get_rapids(),
         }
 
     def submit_via_call(self, asynchronous=True):
@@ -89,6 +99,7 @@ class SparkSubmitterClient(object):
     def submit(self):
         """Submit via RPC."""
         arg = self.arg
+
         # Submit job.
         service_url = self.client_flags.get('spark_submitter_service_url') or \
             flags.FLAGS.spark_submitter_service_url or self.get_service_url()
@@ -97,6 +108,8 @@ class SparkSubmitterClient(object):
         payload = json.loads(res.json() or '{}')
 
         arg['job'].pop('fueling_zip_base64')
+        if not arg['rapids']['rapids_enabled']:
+            arg.pop('rapids')
         logging.info('SparkSubmitArg is')
         pprint.PrettyPrinter(indent=2).pprint(arg)
         sys.stdout.flush()
@@ -212,6 +225,28 @@ class SparkSubmitterClient(object):
         if self.client_flags.get('partner_email'):
             partner['email'] = self.client_flags.get('partner_email')
         return partner
+
+    def get_rapids(self):
+        return {
+            'rapids_enabled': self.client_flags.get(
+                'rapids_enabled',
+                self.get_default('rapids_enabled')),
+            'rapids_task_cores': self.client_flags.get(
+                'rapids_task_cores',
+                self.get_default('rapids_task_cores')),
+            'rapids_executor_gpu': self.client_flags.get(
+                'rapids_executor_gpu',
+                self.get_default('rapids_executor_gpu')),
+            'rapids_task_gpu': self.client_flags.get(
+                'rapids_task_gpu',
+                self.get_default('rapids_task_gpu')),
+            'rapids_concurrent_tasks': self.client_flags.get(
+                'rapids_concurrent_tasks',
+                self.get_default('rapids_concurrent_tasks')),
+            'rapids_discovery_script': self.client_flags.get(
+                'rapids_discovery_script',
+                self.get_default('rapids_discovery_script')),
+        }
 
     """
     Use this function instead of directly accessing flags to avoid instant parsing of flags and
