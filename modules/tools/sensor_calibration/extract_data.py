@@ -364,7 +364,7 @@ def get_substring(str, prefix, suffix):
     str_p = str.rfind(prefix) + len(prefix)
     end_p = str.rfind(suffix)
     return str[str_p:end_p]
-
+'''
 def reorganize_extracted_data(tmp_data_path, task_name, remove_input_data_cache=False):
     root_path = os.path.dirname(os.path.normpath(tmp_data_path))
 
@@ -442,6 +442,98 @@ def reorganize_extracted_data(tmp_data_path, task_name, remove_input_data_cache=
     if remove_input_data_cache:
         print('removing the cache at {}'.format(tmp_data_path))
         os.system('rm -rf {}'.tmp_data_path)
+'''
+
+
+
+def reorganize_extracted_data(tmp_data_path, task_name, remove_input_data_cache=False):
+    root_path = os.path.dirname(os.path.normpath(tmp_data_path))
+
+    config_yaml = ConfigYaml()
+    if task_name == 'lidar_to_gnss':
+        print (get_subfolder_list(tmp_data_path))
+        subfolders = [x for x in get_subfolder_list(tmp_data_path)
+                    if '_sensor_' in x or '_localization_pose' in x]
+        odometry_subfolders = [x for x in subfolders if '_odometry' in x or '_pose' in x]
+        lidar_subfolders = [x for x in subfolders if '_PointCloud2' in x]
+        print(lidar_subfolders)
+        print(odometry_subfolders)
+        if len(lidar_subfolders) is 0 or len(odometry_subfolders) is not 1:
+            raise ValueError(('one odometry and more than 0 lidar(s)'
+                        'sensor are needed for sensor calibration'))
+        odometry_subfolder = odometry_subfolders[0]
+        for lidar in lidar_subfolders:
+            # get the lidar name from folder name string
+            lidar_name = get_substring(str=lidar, prefix='_sensor_', suffix='_PointCloud2')
+            gnss_name ='novatel'
+
+            # reorganize folder structure: each lidar has its raw data,
+            # corresponding odometry and configuration yaml file
+
+            #wxt
+            #out_path = os.path.join(root_path, lidar_name + '_to_gnss_calibration')
+            multi_lidar_out_path = os.path.join(root_path, 'multi_lidar_to_gnss_calibration')
+            #if not process_dir(out_path, 'create'):
+            if not process_dir(multi_lidar_out_path, 'create'):
+                raise ValueError('Failed to create directory: %s' % multi_lidar_out_path)
+            lidar_in_path =os.path.join(tmp_data_path, lidar)
+            lidar_out_path = os.path.join(multi_lidar_out_path, lidar)
+            #wxt
+            if not os.path.exists(lidar_out_path):
+                shutil.copytree(lidar_in_path, lidar_out_path)
+            odometry_in_path = os.path.join(tmp_data_path, odometry_subfolder)
+            odometry_out_path = os.path.join(multi_lidar_out_path, odometry_subfolder)
+            #wxt
+            if not os.path.exists(odometry_out_path):
+                shutil.copytree(odometry_in_path, odometry_out_path)
+
+            #generated_config_yaml = os.path.join(out_path, 'sample_config.yaml')
+            generated_config_yaml = os.path.join(multi_lidar_out_path, lidar_name + '_' + 'sample_config.yaml')
+            config_yaml.generate_task_config_yaml(task_name=task_name,
+                source_sensor=lidar_name, dest_sensor=gnss_name,
+                source_folder=lidar, dest_folder=odometry_subfolder,
+                out_config_file=generated_config_yaml)
+            print('lidar {} calibration data and configuration'
+                    'are generated.'.format(lidar_name))
+    elif task_name == 'camera_to_lidar':
+        # data selection.
+        pair_data_folder_name = 'camera-lidar-pairs'
+        cameras, lidar = select_static_image_pcd(path=tmp_data_path,
+                                    min_distance=5, stop_times=4,
+                                    wait_time=3, check_range=50,
+                                    image_static_diff_threshold=0.005,
+                                    output_folder_name=pair_data_folder_name,
+                                    image_suffix='.jpg', pcd_suffix='.pcd')
+        lidar_name = get_substring(str=lidar, prefix='_apollo_sensor_', suffix='_PointCloud2')
+        for camera in cameras:
+            camera_name = get_substring(str=camera, prefix='_apollo_sensor_', suffix='_image')
+            out_path = os.path.join(root_path, camera_name + '_to_' + lidar_name + '_calibration')
+            if not process_dir(out_path, 'create'):
+                raise ValueError('Failed to create directory: %s' % out_path)
+            # reorganize folder structure: each camera has its images,
+            # corresponding lidar pointclouds, camera initial extrinsics,
+            # intrinsics, and configuration yaml file
+
+            in_pair_data_path = os.path.join(tmp_data_path, camera, pair_data_folder_name)
+            out_pair_data_path = os.path.join(out_path, pair_data_folder_name )
+            shutil.copytree(in_pair_data_path, out_pair_data_path )
+
+            generated_config_yaml = os.path.join(out_path, 'sample_config.yaml')
+            config_yaml.generate_task_config_yaml(task_name=task_name,
+                source_sensor=camera_name, dest_sensor=lidar_name,
+                source_folder=None, dest_folder=None,
+                out_config_file=generated_config_yaml)
+    elif task_name == 'radar_to_gnss':
+        print('not ready. stay tuned')
+    else:
+        raise ValueError('Unsupported data extraction task for{}'.format(task_name))
+
+
+    if remove_input_data_cache:
+        print('removing the cache at {}'.format(tmp_data_path))
+        os.system('rm -rf {}'.tmp_data_path)
+
+
 
 def main():
     """
