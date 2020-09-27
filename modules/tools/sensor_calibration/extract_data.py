@@ -21,6 +21,7 @@ This is a tool to extract useful information from given record files. It does
 self-check the validity of the uploaded data and able to inform developer's when
 the data is not qualified, and reduce the size of uploaded data significantly.
 """
+import yaml
 import argparse
 from datetime import datetime
 import numpy as np
@@ -446,6 +447,28 @@ def reorganize_extracted_data(tmp_data_path, task_name, remove_input_data_cache=
 
 
 
+
+
+# wxt
+def combine_multi_lidar_yaml(yaml_list):
+    out_data = {'calibration_task':'lidar_to_gnss', 'destination_sensor':'novatel', 'odometry_file':   './_apollo_localization_pose/odometry'}
+    sensor_files_directory_list = []
+    source_sensor_list = []
+    transform_list = []
+    for i in range(len(yaml_list)):
+        #print(i)
+        with open(yaml_list[i], 'r') as f:
+            data = yaml.safe_load(f)
+            #print(data)
+            sensor_files_directory_list.append(data['sensor_files_directory'])
+            source_sensor_list.append(data['source_sensor'])
+            transform_list.append(data['transform'])
+    out_data['sensor_files_directory'] = sensor_files_directory_list
+    out_data['source_sensor'] = source_sensor_list
+    out_data['transform'] = transform_list
+    return out_data
+
+
 def reorganize_extracted_data(tmp_data_path, task_name, remove_input_data_cache=False):
     root_path = os.path.dirname(os.path.normpath(tmp_data_path))
 
@@ -462,6 +485,10 @@ def reorganize_extracted_data(tmp_data_path, task_name, remove_input_data_cache=
             raise ValueError(('one odometry and more than 0 lidar(s)'
                         'sensor are needed for sensor calibration'))
         odometry_subfolder = odometry_subfolders[0]
+
+        # wxt
+        yaml_list = []
+
         for lidar in lidar_subfolders:
             # get the lidar name from folder name string
             lidar_name = get_substring(str=lidar, prefix='_sensor_', suffix='_PointCloud2')
@@ -495,6 +522,14 @@ def reorganize_extracted_data(tmp_data_path, task_name, remove_input_data_cache=
                 out_config_file=generated_config_yaml)
             print('lidar {} calibration data and configuration'
                     'are generated.'.format(lidar_name))
+            # wxt        
+            yaml_list.append(generated_config_yaml)
+        out_data=combine_multi_lidar_yaml(yaml_list)
+        multi_lidar_yaml = os.path.join(multi_lidar_out_path, 'multi_lidar_config.yaml')
+        print('wxt: multi_lidar_yaml:' , multi_lidar_yaml)
+        with open(multi_lidar_yaml,'w') as f:    
+            yaml.safe_dump(out_data, f)     
+
     elif task_name == 'camera_to_lidar':
         # data selection.
         pair_data_folder_name = 'camera-lidar-pairs'
