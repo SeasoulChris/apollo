@@ -18,14 +18,15 @@ class CalibrationConfig(object):
         self._task_name = 'unknown'
         self._supported_tasks = supported_calibrations
         logging.info('calibration service now support: {}'.format(self._supported_tasks))
-
+    
+    '''
     def _generate_lidar_to_gnss_calibration_yaml(self, root_path, result_path, in_data):
         out_data = {
             # list all input sensor messages and the file locations
             'data': {
                 'odometry': os.path.abspath(os.path.join(root_path, in_data['odometry_file'])),
                 # 'lidars' are list of dict()
-                'lidars': [
+                'lidars': [  
                     {
                         in_data['source_sensor']: {
                             'path': os.path.abspath(os.path.join(
@@ -65,6 +66,103 @@ class CalibrationConfig(object):
             }
         }
         return out_data
+    '''
+
+    def _generate_lidar_to_gnss_calibration_yaml(self, root_path, result_path, in_data):
+        lidar_list = []
+        init_extrinsics_dics = {}
+        for i in range(len(in_data['source_sensor'])):
+            # wxt todo: too long in a line
+            lidar_list.append({in_data['source_sensor'][i]:{'path': os.path.abspath(os.path.join(
+                                root_path, in_data['sensor_files_directory'][i])) + '/'}})
+            #init_extrinsics_dics[in_data['source_sensor'][i]] = {'translation': in_data['transform']['translation'],'rotation': in_data['transform']['rotation']}                
+            init_extrinsics_dics[in_data['source_sensor'][i]] = in_data['transform'][i]
+        print('wxt: init_extrinsics_dics', init_extrinsics_dics)
+        
+        
+        out_data = {
+            # list all input sensor messages and the file locations
+            'data': {
+                'odometry': os.path.abspath(os.path.join(root_path, in_data['odometry_file'])),
+                # 'lidars' are list of dict()
+                'lidars': lidar_list,
+                'result': result_path,
+                'calib_height': False,
+                'frame': 'UTM'
+            },
+            # list all calibration parameters
+            'calibration': {
+                # extrinsics : dict of dict() for multi-lidar if needs
+                # wired format. Beijing has to make the YAML consistent in multi-lidar calib.
+                'init_extrinsics': init_extrinsics_dics,
+                #  optimization parameters: list of dict() for multi-lidar if needs
+                'steps': [
+                    {
+                        'source_lidars': [
+                            "velodyne16_left"
+                        ],
+                        'target_lidars': [
+                            "velodyne16_left"
+                        ],
+                        'lidar_type': 'multiple',
+                        'fix_target_lidars': False,
+                        'fix_z': True,
+                        'iteration': 3
+                    },
+                    {
+                        'source_lidars': [
+                            "velodyne16_right"
+                        ],
+                        'target_lidars': [
+                            "velodyne16_right"
+                        ],
+                        'lidar_type': 'multiple',
+                        'fix_target_lidars': False,
+                        'fix_z': True,
+                        'iteration': 3
+                    },
+                    {
+                        'source_lidars': [
+                            "velodyne16_back"
+                        ],
+                        'target_lidars': [
+                            "velodyne16_back"
+                        ],
+                        'lidar_type': 'multiple',
+                        'fix_target_lidars': False,
+                        'fix_z': True,
+                        'iteration': 3
+                    },                    
+                    {
+                        'source_lidars': [
+                            "velodyne16_left"
+                        ],
+                        'target_lidars': [
+                            "velodyne16_back"
+                        ],
+                        'lidar_type': 'multiple',
+                        'fix_target_lidars': True,
+                        'fix_z': False,
+                        'iteration': 3
+                    },                    
+                    {
+                        'source_lidars': [
+                            "velodyne16_right"
+                        ],
+                        'target_lidars': [
+                            "velodyne16_back"
+                        ],
+                        'lidar_type': 'multiple',
+                        'fix_target_lidars': True,
+                        'fix_z': False,
+                        'iteration': 3
+                    }                   
+
+                ]
+            }
+        }
+        return out_data
+
 
     def _generate_camera_to_lidar_calibration_yaml(self, root_path, result_path, in_data):
         out_data = {
