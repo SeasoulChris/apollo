@@ -515,7 +515,8 @@ def reorganize_extracted_data(tmp_data_path, task_name, remove_input_data_cache=
                 shutil.copytree(odometry_in_path, odometry_out_path)
 
             #generated_config_yaml = os.path.join(out_path, 'sample_config.yaml')
-            generated_config_yaml = os.path.join(multi_lidar_out_path, lidar_name + '_' + 'sample_config.yaml')
+            #generated_config_yaml = os.path.join(multi_lidar_out_path, lidar_name + '_' + 'sample_config.yaml')
+            generated_config_yaml = os.path.join(tmp_data_path, lidar_name + '_' + 'sample_config.yaml')
             config_yaml.generate_task_config_yaml(task_name=task_name,
                 source_sensor=lidar_name, dest_sensor=gnss_name,
                 source_folder=lidar, dest_folder=odometry_subfolder,
@@ -525,11 +526,11 @@ def reorganize_extracted_data(tmp_data_path, task_name, remove_input_data_cache=
             # wxt        
             yaml_list.append(generated_config_yaml)
         out_data=combine_multi_lidar_yaml(yaml_list)
-        multi_lidar_yaml = os.path.join(multi_lidar_out_path, 'multi_lidar_config.yaml')
-        print('wxt: multi_lidar_yaml:' , multi_lidar_yaml)
+        multi_lidar_yaml = os.path.join(multi_lidar_out_path, 'sample_config.yaml')
+        #print('wxt: multi_lidar_yaml:' , multi_lidar_yaml)
         with open(multi_lidar_yaml,'w') as f:    
             yaml.safe_dump(out_data, f)     
-
+        os.remove 
     elif task_name == 'camera_to_lidar':
         # data selection.
         pair_data_folder_name = 'camera-lidar-pairs'
