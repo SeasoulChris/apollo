@@ -469,7 +469,7 @@ def combine_multi_lidar_yaml(yaml_list):
     return out_data
 
 
-def reorganize_extracted_data(tmp_data_path, task_name, remove_input_data_cache=False):
+def reorganize_extracted_data(tmp_data_path, task_name, remove_input_data_cache=False, main_sensor=None):
     root_path = os.path.dirname(os.path.normpath(tmp_data_path))
 
     config_yaml = ConfigYaml()
@@ -525,12 +525,33 @@ def reorganize_extracted_data(tmp_data_path, task_name, remove_input_data_cache=
                     'are generated.'.format(lidar_name))
             # wxt        
             yaml_list.append(generated_config_yaml)
-        out_data=combine_multi_lidar_yaml(yaml_list)
+        #out_data=combine_multi_lidar_yaml(yaml_list)
+
+        print(odometry_subfolder)
+        out_data = {'calibration_task':task_name, 'destination_sensor':gnss_name, 'odometry_file':odometry_subfolder}
+        sensor_files_directory_list = []
+        source_sensor_list = []
+        transform_list = []
+        for i in range(len(yaml_list)):
+            #print(i)
+            with open(yaml_list[i], 'r') as f:
+                data = yaml.safe_load(f)
+                #print(data)
+                sensor_files_directory_list.append(data['sensor_files_directory'])
+                source_sensor_list.append(data['source_sensor'])
+                transform_list.append(data['transform'])
+        out_data['sensor_files_directory'] = sensor_files_directory_list
+        out_data['source_sensor'] = source_sensor_list
+        out_data['transform'] = transform_list        
+        out_data['main_sensor'] = main_sensor
+
+
+
         multi_lidar_yaml = os.path.join(multi_lidar_out_path, 'sample_config.yaml')
         #print('wxt: multi_lidar_yaml:' , multi_lidar_yaml)
         with open(multi_lidar_yaml,'w') as f:    
             yaml.safe_dump(out_data, f)     
-        os.remove 
+
     elif task_name == 'camera_to_lidar':
         # data selection.
         pair_data_folder_name = 'camera-lidar-pairs'
@@ -648,7 +669,8 @@ def main():
                        start_timestamp, end_timestamp, extraction_rates)
     # output_abs_path='/apollo/data/extracted_data/CoolHigh-2019-09-20/camera_to_lidar-2019-12-16-16-33/tmp'
     reorganize_extracted_data(tmp_data_path=output_abs_path,
-                            task_name=config.io_config.task_name)
+                            task_name=config.io_config.task_name,
+                            main_sensor=config.io_config.main_sensor)
     # generate_compressed_file(input_path=config.io_config.output_path,
     #                          input_name=output_relative_path,
     #                          output_path=config.io_config.output_path,
