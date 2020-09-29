@@ -26,7 +26,7 @@ class ConfigYaml(object):
 
     def _generate_lidar_to_gnss_calibration_yaml(self, in_data, lidar_folder_name, gnss_folder_name):
         in_data['sensor_files_directory'] = os.path.join('.', lidar_folder_name, "")
-        in_data['odometry_file'] = os.path.join('.', gnss_folder_name,'odometry')
+        in_data['odometry_file'] = os.path.join('.', gnss_folder_name, 'odometry')
         return in_data
 
     def _generate_camera_init_param_yaml(self, root_path, in_data):

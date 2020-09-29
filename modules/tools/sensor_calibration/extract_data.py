@@ -528,7 +528,7 @@ def reorganize_extracted_data(tmp_data_path, task_name, remove_input_data_cache=
         #out_data=combine_multi_lidar_yaml(yaml_list)
 
         print(odometry_subfolder)
-        out_data = {'calibration_task':task_name, 'destination_sensor':gnss_name, 'odometry_file':odometry_subfolder}
+        out_data = {'calibration_task':task_name, 'destination_sensor':gnss_name, 'odometry_file': odometry_subfolder + '/odometry'}
         sensor_files_directory_list = []
         source_sensor_list = []
         transform_list = []
