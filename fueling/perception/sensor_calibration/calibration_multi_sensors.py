@@ -120,6 +120,7 @@ class SensorCalibrationPipeline(BasePipeline):
 
     def run_internal(self, job_dir):
         # If it's a partner job, move origin data to our storage before processing.
+
         if self.is_partner_job():
             job_dir = self.partner_storage().abs_path(job_dir)
             job_id = self.FLAGS.get('job_id')
@@ -185,7 +186,9 @@ class SensorCalibrationPipeline(BasePipeline):
         config_file = calib_config.generate_task_config_yaml(root_path=source_dir,
                                                              output_path=output_dir,
                                                              source_config_file=in_config_file)
+        #config_file = "/fuel/testdata/perception/sensor_calibration/multi_lidar_to_gnss_calibration/lidar_to_gnss_calibration_config.yaml"
         task_name = calib_config.get_task_name()
+        #task_name = "lidar_to_gnss"
         """Execute task by task"""
         logging.info('type of {} is {}'.format(task_name, type(task_name)))
         logging.info('executing task: {} with src_dir: {}'.format(task_name, source_dir))

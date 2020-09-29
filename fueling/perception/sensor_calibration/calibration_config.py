@@ -95,9 +95,9 @@ class CalibrationConfig(object):
 
         lidar_steps_list = []
         for i in range(len(in_data['source_sensor'])):
-            lidar_steps_list.append({'source_lidars': in_data['source_sensor'][i], 'target_lidars': in_data['source_sensor'][i], 'lidar_type': 'multiple', 'fix_target_lidars': False, 'fix_z': True, 'iteration': 3})
+            lidar_steps_list.append({'source_lidars': [in_data['source_sensor'][i]], 'target_lidars': [in_data['source_sensor'][i]], 'lidar_type': 'multiple', 'fix_target_lidars': False, 'fix_z': True, 'iteration': 3})
         for i in range(len(sub_sensor)):
-            lidar_steps_list.append({'source_lidars': sub_sensor[i], 'target_lidars': in_data['main_sensor'], 'lidar_type': 'multiple', 'fix_target_lidars': True, 'fix_z': False, 'iteration': 3})
+            lidar_steps_list.append({'source_lidars': [sub_sensor[i]], 'target_lidars': [in_data['main_sensor']], 'lidar_type': 'multiple', 'fix_target_lidars': True, 'fix_z': False, 'iteration': 3})
 
         print('wxt: lidar_steps_list: ', lidar_steps_list)
 
