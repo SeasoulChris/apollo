@@ -68,7 +68,7 @@ class CalibrationConfig(object):
         return out_data
     '''
 
-    def _generate_lidar_to_gnss_calibration_yaml(self, root_path, result_path, in_data):
+    def _generate_multi_lidar_to_gnss_calibration_yaml(self, root_path, result_path, in_data):
         lidar_list = []
         init_extrinsics_dics = {}
         for i in range(len(in_data['source_sensor'])):
@@ -79,7 +79,28 @@ class CalibrationConfig(object):
             init_extrinsics_dics[in_data['source_sensor'][i]] = in_data['transform'][i]
         print('wxt: init_extrinsics_dics', init_extrinsics_dics)
         
+        #wxt
         
+        
+        # 为什么是深拷贝？
+        #sub_sensor = in_data['source_sensor']
+        #sub_sensor = sub_sensor.remove(in_data['main_sensor'])
+        
+        #print('wxt: source_sensor :', in_data['source_sensor'])
+        sub_sensor = in_data['source_sensor'][:]
+        #print('wxt:  sub_sensor: ', sub_sensor)
+        sub_sensor.remove(in_data['main_sensor'])
+        #print('wxt:  sub_sensor: ', sub_sensor)
+
+
+        lidar_steps_list = []
+        for i in range(len(in_data['source_sensor'])):
+            lidar_steps_list.append({'source_lidars': in_data['source_sensor'][i], 'target_lidars': in_data['source_sensor'][i], 'lidar_type': 'multiple', 'fix_target_lidars': False, 'fix_z': True, 'iteration': 3})
+        for i in range(len(sub_sensor)):
+            lidar_steps_list.append({'source_lidars': sub_sensor[i], 'target_lidars': in_data['main_sensor'], 'lidar_type': 'multiple', 'fix_target_lidars': True, 'fix_z': False, 'iteration': 3})
+
+        print('wxt: lidar_steps_list: ', lidar_steps_list)
+
         out_data = {
             # list all input sensor messages and the file locations
             'data': {
@@ -96,69 +117,7 @@ class CalibrationConfig(object):
                 # wired format. Beijing has to make the YAML consistent in multi-lidar calib.
                 'init_extrinsics': init_extrinsics_dics,
                 #  optimization parameters: list of dict() for multi-lidar if needs
-                'steps': [
-                    {
-                        'source_lidars': [
-                            "velodyne16_left"
-                        ],
-                        'target_lidars': [
-                            "velodyne16_left"
-                        ],
-                        'lidar_type': 'multiple',
-                        'fix_target_lidars': False,
-                        'fix_z': True,
-                        'iteration': 3
-                    },
-                    {
-                        'source_lidars': [
-                            "velodyne16_right"
-                        ],
-                        'target_lidars': [
-                            "velodyne16_right"
-                        ],
-                        'lidar_type': 'multiple',
-                        'fix_target_lidars': False,
-                        'fix_z': True,
-                        'iteration': 3
-                    },
-                    {
-                        'source_lidars': [
-                            "velodyne16_back"
-                        ],
-                        'target_lidars': [
-                            "velodyne16_back"
-                        ],
-                        'lidar_type': 'multiple',
-                        'fix_target_lidars': False,
-                        'fix_z': True,
-                        'iteration': 3
-                    },                    
-                    {
-                        'source_lidars': [
-                            "velodyne16_left"
-                        ],
-                        'target_lidars': [
-                            "velodyne16_back"
-                        ],
-                        'lidar_type': 'multiple',
-                        'fix_target_lidars': True,
-                        'fix_z': False,
-                        'iteration': 3
-                    },                    
-                    {
-                        'source_lidars': [
-                            "velodyne16_right"
-                        ],
-                        'target_lidars': [
-                            "velodyne16_back"
-                        ],
-                        'lidar_type': 'multiple',
-                        'fix_target_lidars': True,
-                        'fix_z': False,
-                        'iteration': 3
-                    }                   
-
-                ]
+                'steps': lidar_steps_list
             }
         }
         return out_data
@@ -225,7 +184,7 @@ class CalibrationConfig(object):
             logging.error(f'does not support the calibration task: {self._task_name}')
 
         if self._task_name == 'lidar_to_gnss':
-            out_data = self._generate_lidar_to_gnss_calibration_yaml(
+            out_data = self._generate_multi_lidar_to_gnss_calibration_yaml(
                 root_path=root_path, result_path=result_path, in_data=data)
         elif self._task_name == 'camera_to_lidar':
             out_data = self._generate_camera_to_lidar_calibration_yaml(
@@ -233,9 +192,12 @@ class CalibrationConfig(object):
 
         logging.info(yaml.safe_dump(out_data))
         print(yaml.safe_dump(out_data))
+        
         try:
             with open(dest_config_file, 'w') as f:
-                yaml.safe_dump(out_data, f)
+                #yaml.safe_dump(out_data, f)
+                yaml.dump(out_data, f, default_flow_style=False, sort_keys=False)
+                #yaml.dump(out_data, f, sort_keys=False)
         except BaseException:
             logging.error(f'cannot generate the task config yaml file at {dest_config_file}')
             return None
