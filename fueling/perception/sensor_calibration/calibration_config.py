@@ -18,55 +18,6 @@ class CalibrationConfig(object):
         self._task_name = 'unknown'
         self._supported_tasks = supported_calibrations
         logging.info('calibration service now support: {}'.format(self._supported_tasks))
-    
-    '''
-    def _generate_lidar_to_gnss_calibration_yaml(self, root_path, result_path, in_data):
-        out_data = {
-            # list all input sensor messages and the file locations
-            'data': {
-                'odometry': os.path.abspath(os.path.join(root_path, in_data['odometry_file'])),
-                # 'lidars' are list of dict()
-                'lidars': [  
-                    {
-                        in_data['source_sensor']: {
-                            'path': os.path.abspath(os.path.join(
-                                root_path, in_data['sensor_files_directory'])) + '/'
-                        }
-                    }
-                ],
-                'result': result_path,
-                'calib_height': False,
-                'frame': 'UTM'
-            },
-            # list all calibration parameters
-            'calibration': {
-                # extrinsics : dict of dict() for multi-lidar if needs
-                # wired format. Beijing has to make the YAML consistent in multi-lidar calib.
-                'init_extrinsics': {
-                    in_data['source_sensor']: {
-                        'translation': in_data['transform']['translation'],
-                        'rotation': in_data['transform']['rotation']
-                    }
-                },
-                #  optimization parameters: list of dict() for multi-lidar if needs
-                'steps': [
-                    {
-                        'source_lidars': [
-                            in_data['source_sensor']
-                        ],
-                        'target_lidars': [
-                            in_data['source_sensor']
-                        ],
-                        'lidar_type': 'multiple',
-                        'fix_target_lidars': False,
-                        'fix_z': True,
-                        'iteration': 3
-                    }
-                ]
-            }
-        }
-        return out_data
-    '''
 
     def _generate_multi_lidar_to_gnss_calibration_yaml(self, root_path, result_path, in_data):
         lidar_list = []
@@ -80,11 +31,6 @@ class CalibrationConfig(object):
         print('wxt: init_extrinsics_dics', init_extrinsics_dics)
         
         #wxt
-        
-        
-        # 为什么是深拷贝？
-        #sub_sensor = in_data['source_sensor']
-        #sub_sensor = sub_sensor.remove(in_data['main_sensor'])
         
         #print('wxt: source_sensor :', in_data['source_sensor'])
         sub_sensor = in_data['source_sensor'][:]
