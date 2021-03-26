@@ -246,6 +246,10 @@ bool TransformWrapper::GetTrans(double timestamp, Eigen::Affine3d* trans,
 bool TransformWrapper::QueryTrans(double timestamp, StampedTransform* trans,
                                   const std::string& frame_id,
                                   const std::string& child_frame_id) {
+
+
+  std::cout << "WXT DEBUG QueryTrans: " <<  "frame_id" << frame_id << "\n";
+  std::cout << "WXT DEBUG QueryTrans: " <<  "child_frame_id" << child_frame_id << "\n";                                   
   cyber::Time query_time(timestamp);
   std::string err_string;
   if (!tf2_buffer_->canTransform(frame_id, child_frame_id, query_time,

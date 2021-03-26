@@ -65,6 +65,7 @@ bool SegmentationComponent::Proc(
                                                      LidarFrameMessage);
 
   bool status = InternalProc(message, out_message);
+  std::cout << "WXT DEBUG: InternalProc used " << "\n";
   if (status) {
     writer_->Write(out_message);
     AINFO << "Send lidar segment output message.";

@@ -235,6 +235,11 @@ void FusionCameraDetectionComponent::OnReceiveImage(
     const std::string &camera_name) {
   std::lock_guard<std::mutex> lock(mutex_);
   const double msg_timestamp = message->measurement_time() + timestamp_offset_;
+
+  std::cout << "WXT DEBUG: camera measurement_time:" << std::setprecision(19) << message->measurement_time() << "\n";
+  std::cout << "WXT DEBUG: timestamp_offset_: " << timestamp_offset_ << "\n";
+
+
   AINFO << "Enter FusionCameraDetectionComponent::Proc(), "
         << " camera_name: " << camera_name << " image ts: " << msg_timestamp;
   // timestamp should be almost monotonic
@@ -633,7 +638,9 @@ int FusionCameraDetectionComponent::InternalProc(
     SensorFrameMessage *prefused_message,
     apollo::perception::PerceptionObstacles *out_message) {
   const double msg_timestamp =
+      //wxt: this is camera timestamp
       in_message->measurement_time() + timestamp_offset_;
+  std::cout << "WXT DEBUG: in_message->measurement_time() " << std::setprecision(19) << in_message->measurement_time() << "\n"; 
   const int frame_size = static_cast<int>(camera_frames_.size());
   camera::CameraFrame &camera_frame = camera_frames_[frame_id_ % frame_size];
 

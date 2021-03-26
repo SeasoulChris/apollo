@@ -29,6 +29,8 @@
 
 /** \author Tully Foote */
 
+#include <iostream>
+
 #include "tf2/buffer_core.h"
 #include "tf2/exceptions.h"
 #include "tf2/time_cache.h"
@@ -329,6 +331,10 @@ template <typename F>
 int BufferCore::walkToTopParent(F& f, Time time, CompactFrameID target_id,
                                 CompactFrameID source_id,
                                 std::string* error_string) const {
+
+  std::cout << "walkToTopParent used " << "\n";
+  std::cout << "Time: " << time << " target_id: " << target_id << " source_id: " << source_id << "\n";
+  std::cout << "\n" << "\n" << "\n";                               
   return walkToTopParent(f, time, target_id, source_id, error_string, NULL);
 }
 
@@ -337,6 +343,10 @@ int BufferCore::walkToTopParent(
     F& f, Time time, CompactFrameID target_id, CompactFrameID source_id,
     std::string* error_string, std::vector<CompactFrameID>* frame_chain) const {
   if (frame_chain) frame_chain->clear();
+
+  std::cout << "WXT DEBUG walkToTopParent() " << "\n";
+
+
 
   // Short circuit if zero length transform to allow lookups on non existant
   // links
@@ -373,6 +383,7 @@ int BufferCore::walkToTopParent(
 
     CompactFrameID parent = f.gather(cache, time, &extrapolation_error_string);
     if (parent == 0) {
+      std::cout << "WXT DEBUG: extrapolation_might_have_occurred " << "\n";
       // Just break out here... there may still be a path from source -> target
       top_parent = frame;
       extrapolation_might_have_occurred = true;
@@ -457,6 +468,7 @@ int BufferCore::walkToTopParent(
   if (frame != top_parent) {
     if (extrapolation_might_have_occurred) {
       if (error_string) {
+        //std::cout << "''''''''''''''''''''''''''''''''''''''''" << "\n";
         std::stringstream ss;
         ss << extrapolation_error_string
            << ", when looking up transform from frame ["
@@ -505,7 +517,7 @@ struct TransformAccum {
         result_vec(0.0, 0.0, 0.0) {}
 
   CompactFrameID gather(TimeCacheInterfacePtr cache, Time time,
-                        std::string* error_string) {
+                        std::string* error_string) {                       
     if (!cache->getData(time, st, error_string)) {
       return 0;
     }
@@ -718,6 +730,9 @@ reference_point, reference_point_frame,
 struct CanTransformAccum {
   CompactFrameID gather(TimeCacheInterfacePtr cache, Time time,
                         std::string* error_string) {
+
+    std::cout << "WXT DEBUG: gather used " << "\n";                       
+
     return cache->getParent(time, error_string);
   }
 
@@ -734,6 +749,7 @@ struct CanTransformAccum {
 bool BufferCore::canTransformNoLock(CompactFrameID target_id,
                                     CompactFrameID source_id, const Time& time,
                                     std::string* error_msg) const {
+
   if (target_id == 0 || source_id == 0) {
     if (error_msg) {
       if (target_id == 0) {
@@ -777,6 +793,11 @@ bool BufferCore::canTransformInternal(CompactFrameID target_id,
 bool BufferCore::canTransform(const std::string& target_frame,
                               const std::string& source_frame, const Time& time,
                               std::string* error_msg) const {
+
+  std::cout << "WXT DEBUG : " << "target_frame: " << target_frame << "\n";
+  std::cout << "WXT DEBUG : " << "source_frame: " << source_frame << "\n";
+  std::cout << "WXT DEBUG : " << "time: " << time << "\n";
+  
   // Short circuit if target_frame == source_frame
   if (target_frame == source_frame) return true;
 
@@ -855,6 +876,7 @@ bool BufferCore::canTransform(const std::string& target_frame,
 }
 
 tf2::TimeCacheInterfacePtr BufferCore::getFrame(CompactFrameID frame_id) const {
+  //std::cout << "WXT DEBUG:  framed_.size()" << frames_.size() << "\n";
   if (frame_id >= frames_.size())
     return TimeCacheInterfacePtr();
   else {

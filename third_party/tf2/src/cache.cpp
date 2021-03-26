@@ -96,6 +96,7 @@ void createExtrapolationException3(Time t0, Time t1, std::string* error_str)
 
 uint8_t TimeCache::findClosest(TransformStorage*& one, TransformStorage*& two, Time target_time, std::string* error_str)
 {
+  std::cout << "WXT DEBUG findClosest used " << "\n"; 
   //No values stored
   if (storage_.empty())
   {
@@ -120,6 +121,7 @@ uint8_t TimeCache::findClosest(TransformStorage*& one, TransformStorage*& two, T
     }
     else
     {
+      
       cache::createExtrapolationException1(target_time, ts.stamp_, error_str);
       return 0;
     }
@@ -141,11 +143,20 @@ uint8_t TimeCache::findClosest(TransformStorage*& one, TransformStorage*& two, T
   // Catch cases that would require extrapolation
   else if (target_time > latest_time)
   {
+    std::cout << "WXT DEBUG: target_time > latest_time " << "\n";
+    std::cout << "WXT DEBUG: target_time :" << target_time << "\n";
+    std::cout << "WXT DEBUG: latest_time :" << latest_time << "\n";
+    std::cout << "WXT DEBUG " << "createExtrapolationException2" << "\n";
+
     cache::createExtrapolationException2(target_time, latest_time, error_str);
     return 0;
   }
   else if (target_time < earliest_time)
   {
+    std::cout << "WXT DEBUG: target_time < earliest_time " << "\n";
+    std::cout << "WXT DEBUG: target_time :" << target_time << "\n";
+    std::cout << "WXT DEBUG: earliest_time :" << earliest_time << "\n";
+    std::cout << "WXT DEBUG " << "createExtrapolationException3" << "\n";
     cache::createExtrapolationException3(target_time, earliest_time, error_str);
     return 0;
   }
@@ -202,10 +213,15 @@ void TimeCache::interpolate(const TransformStorage& one, const TransformStorage&
 
 bool TimeCache::getData(Time time, TransformStorage & data_out, std::string* error_str) //returns false if data not available
 {
+  std::cout << "WXT DEBUG: getData Error " << "\n";
+
   TransformStorage* p_temp_1;
   TransformStorage* p_temp_2;
 
   int num_nodes = findClosest(p_temp_1, p_temp_2, time, error_str);
+
+  std::cout << "WXT DEBUG: num_nodes " <<  num_nodes << "\n";
+
   if (num_nodes == 0)
   {
     return false;
@@ -235,12 +251,14 @@ bool TimeCache::getData(Time time, TransformStorage & data_out, std::string* err
 
 CompactFrameID TimeCache::getParent(Time time, std::string* error_str)
 {
+  std::cout << "WXT DEBUG getParent " << "\n";
   TransformStorage* p_temp_1;
   TransformStorage* p_temp_2;
 
   int num_nodes = findClosest(p_temp_1, p_temp_2, time, error_str);
   if (num_nodes == 0)
   {
+    std::cout << "WXT DEBUG : num_node = " << num_nodes << "\n";  
     return 0;
   }
 

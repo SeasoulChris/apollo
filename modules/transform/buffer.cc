@@ -202,6 +202,7 @@ bool Buffer::canTransform(const std::string& target_frame,
     errstr->clear();
     bool retval = tf2::BufferCore::canTransform(target_frame, source_frame,
                                                 time.ToNanosecond(), errstr);
+    //std::cout << "WXT DEBUG: " << "retval" << retval << "\n";
     if (retval) {
       return true;
     } else {
