@@ -288,6 +288,7 @@ bool RawStream::Init() {
   raw_writer_ = node_->CreateWriter<RawData>(FLAGS_gnss_raw_data_topic);
   rtcm_writer_ = node_->CreateWriter<RawData>(FLAGS_rtcm_data_topic);
   cyber::ReaderConfig reader_config;
+
   reader_config.channel_name = FLAGS_gnss_raw_data_topic;
   reader_config.pending_queue_size = 100;
   gpsbin_reader_ = node_->CreateReader<RawData>(
@@ -297,6 +298,19 @@ bool RawStream::Init() {
   chassis_reader_ = node_->CreateReader<Chassis>(
       FLAGS_chassis_topic,
       [&](const std::shared_ptr<Chassis> &chassis) { chassis_ptr_ = chassis; });
+
+
+  //wxt add
+  const std::string rtcmbin_file = getLocalTimeFileStr("/apollo/data/rtcmbin");
+  rtcm_stream_.reset(new std::ofstream(
+      rtcmbin_file, std::ios::app | std::ios::out | std::ios::binary));  
+  cyber::ReaderConfig rtcm_reader_config;
+  rtcm_reader_config.channel_name = FLAGS_rtcm_data_topic;
+  rtcm_reader_config.pending_queue_size = 100;
+  rtcm_reader_ = node_->CreateReader<RawData>(
+    rtcm_reader_config, [&](const std::shared_ptr<RawData> &rtcm_data) {
+      RtcmCallback(rtcm_data);
+    });
 
   return true;
 }
@@ -555,6 +569,13 @@ void RawStream::GpsbinCallback(const std::shared_ptr<RawData const> &raw_data) {
   gpsbin_stream_->write(raw_data->data().c_str(), raw_data->data().size());
 }
 
+//wxt add 
+void RawStream::RtcmCallback(const std::shared_ptr<RawData const> &rtcm_data) {
+  if (rtcm_stream_ == nullptr) {
+    return;
+  }
+  rtcm_stream_->write(rtcm_data->data().c_str(), rtcm_data->data().size());
+}
 }  // namespace gnss
 }  // namespace drivers
 }  // namespace apollo

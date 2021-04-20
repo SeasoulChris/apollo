@@ -63,6 +63,9 @@ class RawStream {
   void GpsbinCallback(const std::shared_ptr<RawData const>& raw_data);
   void OnWheelVelocityTimer();
 
+  //wxt add 
+  void RtcmCallback(const std::shared_ptr<RawData const>& rtcm_data);
+
   std::unique_ptr<cyber::Timer> wheel_velocity_timer_ = nullptr;
   std::shared_ptr<apollo::canbus::Chassis> chassis_ptr_ = nullptr;
   static constexpr size_t BUFFER_SIZE = 2048;
@@ -94,12 +97,19 @@ class RawStream {
   std::unique_ptr<RtcmParser> rtcm_parser_ptr_;
   std::unique_ptr<std::thread> gpsbin_thread_ptr_;
   std::unique_ptr<std::ofstream> gpsbin_stream_ = nullptr;
+  //wxt add
+  std::unique_ptr<std::ofstream> rtcm_stream_ = nullptr;
+
+
 
   std::shared_ptr<apollo::cyber::Node> node_ = nullptr;
   std::shared_ptr<apollo::cyber::Writer<StreamStatus>> stream_writer_ = nullptr;
   std::shared_ptr<apollo::cyber::Writer<RawData>> raw_writer_ = nullptr;
   std::shared_ptr<apollo::cyber::Writer<RawData>> rtcm_writer_ = nullptr;
   std::shared_ptr<apollo::cyber::Reader<RawData>> gpsbin_reader_ = nullptr;
+  //wxt add 
+  std::shared_ptr<apollo::cyber::Reader<RawData>> rtcm_reader_ = nullptr;
+
   std::shared_ptr<apollo::cyber::Reader<apollo::canbus::Chassis>>
       chassis_reader_ = nullptr;
 };
