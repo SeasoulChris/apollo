@@ -95,3 +95,25 @@ py_binary(
         "//modules/tools/common:file_utils",
     ],
 )
+
+py_binary(
+    name = "fake_tf_pose_publisher",
+    srcs = ["fake_tf_pose_publisher.py"],
+    deps = [
+        "//cyber/python/cyber_py3:cyber",
+        "//cyber/python/cyber_py3:cyber_time",
+        "//modules/localization/proto:gps_py_pb2",
+        "//modules/localization/proto:localization_py_pb2",
+        "//modules/transform/proto:transform_py_pb2",
+    ],
+)
+
+py_binary(
+    name = "lidar_compensator_publisher",
+    srcs = ["lidar_compensator_publisher.py"],
+    deps = [
+        "//cyber/python/cyber_py3:cyber",
+        "//cyber/python/cyber_py3:cyber_time",
+        "//modules/drivers/proto:pointcloud_py_pb2",
+    ],
+)
