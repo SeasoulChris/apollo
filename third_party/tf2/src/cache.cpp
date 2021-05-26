@@ -142,7 +142,19 @@ uint8_t TimeCache::findClosest(TransformStorage*& one, TransformStorage*& two, T
   }
   // Catch cases that would require extrapolation
   else if (target_time > latest_time)
-  { 
+  {
+
+    if((target_time - latest_time)%1000000 < 15)
+    {
+      one = &storage_.front();
+      std::cout << "WXT DEBUG: Error Occured, but diff smaller than 15 ms" << "\n";
+      std::cout << "WXT DEBUG: " << "target_time: " << target_time << "\n";
+      std::cout << "WXT DEBUG: " << "latest_time: " << latest_time << "\n";
+      std::cout << "WXT DEBUG: " << "diff: " << (target_time-latest_time)%1000000000 << "\n";
+      std::cout << "WXT DEBUG: " << "current_time: " << std::setprecision(19) << apollo::cyber::Time::Now().ToSecond();
+      std::cout << "WXT DEBUG: " << "\n" << "\n";
+      return 1;
+    } 
     std::cout << "WXT DEBUG: Error Occured " << "\n";
     std::cout << "WXT DEBUG: " << "target_time: " << target_time << "\n";
     std::cout << "WXT DEBUG: " << "latest_time: " << latest_time << "\n";
