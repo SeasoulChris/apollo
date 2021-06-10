@@ -29,9 +29,11 @@
 
 /** \author Tully Foote */
 
+#include "cyber/time/time.h"
 #include "tf2/time_cache.h"
 #include "tf2/exceptions.h"
 
+#include <iomanip>>
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Transform.h>
@@ -141,6 +143,24 @@ uint8_t TimeCache::findClosest(TransformStorage*& one, TransformStorage*& two, T
   // Catch cases that would require extrapolation
   else if (target_time > latest_time)
   {
+
+    if((target_time - latest_time)%1000000 < 15)
+    {
+      one = &storage_.front();
+      std::cout << "WXT DEBUG: Error Occured, but diff smaller than 15 ms" << "\n";
+      std::cout << "WXT DEBUG: " << "target_time: " << target_time << "\n";
+      std::cout << "WXT DEBUG: " << "latest_time: " << latest_time << "\n";
+      std::cout << "WXT DEBUG: " << "diff: " << (target_time-latest_time)%1000000000 << "\n";
+      std::cout << "WXT DEBUG: " << "current_time: " << std::setprecision(19) << apollo::cyber::Time::Now().ToSecond();
+      std::cout << "WXT DEBUG: " << "\n" << "\n";
+      return 1;
+    } 
+    std::cout << "WXT DEBUG: Error Occured " << "\n";
+    std::cout << "WXT DEBUG: " << "target_time: " << target_time << "\n";
+    std::cout << "WXT DEBUG: " << "latest_time: " << latest_time << "\n";
+    std::cout << "WXT DEBUG: " << "diff: " << (target_time-latest_time)%1000000000 << "\n";
+    std::cout << "WXT DEBUG: " << "current_time: " << std::setprecision(19) << apollo::cyber::Time::Now().ToSecond();
+    std::cout << "WXT DEBUG: " << "\n" << "\n"; 
     cache::createExtrapolationException2(target_time, latest_time, error_str);
     return 0;
   }
@@ -172,9 +192,13 @@ uint8_t TimeCache::findClosest(TransformStorage*& one, TransformStorage*& two, T
   //Finally the case were somewhere in the middle  Guarenteed no extrapolation :-)
   one = &*(storage_it); //Older
   two = &*(--storage_it); //Newer
+  std::cout << "WXT DEBUG: two value returned " << "\n";
+  std::cout << "WXT DEBUG: " << "target_time: " << target_time << "\n";
+  std::cout << "WXT DEBUG: " << "latest_time: " << latest_time << "\n";
+  std::cout << "WXT DEBUG: " << "diff: " << (target_time-latest_time)%1000000000 << "\n";
+  std::cout << "WXT DEBUG: " << "current_time: " << std::setprecision(19) << apollo::cyber::Time::Now().ToSecond(); 
+  std::cout << "WXT DEBUG: " << "\n" << "\n";
   return 2;
-
-
 }
 
 void TimeCache::interpolate(const TransformStorage& one, const TransformStorage& two, Time time, TransformStorage& output)
