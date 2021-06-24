@@ -20,7 +20,7 @@ namespace apollo {
 namespace drivers {
 namespace velodyne {
 
-Velodyne16Parser::Velodyne16Parser(const Config& config)
+Velodyne16Parser::Velodyne16Parser(const Config& config)  
     : VelodyneParser(config), previous_packet_stamp_(0), gps_base_usec_(0) {
   inner_time_ = &velodyne::INNER_TIME_16;
   need_two_pt_correction_ = false;
@@ -54,6 +54,7 @@ void Velodyne16Parser::GeneratePointcloud(
 
 uint64_t Velodyne16Parser::GetTimestamp(double base_time, float time_offset,
                                         uint16_t block_id) {
+
   double t = base_time - time_offset;
   uint64_t timestamp = Velodyne16Parser::GetGpsStamp(t, &previous_packet_stamp_,
                                                      &gps_base_usec_);
@@ -75,7 +76,7 @@ void Velodyne16Parser::Unpack(const VelodynePacket& pkt,
   // const RawPacket* raw = (const RawPacket*)&pkt.data[0];
   const RawPacket* raw = (const RawPacket*)pkt.data().c_str();
   double basetime = raw->gps_timestamp;  // usec
-
+  
   for (int block = 0; block < BLOCKS_PER_PACKET; block++) {
     float azimuth = static_cast<float>(raw->blocks[block].rotation);
     if (block < (BLOCKS_PER_PACKET - 1)) {

@@ -26,9 +26,22 @@ namespace velodyne {
 uint64_t VelodyneParser::GetGpsStamp(double current_packet_stamp,
                                      double *previous_packet_stamp,
                                      uint64_t *gps_base_usec) {
+
+  std::cout << "WXT DEBUG" << "current_packet_stamp" << std::setprecision(19) << current_packet_stamp << "\n";
+  std::cout << "WXT DEBUG" << "previous_packet_stamp" << std::setprecision(19) << *previous_packet_stamp << "\n";
+  std::cout << "WXT DEBUG" << "gps_base_usec" << *gps_base_usec << "\n"; 
+  std::cout << "\n";
+
   if (current_packet_stamp < *previous_packet_stamp) {
     // plus 3600 when large jump back, discard little jump back for wrong time
     // in lidar
+
+    std::cout << "WXT DEBUG" << "Error occured" << "current_packet_stamp < *previous_packet_stamp" << "\n"; 
+    std::cout << "WXT DEBUG" << "current_packet_stamp " << std::setprecision(19) << current_packet_stamp << "\n";
+    std::cout << "WXT DEBUG" << "previous_packet_stamp " << std::setprecision(19) << *previous_packet_stamp << "\n";
+    std::cout << "WXT DEBUG" << "gps_base_usec " << std::setprecision(19) << *gps_base_usec << "\n"; 
+    std::cout << "\n";
+    
     if (std::abs(*previous_packet_stamp - current_packet_stamp) > 3599000000) {
       *gps_base_usec += static_cast<uint64_t>(3600 * 1e6);
       AINFO << "Base time plus 3600s. Model: " << config_.model() << std::fixed
@@ -51,6 +64,8 @@ uint64_t VelodyneParser::GetGpsStamp(double current_packet_stamp,
       *gps_base_usec + static_cast<uint64_t>(current_packet_stamp);
 
   gps_stamp = gps_stamp * 1000;
+
+  std::cout << "WXT DEBUG " << "gps_stamp " << std::setprecision(19) << gps_stamp << "\n"; 
   return gps_stamp;
 }
 

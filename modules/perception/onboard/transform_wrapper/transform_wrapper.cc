@@ -251,10 +251,20 @@ bool TransformWrapper::QueryTrans(double timestamp, StampedTransform* trans,
   if (!tf2_buffer_->canTransform(frame_id, child_frame_id, query_time,
                                  static_cast<float>(FLAGS_obs_tf2_buff_size),
                                  &err_string)) {
-    AERROR << "Can not find transform. " << FORMAT_TIMESTAMP(timestamp)
-           << " frame_id: " << frame_id << " child_frame_id: " << child_frame_id
-           << " Error info: " << err_string;
-    return false;
+    apollo::transform::TransformStamped latest_transform =
+        tf2_buffer_->lookupTransform(frame_id, child_frame_id, apollo::cyber::Time(0));
+    double latest_buffer_time = latest_transform.header().timestamp_sec();
+    if((query_time.ToSecond() - latest_buffer_time < 0.015) && (query_time.ToSecond() - latest_buffer_time > 0))
+    {
+      query_time = apollo::cyber::Time(0);
+    }
+    else
+    {
+      AERROR << "Can not find transform. " << FORMAT_TIMESTAMP(timestamp)
+            << " frame_id: " << frame_id << " child_frame_id: " << child_frame_id
+            << " Error info: " << err_string;
+      return false;
+    }
   }
 
   apollo::transform::TransformStamped stamped_transform;
