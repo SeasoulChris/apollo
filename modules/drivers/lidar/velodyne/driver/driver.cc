@@ -76,12 +76,12 @@ void VelodyneDriver::SetBaseTimeFromNmeaTime(NMEATimePtr nmea_time,
   last_gps_time_ =
       static_cast<uint32_t>((nmea_time->min * 60 + nmea_time->sec) * 1e6);
 
-  std::cout << "WXT DEBUG" << "Set base unix time : " << time.tm_year << "-" << time.tm_mon << "-"
+  AERROR << "WXT DEBUG" << "Set base unix time : " << time.tm_year << "-" << time.tm_mon << "-"
         << time.tm_mday << " " << time.tm_hour << ":" << time.tm_min << ":"
         << time.tm_sec;
   uint64_t unix_base = static_cast<uint64_t>(timegm(&time)); //单位s
   *basetime = unix_base * static_cast<uint64_t>(1e6);   //单位是us
-  std::cout << "WXT DEBUG: basetime =  " << std::setprecision(19) << *basetime << "\n"; 
+  std::cout << "WXT DEBUG: basetime =  "  << *basetime << "\n"; 
   std::cout << "\n";
 }
 
@@ -188,7 +188,7 @@ void VelodyneDriver::PollPositioningPacket(void) {
       nmea_time->hour = static_cast<uint16_t>(current_time.tm_hour);
       nmea_time->min = static_cast<uint16_t>(current_time.tm_min);
       nmea_time->sec = static_cast<uint16_t>(current_time.tm_sec);
-      std::cout << "WXT DEBUG " << "Get NMEA Time from local time :"
+      AERROR << "WXT DEBUG " << "Get NMEA Time from local time :"
             << "year:" << nmea_time->year << "mon:" << nmea_time->mon
             << "day:" << nmea_time->day << "hour:" << nmea_time->hour
             << "min:" << nmea_time->min << "sec:" << nmea_time->sec;
@@ -218,25 +218,26 @@ void VelodyneDriver::UpdateGpsTopHour(uint32_t current_time) {
     return;
   }
 
-  std::cout << "WXT DEBUG: " << "last_gps_time_: " << std::setprecision(19) << last_gps_time_ << "\n";
-  std::cout << "WXT DEBUG: " << "current_time: " << std::setprecision(19) << current_time << "\n";
-  std::cout << "WXT DEBUG: " << "basetime_: " << std::setprecision(19) << basetime_ << "\n";
-  std::cout << "\n";
+  std::cout << "WXT DEBUG: " << "last_gps_time_: " <<  last_gps_time_ << "\n";
+  std::cout << "WXT DEBUG: " << "current_time: " <<  current_time << "\n";
+  std::cout << "WXT DEBUG: " << "basetime_: "  << basetime_ << "\n";
 
   if (last_gps_time_ > current_time) {
     std::cout << "WXT DEBUG: " << "last_gps_time_ > current_time" << "\n";
     int32_t time_diff = static_cast<int32_t>(last_gps_time_ - current_time);
-    std::cout << "WXT DEBUG diff : " << std::setprecision(19) << time_diff << "\n";
+    std::cout << "WXT DEBUG diff : "  << time_diff << "\n";
     if (time_diff > 3599000000) {
       basetime_ += static_cast<uint64_t>(3600 * 1e6);
-      AINFO << "Base time plus 3600s. Model: " << config_.model() << std::fixed
+      AERROR << "Base time plus 3600s. Model: " << config_.model() << std::fixed
             << ". current:" << current_time << ", last time:" << last_gps_time_;
     } else {
-      AWARN << "Current stamp:" << std::fixed << current_time
+      AERROR << "Current stamp:" << std::fixed << current_time
             << " less than previous stamp:" << last_gps_time_
             << ". GPS time stamp maybe incorrect!";
     }
   }
+  std::cout << "WXT DEBUG: " << "The final basetime_ is " << basetime_ << "\n";
+  std::cout << "\n";
   last_gps_time_ = current_time;
 }
 
