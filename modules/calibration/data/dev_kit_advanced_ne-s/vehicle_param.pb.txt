@@ -3,15 +3,15 @@ vehicle_param {
   vehicle_id {
       other_unique_id: "NEOLIX_EDU"
   }
-  front_edge_to_center: 1.373
-  back_edge_to_center: 1.402
+  front_edge_to_center: 2.151
+  back_edge_to_center: 0.624
   left_edge_to_center: 0.505
   right_edge_to_center: 0.505
 
   length: 2.775
   width: 1.01
   height: 1.672
-  min_turn_radius: 3.75
+  min_turn_radius: 2.50
   max_acceleration: 2.5
   max_deceleration: -7.0
   max_steer_angle: 6.6323
